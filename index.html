@@ -792,27 +792,35 @@ function buildIdeas(quotes, positions){
 }
 
 
-function findCashLikeValuesByCurrency(obj, depth=0, path=''){
-  if(!obj || depth > 7) return [];
+function findCashLikeValuesByCurrency(obj, depth=0, path='', inheritedCurrency='UNKNOWN'){
+  if(!obj || depth > 8) return [];
+
   const out = [];
   const cashWords = [
     'disponible','saldoDisponible','poderCompra','buyingPower','cashAvailable',
     'availableCash','disponibleOperar','montoDisponible','efectivoDisponible',
-    'saldoParaOperar','disponibleInmediato','efectivo','liquidez','cash','saldo'
+    'saldoParaOperar','disponibleInmediato','efectivo','liquidez','cash','saldo',
+    'saldoSinAplicar','saldoOperable','saldoCuenta','monto','importe'
+  ];
+
+  const amountWords = [
+    'disponible','saldo','monto','importe','cantidad','valor','cash','efectivo','liquidez'
   ];
 
   function pathLooksPortfolioValuation(p){
     const pl = String(p || '').toLowerCase();
     return pl.includes('valuacion') || pl.includes('valoractual') || pl.includes('valorizado') ||
       pl.includes('tenencia') || pl.includes('portfolio') || pl.includes('portafolio') ||
-      pl.includes('instrumento') || pl.includes('titulo');
+      pl.includes('instrumento') || pl.includes('titulo') || pl.includes('cotizacion') ||
+      pl.includes('quote') || pl.includes('precio');
   }
 
-  function detectCurrency(fullPath, raw){
-    const p = String(fullPath || '').toLowerCase();
-    const s = String(raw ?? '').toLowerCase();
-    if(p.includes('usd') || p.includes('dolar') || p.includes('dólar') || p.includes('dolares') || p.includes('dólares') || s.includes('usd') || s.includes('u$s') || s.includes('us$')) return 'USD';
-    if(p.includes('ars') || p.includes('peso') || p.includes('pesos') || p.includes('arg') || s.includes('ars')) return 'ARS';
+  function detectCurrencyFromText(text){
+    const s = String(text ?? '').toLowerCase();
+    if(s === 'usd' || s === 'us$' || s === 'u$s' || s === 'dolar' || s === 'dólar' || s === 'dolares' || s === 'dólares') return 'USD';
+    if(s === 'ars' || s === '$' || s === 'peso' || s === 'pesos') return 'ARS';
+    if(s.includes('usd') || s.includes('u$s') || s.includes('us$') || s.includes('dolar') || s.includes('dólar') || s.includes('dolares') || s.includes('dólares')) return 'USD';
+    if(s.includes('ars') || s.includes('peso') || s.includes('pesos')) return 'ARS';
     return 'UNKNOWN';
   }
 
@@ -821,23 +829,57 @@ function findCashLikeValuesByCurrency(obj, depth=0, path=''){
     return cashWords.some(w => kl === w.toLowerCase() || kl.includes(w.toLowerCase()));
   }
 
+  function keyLooksAmount(k){
+    const kl = String(k || '').toLowerCase();
+    return amountWords.some(w => kl === w.toLowerCase() || kl.includes(w.toLowerCase()));
+  }
+
+  function currencyFromObject(o, currentPath){
+    let currency = inheritedCurrency || 'UNKNOWN';
+    const pathCurrency = detectCurrencyFromText(currentPath);
+    if(pathCurrency !== 'UNKNOWN') currency = pathCurrency;
+
+    if(o && typeof o === 'object' && !Array.isArray(o)){
+      const currencyKeys = ['moneda','currency','codigoMoneda','simboloMoneda','descripcion','nombre','tipo'];
+      for(const k of currencyKeys){
+        if(o[k] !== undefined){
+          const c = detectCurrencyFromText(o[k]);
+          if(c !== 'UNKNOWN') currency = c;
+        }
+      }
+    }
+    return currency;
+  }
+
   if(Array.isArray(obj)){
-    obj.forEach((v,i)=>out.push(...findCashLikeValuesByCurrency(v, depth+1, path+'.'+i)));
+    obj.forEach((v,i)=>out.push(...findCashLikeValuesByCurrency(v, depth+1, path+'.'+i, inheritedCurrency)));
     return out;
   }
 
   if(typeof obj === 'object'){
+    const localCurrency = currencyFromObject(obj, path);
+
     Object.keys(obj).forEach(k=>{
       const v = obj[k];
       const fullPath = path ? path + '.' + k : k;
+      const keyCurrency = detectCurrencyFromText(k);
+      const nextCurrency = keyCurrency !== 'UNKNOWN' ? keyCurrency : localCurrency;
       const n = toNumber(v);
-      if(Number.isFinite(n) && n > 0 && keyLooksCash(k) && !pathLooksPortfolioValuation(fullPath)){
-        const currency = detectCurrency(fullPath, v);
-        let confidence = currency === 'UNKNOWN' ? 1 : 3;
-        if(String(k).toLowerCase().includes('disponible')) confidence += 1;
-        out.push({path:fullPath, value:n, currency, confidence});
+
+      if(Number.isFinite(n) && n > 0 && !pathLooksPortfolioValuation(fullPath)){
+        const isCashKey = keyLooksCash(k) || (nextCurrency !== 'UNKNOWN' && keyLooksAmount(k));
+        if(isCashKey){
+          let confidence = nextCurrency === 'UNKNOWN' ? 1 : 4;
+          if(String(k).toLowerCase().includes('disponible')) confidence += 2;
+          if(String(k).toLowerCase().includes('operar')) confidence += 2;
+          if(String(k).toLowerCase().includes('saldo')) confidence += 1;
+          out.push({path:fullPath, value:n, currency:nextCurrency, confidence});
+        }
       }
-      if(typeof v === 'object') out.push(...findCashLikeValuesByCurrency(v, depth+1, fullPath));
+
+      if(typeof v === 'object'){
+        out.push(...findCashLikeValuesByCurrency(v, depth+1, fullPath, nextCurrency));
+      }
     });
   }
   return out;
@@ -868,7 +910,7 @@ function renderMainAvailableCash(data, total){
   $('availableARSPath').textContent = ars.detected ? ('Origen: ' + ars.path) : 'ARS no identificado';
 
   $('availableUSDMain').textContent = usd.detected ? usdMoney(usd.amount) : 'No detectado';
-  $('availableUSDPath').textContent = usd.detected ? ('Origen: ' + usd.path) : 'USD no identificado';
+  $('availableUSDPath').textContent = usd.detected ? ('Origen: ' + usd.path) : 'USD no identificado en respuesta de IOL';
 
   if(ars.detected || usd.detected){
     $('availableCashSub').textContent = 'Saldos disponibles reales leídos desde IOL';
@@ -1882,12 +1924,73 @@ function renderIdeas(a){
       <p class="muted small">${escapeHtml(i.text)}</p>
     </div>`).join('');
 }
+
+function recommendationForHolding(p, total){
+  const score = scoreOpportunity({
+    sym:p.sym,
+    type:p.type,
+    ch:p.ch,
+    weight:p.weight
+  });
+
+  let accion = 'MANTENER';
+  let kind = 'blue';
+  let motivo = 'Sin señal fuerte para aumentar ni vender. Mantener con control de riesgo.';
+  let entrada = 'No comprar más salvo que confirme precio, volumen y contexto.';
+  let salida = 'Tomar parcial si llega a objetivo o si pierde fuerza.';
+  let plazo = specificHorizonForInstrument({...p, score});
+  let riesgo = specificRiskForInstrument({...p, score});
+
+  if(Number.isFinite(p.weight) && p.weight > 38){
+    accion = 'REDUCIR PARCIAL';
+    kind = 'bad';
+    motivo = 'Peso demasiado alto en cartera. Riesgo de concentración.';
+    entrada = 'No comprar más.';
+    salida = 'Vender parcial en rebotes o si el activo pierde soporte.';
+  } else if(Number.isFinite(p.ch) && p.ch <= -3){
+    accion = 'PROTEGER / NO PROMEDIAR';
+    kind = 'warn';
+    motivo = 'Caída fuerte. No conviene aumentar posición sin estabilización.';
+    entrada = 'No promediar a la baja.';
+    salida = 'Respetar pérdida máxima o reducir si sigue débil.';
+  } else if(Number.isFinite(p.ch) && p.ch >= 4){
+    accion = 'TOMAR GANANCIA PARCIAL';
+    kind = 'ok';
+    motivo = 'Suba fuerte del día. Conviene asegurar parte si se estira.';
+    entrada = 'No perseguir precio.';
+    salida = 'Tomar parcial si acelera o si pierde impulso.';
+  } else if(score >= 80){
+    accion = 'MANTENER / SUMAR MEDIDO';
+    kind = 'ok';
+    motivo = 'Buena lectura táctica, pero solo sumar si hay saldo disponible y confirmación.';
+    entrada = 'Sumar solo si confirma volumen y no se escapa el precio.';
+    salida = 'Tomar parcial en objetivo y respetar invalidación.';
+  } else if(score >= 65){
+    accion = 'MANTENER';
+    kind = 'blue';
+    motivo = 'Lectura aceptable, pero no justifica compra agresiva.';
+    entrada = 'Comprar más solo con confirmación clara.';
+    salida = 'Reducir si pierde fuerza o contexto.';
+  } else if(score < 50){
+    accion = 'NO AUMENTAR';
+    kind = 'warn';
+    motivo = 'No hay ventaja clara para sumar capital.';
+    entrada = 'No comprar más por ahora.';
+    salida = 'Revisar salida parcial si empeora.';
+  }
+
+  return {score, accion, kind, motivo, entrada, salida, plazo, riesgo};
+}
+
 function renderPortfolio(a){
   if(!a.positions.length){
     $('portfolioList').innerHTML='<div class="notice">IOL respondió, pero no pude reconocer la lista de activos. Abrí Técnico y pasame esa respuesta.</div>';
     return;
   }
-  $('portfolioList').innerHTML = a.positions.map(p=>`
+
+  $('portfolioList').innerHTML = a.positions.map(p=>{
+    const rec = recommendationForHolding(p, a.total);
+    return `
     <div class="asset">
       <div class="row">
         <div>
@@ -1898,14 +2001,31 @@ function renderPortfolio(a){
       </div>
       <div class="divider"></div>
       <div class="grid">
-        <div><div class="label">Valuación</div><div class="value mono">${Number.isFinite(p.value)?money(p.value):'—'}</div></div>
+        <div><div class="label">Valuación</div><div class="value mono money-sensitive">${Number.isFinite(p.value)?money(p.value):'—'}</div></div>
         <div><div class="label">Peso</div><div class="value mono">${Number.isFinite(p.weight)?pct(p.weight):'—'}</div></div>
-        <div><div class="label">Precio</div><div class="value mono">${Number.isFinite(p.px)?money(p.px):'—'}</div></div>
+        <div><div class="label">Precio</div><div class="value mono money-sensitive">${Number.isFinite(p.px)?money(p.px):'—'}</div></div>
         <div><div class="label">Día</div><div class="value mono ${p.ch<0?'bad':p.ch>0?'ok':''}">${pct(p.ch)}</div></div>
       </div>
-    </div>`).join('');
-}
 
+      <div class="analysisbox">
+        <div class="mini-title">Qué hacer con esta tenencia</div>
+        <div class="row">
+          <div>
+            <h3 style="font-size:16px">${escapeHtml(rec.accion)}</h3>
+            <div class="tiny">Puntaje ${rec.score} · ${escapeHtml(rec.plazo)}</div>
+          </div>
+          <span class="${pillClass(rec.kind)}">${escapeHtml(rec.kind === 'bad' ? 'Alerta' : rec.kind === 'ok' ? 'Favorable' : 'Controlar')}</span>
+        </div>
+        <p class="muted small"><b>Motivo:</b> ${escapeHtml(rec.motivo)}</p>
+        <p class="muted small"><b>Entrada / aumentar:</b> ${escapeHtml(rec.entrada)}</p>
+        <p class="muted small"><b>Salida / invalidación:</b> ${escapeHtml(rec.salida)}</p>
+        <p class="tiny"><b>Riesgo:</b> ${escapeHtml(rec.riesgo)}</p>
+      </div>
+    </div>`;
+  }).join('');
+
+  applyMoneyVisibility();
+}
 
 function normalizarTickerConsulta(valor){
   const t = String(valor || '').trim().toUpperCase();
