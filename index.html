@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d1117" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>IOL Cartera Segura</title>
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='42' fill='%230d1117'/><text x='96' y='118' font-family='Georgia,serif' font-size='86' font-weight='700' fill='%23f5c97b' text-anchor='middle'>IOL</text><circle cx='146' cy='50' r='10' fill='%2356d364'/></svg>" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='42' fill='%230d1117'/><text x='96' y='118' font-family='Georgia,serif' font-size='86' font-weight='700' fill='%23f5c97b' text-anchor='middle'>IOL</text><circle cx='146' cy='50' r='10' fill='%2356d364'/></svg>" />
+  <style>
+    :root{--bg:#0d1117;--card:#161b22;--card2:#1c232c;--line:#30363d;--txt:#f0f3f5;--muted:#9aa4af;--muted2:#6b7785;--accent:#f5c97b;--green:#56d364;--red:#ff7b72;--yellow:#ffd33d;--blue:#79c0ff;--shadow:0 14px 40px rgba(0,0,0,.25)}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.45;padding-bottom:92px} 
+    header{position:sticky;top:0;z-index:5;background:rgba(13,17,23,.94);backdrop-filter:blur(16px);padding:calc(env(safe-area-inset-top) + 16px) 18px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{display:flex;align-items:center;gap:10px}.logo{width:42px;height:42px;border-radius:13px;background:#10151d;display:grid;place-items:center;color:var(--accent);font-weight:900;font-family:Georgia,serif;position:relative}.logo:after{content:"";position:absolute;right:7px;top:7px;width:7px;height:7px;border-radius:50%;background:var(--green)}
+    h1{font-size:18px;margin:0}.sub{font-size:12px;color:var(--muted);margin-top:2px}.wrap{max-width:760px;margin:0 auto;padding:18px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+    .hero{background:linear-gradient(145deg,#1d2634,#111722);border-color:#39424f}.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.16em;color:var(--accent);font-weight:800}.total{font-size:34px;font-weight:900;letter-spacing:-.04em;margin:8px 0 2px}.muted{color:var(--muted)}.small{font-size:13px}.tiny{font-size:12px;color:var(--muted2)}
+    button,input{font:inherit}.btn{border:0;border-radius:13px;padding:13px 15px;font-weight:800;cursor:pointer}.btn-primary{background:var(--accent);color:#111}.btn-secondary{background:var(--card2);color:var(--txt);border:1px solid var(--line)}.btn-danger{background:rgba(255,123,114,.15);color:var(--red);border:1px solid rgba(255,123,114,.28)}.btn:active{transform:scale(.99)}
+    .topbtn{white-space:nowrap}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px}.label{font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted2);font-weight:800}.value{font-size:17px;font-weight:850;margin-top:5px;word-break:break-word}.ok{color:var(--green)}.bad{color:var(--red)}.warn{color:var(--yellow)}.blue{color:var(--blue)}
+    .pill{display:inline-flex;gap:6px;align-items:center;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:800;background:rgba(86,211,100,.12);color:var(--green);border:1px solid rgba(86,211,100,.22)}.pill.warn{background:rgba(255,211,61,.12);color:var(--yellow);border-color:rgba(255,211,61,.24)}.pill.bad{background:rgba(255,123,114,.12);color:var(--red);border-color:rgba(255,123,114,.24)}
+    .section{font-size:18px;font-weight:900;margin:22px 0 10px;border-left:4px solid var(--accent);padding-left:10px}.row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.divider{height:1px;background:var(--line);margin:12px 0}.asset{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px}.asset h3{margin:0;font-size:18px}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.input{width:100%;padding:14px;border-radius:13px;background:var(--card2);border:1px solid var(--line);color:var(--txt);outline:0}.input:focus{border-color:var(--accent)}.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.error{background:rgba(255,123,114,.1);border:1px solid rgba(255,123,114,.28);color:#ffd8d6;border-radius:14px;padding:12px}.notice{background:rgba(121,192,255,.1);border:1px solid rgba(121,192,255,.25);border-radius:14px;padding:12px;color:#d8ecff}.success{background:rgba(86,211,100,.1);border:1px solid rgba(86,211,100,.23);border-radius:14px;padding:12px;color:#d8ffdc}.hide{display:none!important}
+    nav{position:fixed;left:0;right:0;bottom:0;z-index:10;background:rgba(13,17,23,.96);backdrop-filter:blur(16px);border-top:1px solid var(--line);display:flex;padding:8px 6px calc(8px + env(safe-area-inset-bottom))}.tab{flex:1;background:transparent;border:0;color:var(--muted2);font-size:12px;font-weight:800;padding:8px}.tab.active{color:var(--accent)}
+    pre{white-space:pre-wrap;word-break:break-word;background:#090c10;border:1px solid var(--line);padding:12px;border-radius:12px;color:#c9d1d9;max-height:340px;overflow:auto}.loader{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.22);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="brand"><div class="logo">IOL</div><div><h1>Cartera Segura</h1><div class="sub" id="statusText">Sin conectar</div></div></div>
+  <button class="btn btn-primary topbtn" onclick="refreshNow()">Actualizar</button>
+</header>
+
+<main class="wrap">
+  <section id="screen-dashboard">
+    <div id="setupCard" class="card">
+      <div class="eyebrow">Primer uso</div>
+      <h2 style="margin:8px 0 6px">Conectar app con PIN privado</h2>
+      <p class="muted small">El PIN no es tu clave de IOL. Es una llave privada para que solo tu teléfono pueda pedir datos al servidor. No la compartas.</p>
+      <input id="pinInput" class="input mono" placeholder="Pegá tu APP_PIN privado" autocomplete="off" />
+      <div class="actions"><button class="btn btn-primary" onclick="savePin()">Guardar PIN</button><button class="btn btn-secondary" onclick="testConnection()">Probar</button></div>
+      <div id="setupMsg" style="margin-top:12px"></div>
+    </div>
+
+    <div class="card hero">
+      <div class="row"><div><div class="eyebrow">Actualización real</div><div class="total" id="mainTotal">—</div><div class="muted small" id="mainSub">Esperando datos desde IOL</div></div><span id="modePill" class="pill warn">Solo lectura</span></div>
+    </div>
+    <div class="grid">
+      <div class="stat"><div class="label">Estado</div><div class="value" id="connState">No conectado</div></div>
+      <div class="stat"><div class="label">Última lectura</div><div class="value small" id="updatedAt">—</div></div>
+      <div class="stat"><div class="label">Activos</div><div class="value" id="assetCount">—</div></div>
+      <div class="stat"><div class="label">Cotizaciones</div><div class="value" id="quoteCount">—</div></div>
+    </div>
+
+    <div id="messageArea" style="margin-top:14px"></div>
+
+    <div class="section">Tenencias</div>
+    <div id="portfolioList"><div class="notice">Cuando configures las variables privadas en Netlify y guardes el PIN, acá se cargará tu cartera real.</div></div>
+  </section>
+
+  <section id="screen-config" class="hide">
+    <div class="card">
+      <div class="eyebrow">Seguridad</div>
+      <h2 style="margin:8px 0">Configuración local</h2>
+      <p class="muted small">La app guarda en este teléfono solo el APP_PIN. Tu usuario y contraseña de IOL deben quedar únicamente en Netlify Environment Variables.</p>
+      <input id="pinInput2" class="input mono" placeholder="APP_PIN" autocomplete="off" />
+      <div class="actions"><button class="btn btn-primary" onclick="savePin2()">Guardar</button><button class="btn btn-danger" onclick="clearLocal()">Borrar del teléfono</button></div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">Automático</div>
+      <h2 style="margin:8px 0">Cómo actualiza</h2>
+      <p class="muted small">Actualiza al abrir, al tocar Actualizar y cada 5 minutos mientras la app esté abierta. No ejecuta compras ni ventas.</p>
+      <div id="autoState" class="success">Modo seguro: lectura solamente.</div>
+    </div>
+  </section>
+
+  <section id="screen-raw" class="hide">
+    <div class="card">
+      <div class="eyebrow">Diagnóstico</div>
+      <h2 style="margin:8px 0">Respuesta técnica</h2>
+      <p class="muted small">Esto sirve para revisar errores sin exponer tus claves. No compartas capturas si ves datos sensibles de cartera.</p>
+      <pre id="rawJson">Sin datos todavía.</pre>
+    </div>
+  </section>
+</main>
+
+<nav>
+  <button class="tab active" onclick="showTab('dashboard', this)">Cartera</button>
+  <button class="tab" onclick="showTab('config', this)">Config</button>
+  <button class="tab" onclick="showTab('raw', this)">Técnico</button>
+</nav>
+
+<script>
+const API = '/.netlify/functions/iol-dashboard';
+let lastData = null;
+let timer = null;
+
+function $(id){return document.getElementById(id)}
+function money(n){
+  const num = Number(n);
+  if(!Number.isFinite(num)) return '—';
+  return num.toLocaleString('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0});
+}
+function fmtDate(iso){
+  if(!iso) return '—';
+  try { return new Date(iso).toLocaleString('es-AR'); } catch { return iso; }
+}
+function getPin(){return localStorage.getItem('iol_app_pin') || ''}
+function savePin(){ const v=$('pinInput').value.trim(); if(v.length<10){$('setupMsg').innerHTML='<div class="error">El PIN debe tener mínimo 10 caracteres.</div>';return;} localStorage.setItem('iol_app_pin',v); $('setupMsg').innerHTML='<div class="success">PIN guardado en este teléfono.</div>'; $('setupCard').classList.add('hide'); refreshNow(); }
+function savePin2(){ const v=$('pinInput2').value.trim(); if(v.length<10){alert('PIN demasiado corto');return;} localStorage.setItem('iol_app_pin',v); alert('PIN guardado'); refreshNow(); }
+function clearLocal(){ localStorage.removeItem('iol_app_pin'); localStorage.removeItem('iol_last_snapshot'); location.reload(); }
+function showTab(name, btn){ ['dashboard','config','raw'].forEach(x=>$('screen-'+x).classList.toggle('hide',x!==name)); document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); if(name==='config') $('pinInput2').value=getPin(); }
+
+async function testConnection(){ await refreshNow(); }
+async function refreshNow(){
+  const pin = getPin();
+  if(!pin){ $('setupCard').classList.remove('hide'); $('messageArea').innerHTML='<div class="notice">Primero guardá tu APP_PIN.</div>'; return; }
+  $('setupCard').classList.add('hide');
+  $('statusText').innerHTML='<span class="loader"></span> Consultando IOL...';
+  $('connState').innerHTML='<span class="loader"></span> Actualizando';
+  $('messageArea').innerHTML='';
+  try{
+    const res = await fetch(API, { headers: { 'x-app-pin': pin }, cache: 'no-store' });
+    const data = await res.json();
+    $('rawJson').textContent = JSON.stringify(data, null, 2);
+    if(!res.ok || !data.ok){ throw new Error(data.error || 'No se pudo actualizar'); }
+    lastData = data;
+    localStorage.setItem('iol_last_snapshot', JSON.stringify(data));
+    render(data);
+  }catch(e){
+    $('statusText').textContent='Error de conexión';
+    $('connState').innerHTML='<span class="bad">Error</span>';
+    $('messageArea').innerHTML=`<div class="error"><b>No actualizó.</b><br>${e.message}<br><span class="tiny">Revisá variables privadas en Netlify: IOL_USERNAME, IOL_PASSWORD y APP_PIN.</span></div>`;
+    const cached = localStorage.getItem('iol_last_snapshot');
+    if(cached){ try{ render(JSON.parse(cached), true); }catch{} }
+  }
+}
+
+function extractPortfolioArray(portfolio){
+  if(Array.isArray(portfolio)) return portfolio;
+  return portfolio?.activos || portfolio?.titulos || portfolio?.items || portfolio?.tenencias || [];
+}
+function valueFromItem(item){
+  return item?.valuacion || item?.valorActual || item?.valorMercado || item?.importe || item?.monto || item?.total || item?.cantidadValuada;
+}
+function symbolFromItem(item){return item?.simbolo || item?.ticker || item?.titulo?.simbolo || item?.titulo?.ticker || item?.descripcion || 'Activo'}
+function qtyFromItem(item){return item?.cantidad || item?.nominales || item?.tenencia || item?.titulo?.cantidad || item?.disponible || ''}
+function priceFromQuote(q){ const d=q?.data||{}; return d.ultimoPrecio || d.precio || d.cotizacion || d.ultimo || d.ultimoOperado || null; }
+
+function render(data, cached=false){
+  $('statusText').textContent = cached ? 'Mostrando último dato guardado' : 'Datos reales desde IOL';
+  $('connState').innerHTML = cached ? '<span class="warn">Cache</span>' : '<span class="ok">Conectado</span>';
+  $('updatedAt').textContent = fmtDate(data.updatedAt);
+  $('modePill').className = data.security?.ordersEnabled ? 'pill bad' : 'pill';
+  $('modePill').textContent = data.security?.ordersEnabled ? 'Órdenes activas' : 'Solo lectura';
+
+  const arr = extractPortfolioArray(data.portfolio);
+  $('assetCount').textContent = arr.length || '—';
+  $('quoteCount').textContent = (data.quotes||[]).filter(q=>q.ok).length + '/' + (data.quotes||[]).length;
+
+  const estimated = arr.reduce((acc,it)=>acc+(Number(valueFromItem(it))||0),0);
+  $('mainTotal').textContent = estimated ? money(estimated) : 'Cartera IOL';
+  $('mainSub').textContent = data.source + (cached ? ' · guardado local' : '');
+
+  const warnings = data.warnings || [];
+  $('messageArea').innerHTML = warnings.length ? `<div class="notice"><b>Advertencias:</b><br>${warnings.map(w=>'• '+w).join('<br>')}</div>` : '<div class="success">Actualización correcta. No se expusieron credenciales al navegador.</div>';
+
+  if(!arr.length){
+    $('portfolioList').innerHTML = '<div class="notice">IOL respondió, pero no pude reconocer la lista de activos. Abrí la pestaña Técnico para revisar la forma de la respuesta.</div>';
+    return;
+  }
+  const quotesBySymbol = new Map((data.quotes||[]).map(q=>[q.symbol,q]));
+  $('portfolioList').innerHTML = arr.map(it=>{
+    const sym = String(symbolFromItem(it));
+    const q = quotesBySymbol.get(sym.toUpperCase());
+    const px = priceFromQuote(q);
+    const value = valueFromItem(it);
+    const qty = qtyFromItem(it);
+    return `<div class="asset">
+      <div class="row"><div><h3>${escapeHtml(sym)}</h3><div class="tiny">Cantidad: <span class="mono">${escapeHtml(String(qty||'—'))}</span></div></div><span class="pill ${q?.ok?'':'warn'}">${q?.ok?'Cotiza':'Sin cotización'}</span></div>
+      <div class="divider"></div>
+      <div class="grid"><div><div class="label">Valuación</div><div class="value mono">${value?money(value):'—'}</div></div><div><div class="label">Precio</div><div class="value mono">${px?money(px):'—'}</div></div></div>
+    </div>`;
+  }).join('');
+}
+function escapeHtml(s){return String(s).replace(/[&<>'"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+
+function boot(){
+  const pin = getPin();
+  if(pin){ $('setupCard').classList.add('hide'); refreshNow(); }
+  else { $('setupCard').classList.remove('hide'); }
+  timer = setInterval(()=>{ if(getPin() && document.visibilityState==='visible') refreshNow(); }, 5*60*1000);
+}
+boot();
+</script>
+</body>
+</html>
