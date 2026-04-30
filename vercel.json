@@ -9,10 +9,5 @@
       "source": "/.netlify/functions/:path*",
       "destination": "/api/:path*"
     }
-  ],
-  "functions": {
-    "api/*.js": {
-      "runtime": "nodejs22.x"
-    }
-  }
+  ]
 }
