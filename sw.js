@@ -1,8 +1,8 @@
-const CACHE_NAME = "iol-radar-tactico-v1";
+const CACHE_NAME = "iol-cartera-pro-reparada-v1";
 const FILES = [
   "./",
   "./index.html",
-  "./manifest.webmanifest",
+  "./manifest.json",
   "./icon-192.png",
   "./icon-512.png"
 ];
@@ -22,7 +22,9 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
-  );
+  if (event.request.url.includes("/.netlify/functions/")) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+  event.respondWith(caches.match(event.request).then((cached) => cached || fetch(event.request)));
 });

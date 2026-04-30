@@ -1,903 +1,591 @@
 <!doctype html>
 <html lang="es-AR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#07111f" />
-  <meta name="description" content="Panel táctico para analizar oportunidades en BYMA, CEDEARs, bonos y caución con datos cargados por el usuario." />
-  <link rel="manifest" href="./manifest.webmanifest" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d1117" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>IOL Cartera Pro - Reparada</title>
+  <link rel="manifest" href="./manifest.json" />
   <link rel="apple-touch-icon" href="./icon-192.png" />
-  <title>IOL Radar Táctico</title>
+  <link rel="icon" href="./icon-192.png" />
   <style>
     :root{
-      --fondo:#07111f;
-      --fondo2:#0d1b2f;
-      --tarjeta:#101f35;
-      --tarjeta2:#13243d;
-      --linea:rgba(255,255,255,.11);
-      --texto:#eef5ff;
-      --suave:#a9b8cf;
-      --muted:#7f8da3;
-      --verde:#18c37e;
-      --amarillo:#ffd166;
-      --naranja:#ff9f1c;
-      --rojo:#ff5c7a;
-      --azul:#5aa9ff;
-      --violeta:#b18cff;
-      --sombra:0 16px 40px rgba(0,0,0,.28);
-      --radio:22px;
+      --bg:#0d1117;--card:#161b22;--card2:#1c232c;--card3:#101722;
+      --line:#30363d;--txt:#f0f3f5;--muted:#a8b2bc;--muted2:#6b7785;
+      --accent:#f5c97b;--green:#56d364;--red:#ff7b72;--yellow:#ffd33d;
+      --blue:#79c0ff;--violet:#c297ff;--shadow:0 12px 32px rgba(0,0,0,.24)
     }
     *{box-sizing:border-box}
-    html,body{margin:0;min-height:100%;background:linear-gradient(145deg,var(--fondo),#08182a 45%,#091525);color:var(--texto);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
-    body{padding-bottom:90px}
-    button,input,select,textarea{font:inherit}
-    .app{width:min(1120px,100%);margin:auto;padding:18px}
-    .superior{
-      position:sticky;top:0;z-index:20;
-      margin:-18px -18px 18px;
-      padding:16px 18px 12px;
-      background:rgba(7,17,31,.86);
-      backdrop-filter:blur(14px);
-      border-bottom:1px solid var(--linea);
+    body{
+      margin:0;background:var(--bg);color:var(--txt);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      line-height:1.45;padding-bottom:94px;-webkit-font-smoothing:antialiased
     }
-    .marca{display:flex;align-items:center;gap:12px}
+    header{
+      position:sticky;top:0;z-index:10;background:rgba(13,17,23,.94);
+      backdrop-filter:blur(16px);padding:calc(env(safe-area-inset-top) + 15px) 16px 13px;
+      border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px
+    }
+    .brand{display:flex;align-items:center;gap:10px;min-width:0}
     .logo{
-      width:46px;height:46px;border-radius:16px;
-      background:radial-gradient(circle at 30% 25%,#70c7ff,#1e6fff 44%,#0c1b31 82%);
-      display:grid;place-items:center;font-weight:900;font-size:20px;box-shadow:0 10px 28px rgba(90,169,255,.25)
+      width:42px;height:42px;border-radius:13px;background:#10151d;display:grid;place-items:center;
+      color:var(--accent);font-weight:950;font-family:Georgia,serif;position:relative;box-shadow:var(--shadow);flex:0 0 auto
     }
-    h1{margin:0;font-size:1.28rem;letter-spacing:-.03em}
-    .subtitulo{margin:2px 0 0;color:var(--suave);font-size:.88rem;line-height:1.25}
-    .estado-datos{
-      display:inline-flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--linea);
-      border-radius:999px;color:var(--suave);background:rgba(255,255,255,.04);font-size:.82rem;margin-top:12px
+    .logo:after{content:"";position:absolute;right:7px;top:7px;width:7px;height:7px;border-radius:50%;background:var(--green)}
+    h1{font-size:17px;margin:0;letter-spacing:-.02em}
+    h2{font-size:19px;margin:0 0 10px;letter-spacing:-.02em}
+    h3{font-size:18px;margin:0}
+    .sub{font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:210px}
+    .wrap{max-width:820px;margin:0 auto;padding:16px}
+    .card{
+      background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)
     }
-    .punto{width:9px;height:9px;border-radius:99px;background:var(--rojo);box-shadow:0 0 0 4px rgba(255,92,122,.12)}
-    .punto.ok{background:var(--verde);box-shadow:0 0 0 4px rgba(24,195,126,.12)}
-    .hero{
-      display:grid;grid-template-columns:1.25fr .75fr;gap:16px;margin-bottom:16px
-    }
-    .panel{
-      background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.025));
-      border:1px solid var(--linea);
-      border-radius:var(--radio);
-      box-shadow:var(--sombra);
-      overflow:hidden;
-    }
-    .panel-inner{padding:18px}
-    .titulo-panel{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
-    .titulo-panel h2{margin:0;font-size:1rem;letter-spacing:-.02em}
-    .tag{
-      display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;
-      border:1px solid var(--linea);color:var(--suave);background:rgba(255,255,255,.04);font-size:.8rem
-    }
-    .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-    .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-    .dato{
-      background:rgba(255,255,255,.045);border:1px solid var(--linea);border-radius:18px;padding:14px
-    }
-    .dato .label{color:var(--muted);font-size:.78rem;margin-bottom:6px}
-    .dato .valor{font-weight:850;font-size:1.08rem}
-    .dato .pie{color:var(--suave);font-size:.78rem;margin-top:6px;line-height:1.25}
-    label{display:block;color:var(--suave);font-size:.82rem;margin-bottom:7px}
-    input,select,textarea{
-      width:100%;border:1px solid var(--linea);background:rgba(255,255,255,.055);color:var(--texto);
-      border-radius:16px;padding:13px 14px;outline:none
-    }
-    textarea{min-height:170px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.82rem;line-height:1.4}
-    input:focus,select:focus,textarea:focus{border-color:rgba(90,169,255,.75);box-shadow:0 0 0 4px rgba(90,169,255,.12)}
-    .botonera{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .hero{background:linear-gradient(145deg,#1d2634,#111722);border-color:#39424f}
+    .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.16em;color:var(--accent);font-weight:900}
+    .total{font-size:34px;font-weight:950;letter-spacing:-.05em;margin:8px 0 2px}
+    .muted{color:var(--muted)}.small{font-size:13px}.tiny{font-size:12px;color:var(--muted2)}
+    button,input{font:inherit}
     .btn{
-      border:0;cursor:pointer;border-radius:16px;padding:13px 15px;font-weight:800;color:#07111f;
-      background:linear-gradient(135deg,#78c6ff,#5aa9ff);box-shadow:0 10px 26px rgba(90,169,255,.22)
+      border:0;border-radius:13px;padding:13px 14px;font-weight:900;cursor:pointer;min-height:46px
     }
-    .btn.sec{background:rgba(255,255,255,.06);color:var(--texto);border:1px solid var(--linea);box-shadow:none}
-    .btn.peligro{background:rgba(255,92,122,.14);color:#ffdbe3;border:1px solid rgba(255,92,122,.35);box-shadow:none}
-    .btn:active{transform:translateY(1px)}
-    .alerta{
-      border:1px solid rgba(255,209,102,.28);
-      background:rgba(255,209,102,.09);
-      color:#fff2c7;
-      border-radius:18px;padding:13px 14px;line-height:1.35;font-size:.9rem;margin-top:12px
+    .btn-primary{background:var(--accent);color:#111}
+    .btn-secondary{background:var(--card2);color:var(--txt);border:1px solid var(--line)}
+    .btn-danger{background:rgba(255,123,114,.15);color:var(--red);border:1px solid rgba(255,123,114,.28)}
+    .btn:active{transform:scale(.99)}
+    .topbtn{white-space:nowrap;padding:12px 13px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .stat{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px}
+    .label{font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted2);font-weight:900}
+    .value{font-size:17px;font-weight:900;margin-top:5px;word-break:break-word}
+    .ok{color:var(--green)}.bad{color:var(--red)}.warnc{color:var(--yellow)}.blue{color:var(--blue)}.violet{color:var(--violet)}
+    .pill{
+      display:inline-flex;gap:6px;align-items:center;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:900;
+      background:rgba(86,211,100,.12);color:var(--green);border:1px solid rgba(86,211,100,.22);white-space:nowrap
     }
-    .error{
-      border:1px solid rgba(255,92,122,.35);
-      background:rgba(255,92,122,.1);
-      color:#ffdbe3;
-      border-radius:18px;padding:13px 14px;line-height:1.35;font-size:.9rem;margin-top:12px
+    .pill.warn{background:rgba(255,211,61,.12);color:var(--yellow);border-color:rgba(255,211,61,.24)}
+    .pill.bad{background:rgba(255,123,114,.12);color:var(--red);border-color:rgba(255,123,114,.24)}
+    .pill.blue{background:rgba(121,192,255,.12);color:var(--blue);border-color:rgba(121,192,255,.24)}
+    .pill.violet{background:rgba(194,151,255,.12);color:var(--violet);border-color:rgba(194,151,255,.24)}
+    .section{
+      font-size:18px;font-weight:950;margin:22px 0 10px;border-left:4px solid var(--accent);padding-left:10px
     }
-    .okmsg{
-      border:1px solid rgba(24,195,126,.3);
-      background:rgba(24,195,126,.1);
-      color:#c8ffe7;
-      border-radius:18px;padding:13px 14px;line-height:1.35;font-size:.9rem;margin-top:12px
+    .row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+    .divider{height:1px;background:var(--line);margin:12px 0}
+    .asset,.rec{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+    .input{
+      width:100%;padding:14px;border-radius:13px;background:var(--card2);border:1px solid var(--line);color:var(--txt);outline:0
     }
-    .seccion{margin-top:18px}
-    .seccion h2{font-size:1.05rem;margin:0 0 12px;letter-spacing:-.02em}
-    .resumen-mercado{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
-    .mini{
-      background:rgba(255,255,255,.045);border:1px solid var(--linea);border-radius:18px;padding:12px;min-height:92px
+    .input:focus{border-color:var(--accent)}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+    .error{background:rgba(255,123,114,.1);border:1px solid rgba(255,123,114,.28);color:#ffd8d6;border-radius:14px;padding:12px}
+    .notice{background:rgba(121,192,255,.1);border:1px solid rgba(121,192,255,.25);border-radius:14px;padding:12px;color:#d8ecff}
+    .success{background:rgba(86,211,100,.1);border:1px solid rgba(86,211,100,.23);border-radius:14px;padding:12px;color:#d8ffdc}
+    .warning{background:rgba(255,211,61,.1);border:1px solid rgba(255,211,61,.25);border-radius:14px;padding:12px;color:#fff0ad}
+    .hide{display:none!important}
+    .plan{list-style:none;counter-reset:s;padding:0;margin:0}
+    .plan li{
+      counter-increment:s;background:var(--card2);border:1px solid var(--line);border-radius:14px;
+      padding:13px 13px 13px 52px;margin-bottom:9px;position:relative
     }
-    .mini .k{color:var(--muted);font-size:.72rem;margin-bottom:8px}
-    .mini .v{font-weight:850;font-size:.98rem;word-break:break-word}
-    .mini .c{font-size:.72rem;margin-top:8px;color:var(--suave)}
-    .recomendaciones{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
-    .card-rec{
-      position:relative;overflow:hidden;
-      background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.025));
-      border:1px solid var(--linea);
-      border-radius:24px;padding:16px;box-shadow:var(--sombra)
+    .plan li:before{
+      content:counter(s);position:absolute;left:13px;top:12px;width:28px;height:28px;border-radius:50%;
+      background:var(--accent);color:#111;display:grid;place-items:center;font-weight:950
     }
-    .card-rec:before{
-      content:"";position:absolute;inset:0 auto 0 0;width:5px;background:var(--azul)
+    .scorebar{height:5px;background:var(--line);border-radius:99px;overflow:hidden;margin-top:10px}
+    .scorebar span{display:block;height:100%;background:var(--accent);border-radius:99px}
+    nav{
+      position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(13,17,23,.96);
+      backdrop-filter:blur(16px);border-top:1px solid var(--line);
+      display:flex;padding:8px 6px calc(8px + env(safe-area-inset-bottom))
     }
-    .card-rec.riesgo-bajo:before{background:var(--verde)}
-    .card-rec.riesgo-moderado:before{background:var(--amarillo)}
-    .card-rec.riesgo-alto:before{background:var(--naranja)}
-    .card-rec.riesgo-muy-alto:before{background:var(--rojo)}
-    .rec-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-    .activo{font-size:1.22rem;font-weight:950;letter-spacing:-.04em;margin:0}
-    .nombre-activo{color:var(--suave);font-size:.83rem;margin-top:2px}
-    .tipo{color:var(--muted);font-size:.75rem;margin-top:7px}
-    .accion{
-      padding:9px 11px;border-radius:999px;font-weight:950;font-size:.78rem;white-space:nowrap;border:1px solid var(--linea);
-      background:rgba(255,255,255,.06)
+    .tab{flex:1;background:transparent;border:0;color:var(--muted2);font-size:11px;font-weight:900;padding:8px 2px}
+    .tab.active{color:var(--accent)}
+    pre{
+      white-space:pre-wrap;word-break:break-word;background:#090c10;border:1px solid var(--line);
+      padding:12px;border-radius:12px;color:#c9d1d9;max-height:360px;overflow:auto
     }
-    .accion.comprar{background:rgba(24,195,126,.16);border-color:rgba(24,195,126,.35);color:#bfffe3}
-    .accion.esperar{background:rgba(255,209,102,.15);border-color:rgba(255,209,102,.35);color:#fff0bf}
-    .accion.vender{background:rgba(255,159,28,.14);border-color:rgba(255,159,28,.35);color:#ffe2bd}
-    .accion.no-operar{background:rgba(255,92,122,.14);border-color:rgba(255,92,122,.35);color:#ffdbe3}
-    .scorebox{display:grid;grid-template-columns:92px 1fr;gap:13px;align-items:center;margin:15px 0}
-    .medidor{
-      width:92px;height:92px;border-radius:28px;display:grid;place-items:center;
-      background:conic-gradient(var(--azul) calc(var(--score)*1%),rgba(255,255,255,.09) 0);
-      box-shadow:inset 0 0 0 1px var(--linea)
+    .loader{
+      display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.22);
+      border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite
     }
-    .medidor span{
-      width:68px;height:68px;border-radius:22px;background:#0d1b2f;display:grid;place-items:center;font-weight:950;font-size:1.25rem
-    }
-    .lectura{color:var(--suave);font-size:.86rem;line-height:1.35}
-    .niveles{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:12px}
-    .nivel{border:1px solid var(--linea);background:rgba(255,255,255,.045);border-radius:16px;padding:11px}
-    .nivel .nlabel{color:var(--muted);font-size:.72rem;margin-bottom:4px}
-    .nivel .nvalor{font-weight:850;font-size:.91rem}
-    .motivo{
-      margin-top:12px;border-top:1px solid var(--linea);padding-top:12px;color:var(--suave);font-size:.86rem;line-height:1.36
-    }
-    .chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
-    .chip{font-size:.74rem;padding:7px 9px;border:1px solid var(--linea);border-radius:999px;color:var(--suave);background:rgba(255,255,255,.04)}
-    .listas{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-    .lista{
-      border:1px solid var(--linea);background:rgba(255,255,255,.035);border-radius:22px;padding:15px
-    }
-    .lista h3{margin:0 0 10px;font-size:.98rem}
-    .lista ul{margin:0;padding-left:18px;color:var(--suave);font-size:.88rem;line-height:1.55}
-    .vacio{
-      border:1px dashed rgba(255,255,255,.18);border-radius:22px;padding:20px;color:var(--suave);text-align:center;background:rgba(255,255,255,.025)
-    }
-    .pie-app{
-      color:var(--muted);font-size:.78rem;line-height:1.45;margin:20px 0 0;text-align:center
-    }
-    .barra-inferior{
-      position:fixed;left:0;right:0;bottom:0;z-index:30;padding:10px 14px calc(10px + env(safe-area-inset-bottom));
-      background:rgba(7,17,31,.9);backdrop-filter:blur(14px);border-top:1px solid var(--linea);
-      display:none;gap:8px;justify-content:center
-    }
-    .barra-inferior .btn{width:min(520px,100%)}
-    @media(max-width:900px){
-      .hero{grid-template-columns:1fr}
-      .resumen-mercado{grid-template-columns:repeat(3,1fr)}
-      .recomendaciones{grid-template-columns:1fr}
-      .listas{grid-template-columns:1fr}
-      .grid3{grid-template-columns:1fr}
-    }
+    @keyframes spin{to{transform:rotate(360deg)}}
     @media(max-width:560px){
-      .app{padding:14px}
-      .superior{margin:-14px -14px 14px;padding:14px}
-      h1{font-size:1.12rem}
-      .subtitulo{font-size:.8rem}
-      .panel-inner{padding:14px}
-      .grid2{grid-template-columns:1fr}
-      .resumen-mercado{grid-template-columns:repeat(2,1fr)}
-      .scorebox{grid-template-columns:82px 1fr}
-      .medidor{width:82px;height:82px;border-radius:24px}
-      .medidor span{width:60px;height:60px;border-radius:20px}
-      .niveles{grid-template-columns:1fr}
-      .accion{font-size:.72rem}
-      .barra-inferior{display:flex}
+      .wrap{padding:14px}.grid3{grid-template-columns:1fr}.total{font-size:31px}
+      .sub{max-width:170px}.actions{grid-template-columns:1fr}
     }
   </style>
 </head>
 <body>
-  <div class="app">
-    <header class="superior">
-      <div class="marca">
-        <div class="logo">I</div>
+<header>
+  <div class="brand">
+    <div class="logo">IOL</div>
+    <div>
+      <h1>Cartera Pro</h1>
+      <div class="sub" id="statusText">Sin conectar</div>
+    </div>
+  </div>
+  <button class="btn btn-primary topbtn" onclick="refreshNow()">Actualizar</button>
+</header>
+
+<main class="wrap">
+  <section id="screen-hoy">
+    <div id="setupCard" class="card">
+      <div class="eyebrow">Primer uso</div>
+      <h2>Conectar con PIN privado</h2>
+      <p class="muted small">El PIN no es tu clave de IOL. Es la llave privada APP_PIN configurada en Netlify. Tu usuario y contraseña no quedan en el teléfono.</p>
+      <input id="pinInput" class="input mono" placeholder="Pegá tu APP_PIN privado" autocomplete="off" />
+      <div class="actions">
+        <button class="btn btn-primary" onclick="savePin()">Guardar PIN</button>
+        <button class="btn btn-secondary" onclick="testConnection()">Probar conexión</button>
+      </div>
+      <div id="setupMsg" style="margin-top:12px"></div>
+    </div>
+
+    <div class="card hero">
+      <div class="row">
         <div>
-          <h1>IOL Radar Táctico</h1>
-          <p class="subtitulo">Análisis diario para acciones argentinas, CEDEARs, bonos y caución. Sin datos reales, no emite recomendación operativa.</p>
+          <div class="eyebrow">Cartera real IOL</div>
+          <div class="total" id="mainTotal">—</div>
+          <div class="muted small" id="mainSub">Esperando datos desde IOL</div>
         </div>
+        <span id="modePill" class="pill warn">Solo lectura</span>
       </div>
-      <div id="estadoDatos" class="estado-datos"><span class="punto"></span><span>Sin datos reales cargados</span></div>
-    </header>
+    </div>
 
-    <section class="hero">
-      <div class="panel">
-        <div class="panel-inner">
-          <div class="titulo-panel">
-            <h2>Panel de decisión</h2>
-            <span class="tag">Mercado argentino + exterior</span>
-          </div>
-          <div class="grid3">
-            <div>
-              <label for="capital">Capital disponible</label>
-              <input id="capital" inputmode="numeric" value="5000000" />
-            </div>
-            <div>
-              <label for="perfil">Perfil operativo</label>
-              <select id="perfil">
-                <option value="moderado">Moderado</option>
-                <option value="tactico">Táctico</option>
-                <option value="conservador">Conservador</option>
-              </select>
-            </div>
-            <div>
-              <label for="horizonte">Horizonte principal</label>
-              <select id="horizonte">
-                <option value="corto">Corto plazo</option>
-                <option value="intradiario">Intradiario</option>
-                <option value="mediano">Mediano plazo</option>
-              </select>
-            </div>
-          </div>
-          <div id="mensajePrincipal" class="alerta">
-            Faltan datos reales de mercado para emitir una recomendación operativa confiable. Podés cargar datos manualmente en formato JSON o usar el ejemplo educativo para probar la app.
-          </div>
-          <div class="botonera">
-            <button class="btn" id="btnAnalizar">Analizar cartera</button>
-            <button class="btn sec" id="btnEjemplo">Cargar ejemplo educativo</button>
-            <button class="btn peligro" id="btnLimpiar">Limpiar datos</button>
-          </div>
-        </div>
+    <div class="grid">
+      <div class="stat"><div class="label">Estado</div><div class="value" id="connState">No conectado</div></div>
+      <div class="stat"><div class="label">Última lectura</div><div class="value small" id="updatedAt">—</div></div>
+      <div class="stat"><div class="label">Activos</div><div class="value" id="assetCount">—</div></div>
+      <div class="stat"><div class="label">Señal general</div><div class="value" id="generalSignal">—</div></div>
+    </div>
+
+    <div id="messageArea" style="margin-top:14px"></div>
+
+    <div class="section">Plan operativo</div>
+    <ol id="dailyPlan" class="plan"><li>Conectá la app para generar plan con datos reales.</li></ol>
+  </section>
+
+  <section id="screen-recs" class="hide">
+    <div class="card">
+      <div class="eyebrow">Recomendaciones</div>
+      <h2>Qué haría hoy</h2>
+      <p class="muted small">Motor táctico basado en tus tenencias reales, concentración, variación diaria, precio y cotizaciones disponibles desde IOL. No ejecuta órdenes.</p>
+    </div>
+    <div id="recommendationsList"><div class="notice">Actualizá la app para ver recomendaciones.</div></div>
+
+    <div class="section">Ideas / watchlist</div>
+    <div id="ideasList"><div class="notice">Se carga con la watchlist configurada en el backend.</div></div>
+  </section>
+
+  <section id="screen-cartera" class="hide">
+    <div class="section">Tenencias</div>
+    <div id="portfolioList"><div class="notice">Cuando guardes el PIN y actualices, acá se cargará tu cartera real.</div></div>
+  </section>
+
+  <section id="screen-config" class="hide">
+    <div class="card">
+      <div class="eyebrow">Seguridad</div>
+      <h2>Configuración local</h2>
+      <p class="muted small">La app guarda en este teléfono solo el APP_PIN. Las credenciales IOL deben quedar únicamente en Netlify Environment Variables.</p>
+      <input id="pinInput2" class="input mono" placeholder="APP_PIN" autocomplete="off" />
+      <div class="actions">
+        <button class="btn btn-primary" onclick="savePin2()">Guardar</button>
+        <button class="btn btn-danger" onclick="clearLocal()">Borrar del teléfono</button>
       </div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">Estado</div>
+      <h2>Conexión usada</h2>
+      <p class="muted small">Esta reparación vuelve a usar el endpoint real del repositorio:</p>
+      <div class="success mono">/.netlify/functions/iol-dashboard</div>
+    </div>
+  </section>
 
-      <div class="panel">
-        <div class="panel-inner">
-          <div class="titulo-panel">
-            <h2>Criterio del motor</h2>
-            <span class="tag">0 a 100</span>
-          </div>
-          <div class="grid2">
-            <div class="dato">
-              <div class="label">80 a 100</div>
-              <div class="valor">Oportunidad fuerte</div>
-              <div class="pie">Solo si respeta entrada, stop y liquidez.</div>
-            </div>
-            <div class="dato">
-              <div class="label">65 a 79</div>
-              <div class="valor">Oportunidad moderada</div>
-              <div class="pie">Requiere confirmación.</div>
-            </div>
-            <div class="dato">
-              <div class="label">50 a 64</div>
-              <div class="valor">Observar</div>
-              <div class="pie">No perseguir precio.</div>
-            </div>
-            <div class="dato">
-              <div class="label">Menor a 50</div>
-              <div class="valor">No operar</div>
-              <div class="pie">Preservar capital.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+  <section id="screen-raw" class="hide">
+    <div class="card">
+      <div class="eyebrow">Diagnóstico</div>
+      <h2>Respuesta técnica</h2>
+      <p class="muted small">Sirve para revisar errores. No compartas capturas si ves datos sensibles de cartera.</p>
+      <pre id="rawJson">Sin datos todavía.</pre>
+    </div>
+  </section>
+</main>
 
-    <section class="seccion">
-      <div class="titulo-panel">
-        <h2>Resumen del mercado</h2>
-        <span class="tag" id="fechaDatos">Sin fecha de datos</span>
-      </div>
-      <div id="resumenMercado" class="resumen-mercado"></div>
-    </section>
-
-    <section class="seccion">
-      <div class="panel">
-        <div class="panel-inner">
-          <div class="titulo-panel">
-            <h2>Cargar datos del día</h2>
-            <span class="tag">JSON</span>
-          </div>
-          <p class="subtitulo" style="margin-bottom:12px">Pegá datos reales de tu fuente, planilla o API. La app no inventa precios: analiza lo que cargues.</p>
-          <textarea id="jsonDatos" spellcheck="false" placeholder='Pegá aquí el JSON con datos reales del día...'></textarea>
-          <div class="botonera">
-            <button class="btn" id="btnCargarJson">Cargar y analizar</button>
-            <button class="btn sec" id="btnCopiarFormato">Copiar formato base</button>
-          </div>
-          <div id="mensajeJson"></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="seccion">
-      <div class="titulo-panel">
-        <h2>Mejores oportunidades del día</h2>
-        <span class="tag" id="contadorOportunidades">0 activos</span>
-      </div>
-      <div id="recomendaciones" class="recomendaciones"></div>
-    </section>
-
-    <section class="seccion">
-      <div class="listas">
-        <div class="lista">
-          <h3>Activos a evitar</h3>
-          <ul id="evitar"></ul>
-        </div>
-        <div class="lista">
-          <h3>Caución / refugio</h3>
-          <ul id="refugio"></ul>
-        </div>
-        <div class="lista">
-          <h3>Alertas importantes</h3>
-          <ul id="alertas"></ul>
-        </div>
-      </div>
-    </section>
-
-    <section class="seccion">
-      <div class="panel">
-        <div class="panel-inner">
-          <div class="titulo-panel">
-            <h2>Aspectos analizados</h2>
-            <span class="tag">Filtro profesional</span>
-          </div>
-          <div class="listas">
-            <div class="lista">
-              <h3>Argentina</h3>
-              <ul>
-                <li>Merval, volumen y tendencia general.</li>
-                <li>Dólar MEP, CCL, riesgo país y bonos.</li>
-                <li>BCRA, inflación, Tesoro y contexto político.</li>
-              </ul>
-            </div>
-            <div class="lista">
-              <h3>Exterior</h3>
-              <ul>
-                <li>S&amp;P 500, Nasdaq, tasas de la FED e inflación de EE.UU.</li>
-                <li>Balances, tecnología, petróleo, oro y dólar global.</li>
-                <li>Noticias internacionales con impacto en CEDEARs.</li>
-              </ul>
-            </div>
-            <div class="lista">
-              <h3>Activo</h3>
-              <ul>
-                <li>Tendencia, volumen, momentum y liquidez.</li>
-                <li>Catalizador, riesgo y relación riesgo/beneficio.</li>
-                <li>Entrada, objetivo, stop e invalidación.</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <p class="pie-app">
-      Herramienta de análisis. No garantiza resultados ni reemplaza tu criterio. Usá siempre gestión de riesgo, posición limitada y stop definido.
-    </p>
-  </div>
-
-  <div class="barra-inferior">
-    <button class="btn" id="btnInstalar" style="display:none">Instalar app en el celular</button>
-  </div>
+<nav>
+  <button class="tab active" onclick="showTab('hoy', this)">Hoy</button>
+  <button class="tab" onclick="showTab('recs', this)">Recom.</button>
+  <button class="tab" onclick="showTab('cartera', this)">Cartera</button>
+  <button class="tab" onclick="showTab('config', this)">Config</button>
+  <button class="tab" onclick="showTab('raw', this)">Técnico</button>
+</nav>
 
 <script>
-const $ = (id) => document.getElementById(id);
+const API = './.netlify/functions/iol-dashboard'.replace('./.netlify','/.netlify');
+let lastData = null;
+let timer = null;
 
-let datosActuales = null;
-let diferidoInstalacion = null;
+function $(id){return document.getElementById(id)}
+function money(n){ const num=toNumber(n); if(!Number.isFinite(num)) return '—'; return num.toLocaleString('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}); }
+function pct(n){ const num=toNumber(n); if(!Number.isFinite(num)) return '—'; return (num>0?'+':'') + num.toLocaleString('es-AR',{maximumFractionDigits:2}) + '%'; }
+function fmtDate(iso){ if(!iso) return '—'; try { return new Date(iso).toLocaleString('es-AR',{dateStyle:'short', timeStyle:'short'}); } catch { return iso; } }
+function toNumber(v){
+  if(v===null||v===undefined||v==='') return NaN;
+  if(typeof v==='number') return v;
+  let s=String(v).replace(/\$/g,'').replace(/\s/g,'');
+  if(s.includes(',') && s.includes('.')) s=s.replace(/\./g,'').replace(',', '.');
+  else if(s.includes(',')) s=s.replace(',', '.');
+  const n=Number(s.replace(/[^\d.-]/g,''));
+  return Number.isFinite(n)?n:NaN;
+}
+function escapeHtml(s){return String(s ?? '').replace(/[&<>'"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
 
-const FORMATO_BASE = {
-  fecha: "2026-04-30",
-  modo: "real",
-  mercado: {
-    merval: { valor: "", cambio: "", lectura: "" },
-    dolarMEP: { valor: "", cambio: "", lectura: "" },
-    dolarCCL: { valor: "", cambio: "", lectura: "" },
-    riesgoPais: { valor: "", cambio: "", lectura: "" },
-    sp500: { valor: "", cambio: "", lectura: "" },
-    nasdaq: { valor: "", cambio: "", lectura: "" },
-    tasaCaucion: { valor: "", cambio: "", lectura: "" },
-    bonos: { valor: "", cambio: "", lectura: "" }
-  },
-  alertas: [
-    "Completar con noticias o eventos relevantes del día."
-  ],
-  activos: [
-    {
-      ticker: "GGAL",
-      nombre: "Grupo Financiero Galicia",
-      tipo: "Acción argentina",
-      precio: 0,
-      moneda: "ARS",
-      zonaEntrada: "Completar",
-      objetivo1: "Completar",
-      objetivo2: "Completar",
-      stop: "Completar",
-      tendencia: 0,
-      volumen: 0,
-      momentum: 0,
-      liquidez: 0,
-      catalizador: 0,
-      contextoLocal: 0,
-      contextoInternacional: 0,
-      riesgo: 0,
-      riesgoBeneficio: 0,
-      noticia: "Completar",
-      horizonte: "Corto plazo"
-    }
-  ]
-};
-
-const EJEMPLO_EDUCATIVO = {
-  fecha: "Ejemplo educativo - no usar como señal real",
-  modo: "educativo",
-  mercado: {
-    merval: { valor: "Ejemplo", cambio: "+", lectura: "Tendencia positiva, pero requiere confirmar volumen." },
-    dolarMEP: { valor: "Ejemplo", cambio: "Estable", lectura: "Sin presión fuerte en el ejemplo." },
-    dolarCCL: { valor: "Ejemplo", cambio: "Leve suba", lectura: "Vigilar brecha y CEDEARs." },
-    riesgoPais: { valor: "Ejemplo", cambio: "Alto", lectura: "Mantiene riesgo en bonos soberanos." },
-    sp500: { valor: "Ejemplo", cambio: "+", lectura: "Exterior acompaña en el ejemplo." },
-    nasdaq: { valor: "Ejemplo", cambio: "+", lectura: "Mejora apetito por tecnología." },
-    tasaCaucion: { valor: "Ejemplo", cambio: "Atractiva", lectura: "Sirve como espera cuando no hay entrada clara." },
-    bonos: { valor: "Ejemplo", cambio: "Mixto", lectura: "Solo con gestión de riesgo." }
-  },
-  alertas: [
-    "Ejemplo educativo: no representa precios reales.",
-    "No perseguir activos si abren con gap fuerte.",
-    "Usar caución si no hay entrada limpia."
-  ],
-  activos: [
-    {
-      ticker: "GGAL",
-      nombre: "Grupo Financiero Galicia",
-      tipo: "Acción argentina",
-      precio: "Ejemplo",
-      moneda: "ARS",
-      zonaEntrada: "Solo sobre soporte confirmado",
-      objetivo1: "Primer objetivo técnico",
-      objetivo2: "Extensión si mantiene volumen",
-      stop: "Pierde soporte con volumen",
-      tendencia: 82,
-      volumen: 78,
-      momentum: 80,
-      liquidez: 92,
-      catalizador: 72,
-      contextoLocal: 70,
-      contextoInternacional: 62,
-      riesgo: 64,
-      riesgoBeneficio: 78,
-      noticia: "Banco líquido, sensible al Merval y al contexto local.",
-      horizonte: "Corto plazo"
-    },
-    {
-      ticker: "NVDA",
-      nombre: "NVIDIA CEDEAR",
-      tipo: "CEDEAR",
-      precio: "Ejemplo",
-      moneda: "ARS",
-      zonaEntrada: "Esperar retroceso o confirmación",
-      objetivo1: "Primer objetivo por momentum",
-      objetivo2: "Continuación si Nasdaq acompaña",
-      stop: "Pierde media corta o cae Nasdaq",
-      tendencia: 86,
-      volumen: 74,
-      momentum: 88,
-      liquidez: 86,
-      catalizador: 82,
-      contextoLocal: 62,
-      contextoInternacional: 80,
-      riesgo: 72,
-      riesgoBeneficio: 74,
-      noticia: "Alta fuerza relativa, pero con riesgo de volatilidad.",
-      horizonte: "Corto plazo"
-    },
-    {
-      ticker: "AL30",
-      nombre: "Bono Soberano 2030",
-      tipo: "Bono",
-      precio: "Ejemplo",
-      moneda: "ARS",
-      zonaEntrada: "Solo con mejora de riesgo país",
-      objetivo1: "Rebote técnico",
-      objetivo2: "Recuperación si comprime riesgo",
-      stop: "Riesgo país sube y pierde paridad clave",
-      tendencia: 54,
-      volumen: 68,
-      momentum: 50,
-      liquidez: 82,
-      catalizador: 46,
-      contextoLocal: 48,
-      contextoInternacional: 52,
-      riesgo: 78,
-      riesgoBeneficio: 58,
-      noticia: "Activo sensible a riesgo país y política local.",
-      horizonte: "Mediano plazo"
-    },
-    {
-      ticker: "CAUCIÓN",
-      nombre: "Caución bursátil",
-      tipo: "Caución",
-      precio: "Tasa del día",
-      moneda: "ARS",
-      zonaEntrada: "Cuando no hay ventaja clara",
-      objetivo1: "Rendimiento de tasa",
-      objetivo2: "Mantener liquidez",
-      stop: "Aparece oportunidad superior con riesgo controlado",
-      tendencia: 70,
-      volumen: 88,
-      momentum: 62,
-      liquidez: 95,
-      catalizador: 66,
-      contextoLocal: 75,
-      contextoInternacional: 65,
-      riesgo: 22,
-      riesgoBeneficio: 70,
-      noticia: "Refugio táctico para no dejar efectivo inmóvil.",
-      horizonte: "Intradiario / corto plazo"
-    },
-    {
-      ticker: "TSLA",
-      nombre: "Tesla CEDEAR",
-      tipo: "CEDEAR",
-      precio: "Ejemplo",
-      moneda: "ARS",
-      zonaEntrada: "No entrar sin confirmación",
-      objetivo1: "Solo si recupera tendencia",
-      objetivo2: "No definido",
-      stop: "Debilidad en acción original",
-      tendencia: 42,
-      volumen: 61,
-      momentum: 38,
-      liquidez: 78,
-      catalizador: 34,
-      contextoLocal: 54,
-      contextoInternacional: 46,
-      riesgo: 84,
-      riesgoBeneficio: 40,
-      noticia: "Volatilidad alta y señal técnica débil.",
-      horizonte: "Corto plazo"
-    }
-  ]
-};
-
-function guardarLocal(){
-  localStorage.setItem("iolRadarDatos", JSON.stringify(datosActuales));
-  localStorage.setItem("iolRadarCapital", $("capital").value || "");
-  localStorage.setItem("iolRadarPerfil", $("perfil").value || "moderado");
-  localStorage.setItem("iolRadarHorizonte", $("horizonte").value || "corto");
+function getPin(){return localStorage.getItem('APP_PIN') || ''}
+function savePin(){
+  const v=$('pinInput').value.trim();
+  if(v.length<8){$('setupMsg').innerHTML='<div class="error">PIN demasiado corto.</div>';return;}
+  localStorage.setItem('APP_PIN',v);
+  $('setupCard').classList.add('hide');
+  $('setupMsg').innerHTML='';
+  refreshNow();
+}
+function savePin2(){
+  const v=$('pinInput2').value.trim();
+  if(v.length<8){ alert('PIN demasiado corto'); return; }
+  localStorage.setItem('APP_PIN',v);
+  alert('PIN guardado');
+  refreshNow();
+}
+function clearLocal(){
+  localStorage.removeItem('APP_PIN');
+  localStorage.removeItem('LAST_IOL_DATA');
+  location.reload();
+}
+function testConnection(){
+  const v=$('pinInput').value.trim();
+  if(v) localStorage.setItem('APP_PIN',v);
+  refreshNow(true);
+}
+function showTab(name, btn){
+  ['hoy','recs','cartera','config','raw'].forEach(x=>$('screen-'+x).classList.add('hide'));
+  $('screen-'+name).classList.remove('hide');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  window.scrollTo(0,0);
+  if(name==='config') $('pinInput2').value=getPin();
 }
 
-function cargarLocal(){
-  $("capital").value = localStorage.getItem("iolRadarCapital") || "5000000";
-  $("perfil").value = localStorage.getItem("iolRadarPerfil") || "moderado";
-  $("horizonte").value = localStorage.getItem("iolRadarHorizonte") || "corto";
-  const raw = localStorage.getItem("iolRadarDatos");
-  if(raw){
-    try{ datosActuales = JSON.parse(raw); }catch(e){ datosActuales = null; }
+async function refreshNow(test=false){
+  const pin=getPin() || $('pinInput').value.trim();
+  if(!pin){ $('setupCard').classList.remove('hide'); return; }
+
+  $('statusText').innerHTML = '<span class="loader"></span> Consultando IOL';
+  $('connState').innerHTML = '<span class="loader"></span> Actualizando';
+  $('messageArea').innerHTML = '';
+
+  try{
+    const res = await fetch(API,{headers:{'x-app-pin':pin},cache:'no-store'});
+    const data = await res.json().catch(()=>({ok:false,error:'Respuesta no JSON'}));
+    $('rawJson').textContent = JSON.stringify(data,null,2);
+    if(!res.ok || !data.ok){ throw new Error(data.error || ('Error HTTP '+res.status)); }
+    localStorage.setItem('LAST_IOL_DATA', JSON.stringify(data));
+    render(data,false);
+    if(test) $('setupMsg').innerHTML='<div class="success">Conexión correcta.</div>';
+  }catch(e){
+    $('statusText').textContent='Error de conexión';
+    $('connState').innerHTML='<span class="bad">Error</span>';
+    $('messageArea').innerHTML='<div class="error"><b>No pude actualizar.</b><br>'+escapeHtml(e.message)+'<br><span class="tiny">Revisá APP_PIN, variables privadas en Netlify y que exista la función iol-dashboard.</span></div>';
+    const cached = localStorage.getItem('LAST_IOL_DATA');
+    if(cached){ try{ render(JSON.parse(cached),true); }catch{} }
+    if(test) $('setupMsg').innerHTML='<div class="error">'+escapeHtml(e.message)+'</div>';
   }
 }
 
-function normalizarNumero(valor){
-  if(typeof valor === "number") return valor;
-  if(typeof valor === "string"){
-    const limpio = valor.replace(/\./g,"").replace(",",".").replace(/[^\d.-]/g,"");
-    const n = Number(limpio);
-    return Number.isFinite(n) ? n : 0;
+function findArrayWithSymbols(obj, depth=0){
+  if(!obj || depth>6) return [];
+  if(Array.isArray(obj)){
+    const score = obj.filter(x=>x && typeof x==='object' && symbolFromItem(x)).length;
+    if(score>0) return obj;
+    for(const item of obj){ const r=findArrayWithSymbols(item, depth+1); if(r.length) return r; }
+  } else if(typeof obj==='object'){
+    const common = ['activos','titulos','tenencias','items','portafolio','portfolio','instrumentos','posiciones','resultado','data'];
+    for(const k of common){ const r=findArrayWithSymbols(obj[k], depth+1); if(r.length) return r; }
+    for(const k of Object.keys(obj)){ const r=findArrayWithSymbols(obj[k], depth+1); if(r.length) return r; }
   }
-  return 0;
+  return [];
+}
+function extractPortfolioArray(portfolio){ return findArrayWithSymbols(portfolio); }
+function symbolFromItem(item){
+  return (
+    item?.simbolo || item?.ticker || item?.symbol ||
+    item?.titulo?.simbolo || item?.titulo?.ticker ||
+    item?.instrumento?.simbolo || item?.instrumento?.ticker ||
+    item?.descripcion?.split?.(' ')?.[0] || ''
+  ).toString().toUpperCase();
+}
+function firstNum(obj, keys){
+  for(const k of keys){
+    if(obj && obj[k]!==undefined){
+      const n=toNumber(obj[k]);
+      if(Number.isFinite(n)) return n;
+    }
+  }
+  return NaN;
+}
+function qtyFromItem(item){
+  return firstNum(item, ['cantidad','nominales','tenencia','disponible','quantity']) || item?.titulo?.cantidad || '';
+}
+function valueFromItem(item){
+  return firstNum(item, [
+    'valuacion','valuado','valor','valorActual','valorizado','monto','importe','subtotal',
+    'tenenciaValuada','cantidadValorizada','totalValuado','valorMercado','valorizacion'
+  ]);
+}
+function priceFromQuote(q){
+  const d=q?.data||{};
+  return firstNum(d,['ultimoPrecio','ultimo','precio','cotizacion','cierre','ultimoOperado','lastPrice','price']) ||
+         firstNum(d?.puntas?.compra||{},['precio']) || NaN;
+}
+function pctFromQuote(q){
+  const d=q?.data||{};
+  return firstNum(d,['variacion','variacionPorcentual','variacionDiaria','varPorcentual','changePercent','percentageChange']);
+}
+function inferType(sym){
+  if(/^(AL|GD|AE|TX|T[0-9]|S[0-9]|DICP|PAR|BA37|BPY|TO|TV)/.test(sym)) return 'Bono';
+  if(['KO','NU','NVDA','AAPL','MSFT','GOOGL','AMZN','META','TSLA','V','MELI','SPY','QQQ','AMD','NFLX'].includes(sym)) return 'CEDEAR/ETF';
+  if(['GGAL','YPFD','PAMP','VIST','COME','BMA','SUPV','LOMA','TXAR','ALUA','CEPU','EDN','TGSU2','TRAN'].includes(sym)) return 'Acción AR';
+  if(sym.includes('CAUC')) return 'Caución';
+  return 'Activo';
 }
 
-function limitar(n,min=0,max=100){ return Math.max(min, Math.min(max, Number(n)||0)); }
+function buildAnalysis(data){
+  const arr = extractPortfolioArray(data.portfolio).map(it=>({
+    raw:it,
+    sym:symbolFromItem(it),
+    qty:qtyFromItem(it),
+    value:valueFromItem(it)
+  })).filter(x=>x.sym);
 
-function calcularPuntaje(a, perfil){
-  const pesos = {
-    tendencia: 0.16,
-    volumen: 0.12,
-    momentum: 0.14,
-    liquidez: 0.12,
-    catalizador: 0.14,
-    contextoLocal: 0.10,
-    contextoInternacional: 0.10,
-    riesgoBeneficio: 0.12
+  const quotes = data.quotes || [];
+  const qmap = new Map(quotes.map(q=>[(q.symbol||'').toUpperCase(), q]));
+  const total = arr.reduce((a,x)=>a+(Number.isFinite(x.value)?x.value:0),0);
+
+  const positions = arr.map(x=>{
+    const q=qmap.get(x.sym);
+    const px=priceFromQuote(q);
+    const ch=pctFromQuote(q);
+    const weight=total&&Number.isFinite(x.value)?x.value/total*100:NaN;
+    const type=inferType(x.sym);
+    return {...x,q,px,ch,weight,type};
+  });
+
+  const recs=[]; const plan=[];
+  if(!positions.length){
+    return {
+      positions,total,
+      recs:[{title:'No pude leer tenencias',tag:'Revisar',kind:'warn',text:'IOL respondió, pero la app no reconoció la estructura del portafolio. Mirá la pestaña Técnico y me pasás esa respuesta.'}],
+      plan:['Revisar pestaña Técnico para confirmar estructura del portafolio.'],
+      signal:'Revisar',
+      actionable:[],
+      ideas:buildIdeas(quotes, [])
+    };
+  }
+
+  const maxPos = positions.slice().sort((a,b)=>(b.weight||0)-(a.weight||0))[0];
+  if(maxPos && maxPos.weight>38){
+    recs.push({title:`Reducir concentración en ${maxPos.sym}`,tag:'Prioridad',kind:'bad',text:`${maxPos.sym} pesa ${pct(maxPos.weight)} de la cartera. Para trading táctico conviene liberar caja o bajar exposición parcial en rebotes.`});
+    plan.push(`Si ${maxPos.sym} rebota, vender parcial para bajar concentración debajo de 30–35%.`);
+  }
+
+  const losers = positions.filter(p=>Number.isFinite(p.ch) && p.ch<=-3).sort((a,b)=>a.ch-b.ch);
+  if(losers.length){
+    const l=losers[0];
+    recs.push({title:`Proteger ${l.sym}`,tag:'Riesgo',kind:'bad',text:`Cae ${pct(l.ch)}. No promediar abajo sin señal. Definir stop y esperar estabilización.`});
+    plan.push(`No comprar más ${l.sym} mientras siga débil; revisar stop.`);
+  }
+
+  const winners = positions.filter(p=>Number.isFinite(p.ch) && p.ch>=2).sort((a,b)=>b.ch-a.ch);
+  if(winners.length){
+    const w=winners[0];
+    recs.push({title:`Tomar parcial si ${w.sym} acelera`,tag:'Momentum',kind:'ok',text:`Sube ${pct(w.ch)}. Mantener si conserva fuerza; tomar parcial si llega a objetivo intradiario.`});
+    plan.push(`En ${w.sym}, no perseguir: mantener con stop dinámico o tomar parcial si estira.`);
+  }
+
+  const bondsWeight = positions.filter(p=>p.type==='Bono').reduce((a,p)=>a+(p.weight||0),0);
+  if(bondsWeight>45){
+    recs.push({title:'Bonos con peso alto',tag:'Balance',kind:'warn',text:`Los bonos pesan ${pct(bondsWeight)}. Mantener si el riesgo país acompaña; si no hay mejora, no sumar más exposición.`});
+    plan.push('No aumentar bonos si ya pesan más de 45% de la cartera.');
+  }
+
+  if(recs.length<3){
+    recs.push({title:'Mantener liquidez operativa',tag:'Disciplina',kind:'blue',text:'Si liberás efectivo, usar caución corta mientras no haya una entrada clara. No quedar sin caja.'});
+    plan.push('Mantener caja disponible para oportunidades; no entrar por ansiedad.');
+  }
+
+  const actionable = positions.map(p=>assetRecommendation(p,total)).sort((a,b)=>b.score-a.score);
+  const ideas = buildIdeas(quotes, positions);
+  return {positions,total,recs,plan,signal:generalSignal(recs),actionable,ideas};
+}
+function generalSignal(recs){
+  if(recs.some(r=>r.kind==='bad')) return 'Defensivo';
+  if(recs.some(r=>r.kind==='ok')) return 'Selectivo';
+  return 'Esperar';
+}
+function assetRecommendation(p,total){
+  let action='Mantener'; let kind='blue'; let score=55; let reasons=[];
+  if(p.weight>38){ action='Reducir parcial'; kind='bad'; score=85; reasons.push(`peso alto ${pct(p.weight)}`); }
+  if(Number.isFinite(p.ch) && p.ch<=-3){ action='Proteger / stop'; kind='bad'; score=Math.max(score,82); reasons.push(`caída diaria ${pct(p.ch)}`); }
+  if(Number.isFinite(p.ch) && p.ch>=2 && p.weight<35){ action='Mantener momentum'; kind='ok'; score=Math.max(score,72); reasons.push(`momentum ${pct(p.ch)}`); }
+  if(!Number.isFinite(p.ch)) reasons.push('sin variación disponible');
+  if(!Number.isFinite(p.px)) reasons.push('sin precio disponible');
+  const multStop = p.type==='Bono'?0.965:0.97;
+  const multTarget=p.type==='Bono'?1.035:1.045;
+  return {
+    sym:p.sym,type:p.type,action,kind,score,weight:p.weight,px:p.px,ch:p.ch,value:p.value,
+    stop:Number.isFinite(p.px)?p.px*multStop:NaN,
+    target:Number.isFinite(p.px)?p.px*multTarget:NaN,
+    reasons
   };
-  let base =
-    limitar(a.tendencia) * pesos.tendencia +
-    limitar(a.volumen) * pesos.volumen +
-    limitar(a.momentum) * pesos.momentum +
-    limitar(a.liquidez) * pesos.liquidez +
-    limitar(a.catalizador) * pesos.catalizador +
-    limitar(a.contextoLocal) * pesos.contextoLocal +
-    limitar(a.contextoInternacional) * pesos.contextoInternacional +
-    limitar(a.riesgoBeneficio) * pesos.riesgoBeneficio;
-
-  const riesgo = limitar(a.riesgo);
-  let penalizacion = riesgo * 0.12;
-  if(perfil === "conservador") penalizacion = riesgo * 0.20;
-  if(perfil === "tactico") penalizacion = riesgo * 0.09;
-
-  const bonoCaucion = String(a.tipo||"").toLowerCase().includes("caución") ? 6 : 0;
-  return Math.round(limitar(base - penalizacion + bonoCaucion));
+}
+function buildIdeas(quotes, positions){
+  const held = new Set(positions.map(p=>p.sym));
+  return quotes
+    .filter(q=>q.ok && !held.has((q.symbol||'').toUpperCase()))
+    .map(q=>{
+      const sym=(q.symbol||'').toUpperCase();
+      const ch=pctFromQuote(q);
+      const px=priceFromQuote(q);
+      let tag='Watch'; let kind='blue'; let text='Seguir sin entrar apurado. Esperar volumen y confirmación.';
+      if(Number.isFinite(ch)&&ch>1&&ch<5){tag='Momentum';kind='ok';text='Tiene fuerza relativa. Entrada solo si confirma y con stop corto.'}
+      if(Number.isFinite(ch)&&ch<=-2){tag='Esperar';kind='warn';text='Está débil. No agarrar cuchillo cayendo; esperar estabilización.'}
+      if(Number.isFinite(ch)&&ch>=5){tag='No perseguir';kind='warn';text='Subió demasiado para entrada tardía. Esperar retroceso.'}
+      return {sym,kind,tag,text,px,ch,type:inferType(sym)};
+    }).slice(0,12);
 }
 
-function clasificarRiesgo(riesgo){
-  const r = limitar(riesgo);
-  if(r < 35) return { texto:"Bajo", clase:"riesgo-bajo" };
-  if(r < 60) return { texto:"Moderado", clase:"riesgo-moderado" };
-  if(r < 78) return { texto:"Alto", clase:"riesgo-alto" };
-  return { texto:"Muy alto", clase:"riesgo-muy-alto" };
-}
+function render(data,cached=false){
+  lastData=data;
+  const a=buildAnalysis(data);
 
-function decidirAccion(score, activo){
-  const tipo = String(activo.tipo||"").toLowerCase();
-  const riesgo = limitar(activo.riesgo);
-  if(tipo.includes("caución")){
-    if(score >= 60) return "USAR COMO REFUGIO";
-    return "ESPERAR";
-  }
-  if(score >= 80 && riesgo < 82) return "COMPRAR";
-  if(score >= 65) return "ESPERAR";
-  if(score >= 50) return "OBSERVAR";
-  if(score < 45 && riesgo > 70) return "NO OPERAR";
-  return "NO OPERAR";
-}
+  $('setupCard').classList.add('hide');
+  $('statusText').textContent = cached ? 'Mostrando último dato guardado' : 'Datos reales desde IOL';
+  $('connState').innerHTML = cached ? '<span class="warnc">Cache</span>' : '<span class="ok">Conectado</span>';
+  $('updatedAt').textContent = fmtDate(data.updatedAt);
+  $('modePill').className = data.security?.ordersEnabled ? 'pill bad' : 'pill';
+  $('modePill').textContent = data.security?.ordersEnabled ? 'Órdenes activas' : 'Solo lectura';
+  $('assetCount').textContent = a.positions.length || '—';
+  $('generalSignal').innerHTML =
+    a.signal==='Defensivo' ? '<span class="bad">Defensivo</span>' :
+    a.signal==='Selectivo' ? '<span class="ok">Selectivo</span>' :
+    a.signal==='Revisar' ? '<span class="warnc">Revisar</span>' :
+    '<span class="warnc">Esperar</span>';
+  $('mainTotal').textContent = a.total ? money(a.total) : 'Cartera IOL';
+  $('mainSub').textContent = (data.source || 'IOL API') + (cached ? ' · guardado local' : '');
 
-function claseAccion(accion){
-  const a = accion.toLowerCase();
-  if(a.includes("comprar") || a.includes("refugio")) return "comprar";
-  if(a.includes("esperar") || a.includes("observar")) return "esperar";
-  if(a.includes("vender")) return "vender";
-  return "no-operar";
-}
+  const warnings = data.warnings || [];
+  $('messageArea').innerHTML = warnings.length
+    ? `<div class="notice"><b>Advertencias:</b><br>${warnings.map(w=>'• '+escapeHtml(w)).join('<br>')}</div>`
+    : '<div class="success">Actualización correcta. Tenencias y recomendaciones generadas con datos recibidos desde IOL.</div>';
 
-function lecturaScore(score){
-  if(score >= 80) return "Oportunidad fuerte. Comprar solo si respeta la zona de entrada y la pérdida máxima definida.";
-  if(score >= 65) return "Oportunidad moderada. Esperar confirmación, no entrar si el precio se escapa.";
-  if(score >= 50) return "Señal incompleta. Conviene observar y exigir mejor relación riesgo/beneficio.";
-  return "No hay ventaja clara. Priorizar liquidez, caución o no operar.";
+  $('dailyPlan').innerHTML = a.plan.slice(0,5).map(x=>`<li>${escapeHtml(x)}</li>`).join('');
+  renderRecommendations(a);
+  renderPortfolio(a);
+  renderIdeas(a);
 }
-
-function formatoARS(valor){
-  const n = normalizarNumero(valor);
-  if(!n) return String(valor || "Sin dato");
-  return n.toLocaleString("es-AR", { style:"currency", currency:"ARS", maximumFractionDigits:0 });
+function pillClass(kind){
+  return kind==='bad'?'pill bad':kind==='warn'?'pill warn':kind==='ok'?'pill':'pill blue';
 }
+function renderRecommendations(a){
+  const top = a.recs.map(r=>`
+    <div class="rec">
+      <div class="row"><h3>${escapeHtml(r.title)}</h3><span class="${pillClass(r.kind)}">${escapeHtml(r.tag)}</span></div>
+      <p class="muted small">${escapeHtml(r.text)}</p>
+    </div>`).join('');
 
-function renderEstado(){
-  const tiene = datosActuales && Array.isArray(datosActuales.activos) && datosActuales.activos.length;
-  const estado = $("estadoDatos");
-  if(tiene){
-    estado.innerHTML = '<span class="punto ok"></span><span>Datos cargados: ' + (datosActuales.fecha || "sin fecha") + '</span>';
-  } else {
-    estado.innerHTML = '<span class="punto"></span><span>Sin datos reales cargados</span>';
-  }
+  const porActivo = a.actionable.length
+    ? '<div class="section">Por activo</div>' + a.actionable.map(r=>`
+      <div class="rec">
+        <div class="row">
+          <div>
+            <h3>${escapeHtml(r.sym)}</h3>
+            <div class="tiny">${escapeHtml(r.type)} · ${Number.isFinite(r.weight)?'Peso '+pct(r.weight):'Peso —'}</div>
+          </div>
+          <span class="${pillClass(r.kind)}">${escapeHtml(r.action)}</span>
+        </div>
+        <div class="divider"></div>
+        <div class="grid">
+          <div><div class="label">Precio</div><div class="value mono">${Number.isFinite(r.px)?money(r.px):'—'}</div></div>
+          <div><div class="label">Día</div><div class="value mono ${r.ch<0?'bad':r.ch>0?'ok':''}">${pct(r.ch)}</div></div>
+          <div><div class="label">Stop sugerido</div><div class="value mono">${Number.isFinite(r.stop)?money(r.stop):'—'}</div></div>
+          <div><div class="label">Objetivo parcial</div><div class="value mono">${Number.isFinite(r.target)?money(r.target):'—'}</div></div>
+        </div>
+        <div class="scorebar"><span style="width:${Math.max(10,Math.min(100,r.score))}%"></span></div>
+        <p class="tiny">Base: ${escapeHtml(r.reasons.join(', ') || 'lectura neutral')}</p>
+      </div>`).join('')
+    : '<div class="notice">Todavía no hay activos reconocidos para recomendar.</div>';
+
+  $('recommendationsList').innerHTML = top + porActivo;
 }
-
-function renderResumen(){
-  const cont = $("resumenMercado");
-  const m = datosActuales?.mercado || {};
-  const items = [
-    ["Merval", m.merval],
-    ["Dólar MEP", m.dolarMEP],
-    ["Dólar CCL", m.dolarCCL],
-    ["Riesgo país", m.riesgoPais],
-    ["S&P 500", m.sp500],
-    ["Nasdaq", m.nasdaq],
-    ["Tasa caución", m.tasaCaucion],
-    ["Bonos", m.bonos]
-  ];
-  $("fechaDatos").textContent = datosActuales?.fecha || "Sin fecha de datos";
-  cont.innerHTML = items.map(([k,v]) => `
-    <div class="mini">
-      <div class="k">${k}</div>
-      <div class="v">${v?.valor || "Sin dato"}</div>
-      <div class="c">${v?.cambio ? v.cambio + " · " : ""}${v?.lectura || "Pendiente de carga"}</div>
-    </div>
-  `).join("");
-}
-
-function renderMensajes(){
-  const msg = $("mensajePrincipal");
-  if(!datosActuales){
-    msg.className = "alerta";
-    msg.textContent = "Faltan datos reales de mercado para emitir una recomendación operativa confiable. Podés cargar datos manualmente en formato JSON o usar el ejemplo educativo para probar la app.";
+function renderIdeas(a){
+  if(!a.ideas.length){
+    $('ideasList').innerHTML = '<div class="notice">No llegaron cotizaciones de watchlist. Igual se muestran recomendaciones por tus tenencias.</div>';
     return;
   }
-  if(datosActuales.modo === "educativo"){
-    msg.className = "alerta";
-    msg.textContent = "Modo educativo cargado. Sirve para probar diseño y lógica, pero no debe usarse como señal real de compra o venta.";
+  $('ideasList').innerHTML = a.ideas.map(i=>`
+    <div class="asset">
+      <div class="row">
+        <div><h3>${escapeHtml(i.sym)}</h3><div class="tiny">${escapeHtml(i.type)}</div></div>
+        <span class="${pillClass(i.kind)}">${escapeHtml(i.tag)}</span>
+      </div>
+      <div class="divider"></div>
+      <div class="grid">
+        <div><div class="label">Precio</div><div class="value mono">${Number.isFinite(i.px)?money(i.px):'—'}</div></div>
+        <div><div class="label">Día</div><div class="value mono ${i.ch<0?'bad':i.ch>0?'ok':''}">${pct(i.ch)}</div></div>
+      </div>
+      <p class="muted small">${escapeHtml(i.text)}</p>
+    </div>`).join('');
+}
+function renderPortfolio(a){
+  if(!a.positions.length){
+    $('portfolioList').innerHTML='<div class="notice">IOL respondió, pero no pude reconocer la lista de activos. Abrí Técnico y pasame esa respuesta.</div>';
+    return;
+  }
+  $('portfolioList').innerHTML = a.positions.map(p=>`
+    <div class="asset">
+      <div class="row">
+        <div>
+          <h3>${escapeHtml(p.sym)}</h3>
+          <div class="tiny">${escapeHtml(p.type)} · Cantidad <span class="mono">${escapeHtml(String(p.qty||'—'))}</span></div>
+        </div>
+        <span class="pill ${p.q?.ok?'':'warn'}">${p.q?.ok?'Cotiza':'Sin cotización'}</span>
+      </div>
+      <div class="divider"></div>
+      <div class="grid">
+        <div><div class="label">Valuación</div><div class="value mono">${Number.isFinite(p.value)?money(p.value):'—'}</div></div>
+        <div><div class="label">Peso</div><div class="value mono">${Number.isFinite(p.weight)?pct(p.weight):'—'}</div></div>
+        <div><div class="label">Precio</div><div class="value mono">${Number.isFinite(p.px)?money(p.px):'—'}</div></div>
+        <div><div class="label">Día</div><div class="value mono ${p.ch<0?'bad':p.ch>0?'ok':''}">${pct(p.ch)}</div></div>
+      </div>
+    </div>`).join('');
+}
+
+function boot(){
+  const pin=getPin();
+  if(pin){
+    $('setupCard').classList.add('hide');
+    refreshNow();
   } else {
-    msg.className = "okmsg";
-    msg.textContent = "Datos cargados. La app analizará tendencia, volumen, momentum, liquidez, catalizador, contexto local, contexto internacional, riesgo y relación riesgo/beneficio.";
+    $('setupCard').classList.remove('hide');
   }
+  timer=setInterval(()=>{ if(getPin() && document.visibilityState==='visible') refreshNow(); },5*60*1000);
 }
-
-function renderRecomendaciones(){
-  const cont = $("recomendaciones");
-  const perfil = $("perfil").value;
-  if(!datosActuales || !Array.isArray(datosActuales.activos) || datosActuales.activos.length === 0){
-    cont.innerHTML = '<div class="vacio">Faltan datos reales de mercado para emitir una recomendación operativa confiable.</div>';
-    $("contadorOportunidades").textContent = "0 activos";
-    return [];
-  }
-
-  const analizados = datosActuales.activos.map(a => {
-    const score = calcularPuntaje(a, perfil);
-    const riesgo = clasificarRiesgo(a.riesgo);
-    const accion = decidirAccion(score, a);
-    return { ...a, score, riesgoTexto: riesgo.texto, riesgoClase: riesgo.clase, accion };
-  }).sort((a,b)=>b.score-a.score);
-
-  $("contadorOportunidades").textContent = analizados.length + " activos";
-
-  cont.innerHTML = analizados.map(a => {
-    const colorScore = a.score >= 80 ? "var(--verde)" : a.score >= 65 ? "var(--amarillo)" : a.score >= 50 ? "var(--naranja)" : "var(--rojo)";
-    return `
-      <article class="card-rec ${a.riesgoClase}">
-        <div class="rec-top">
-          <div>
-            <h3 class="activo">${a.ticker || "Activo"}</h3>
-            <div class="nombre-activo">${a.nombre || ""}</div>
-            <div class="tipo">${a.tipo || "Tipo no informado"} · ${a.horizonte || $("horizonte").value}</div>
-          </div>
-          <div class="accion ${claseAccion(a.accion)}">${a.accion}</div>
-        </div>
-
-        <div class="scorebox">
-          <div class="medidor" style="--score:${a.score}; --azul:${colorScore}">
-            <span>${a.score}</span>
-          </div>
-          <div class="lectura">
-            <strong>Puntaje táctico:</strong> ${lecturaScore(a.score)}<br>
-            <strong>Riesgo:</strong> ${a.riesgoTexto}
-          </div>
-        </div>
-
-        <div class="niveles">
-          <div class="nivel">
-            <div class="nlabel">Precio de referencia</div>
-            <div class="nvalor">${typeof a.precio === "number" ? formatoARS(a.precio) : (a.precio || "Sin dato")}</div>
-          </div>
-          <div class="nivel">
-            <div class="nlabel">Zona de entrada</div>
-            <div class="nvalor">${a.zonaEntrada || "Sin dato"}</div>
-          </div>
-          <div class="nivel">
-            <div class="nlabel">Objetivo de salida</div>
-            <div class="nvalor">${a.objetivo1 || "Sin dato"}${a.objetivo2 ? " / " + a.objetivo2 : ""}</div>
-          </div>
-          <div class="nivel">
-            <div class="nlabel">Stop / invalidación</div>
-            <div class="nvalor">${a.stop || "Sin dato"}</div>
-          </div>
-        </div>
-
-        <div class="motivo">
-          <strong>Motivo:</strong> ${a.noticia || "Sin motivo cargado."}<br>
-          <strong>Cambia la decisión si:</strong> pierde la zona marcada, cae el volumen, cambia el contexto del mercado o aparece una noticia contraria.
-        </div>
-
-        <div class="chips">
-          <span class="chip">Tendencia ${limitar(a.tendencia)}</span>
-          <span class="chip">Volumen ${limitar(a.volumen)}</span>
-          <span class="chip">Momentum ${limitar(a.momentum)}</span>
-          <span class="chip">Liquidez ${limitar(a.liquidez)}</span>
-        </div>
-      </article>
-    `;
-  }).join("");
-
-  return analizados;
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 }
-
-function renderListas(analizados){
-  const evitar = analizados.filter(a => a.score < 55 || limitar(a.riesgo) >= 80).slice(0,6);
-  $("evitar").innerHTML = evitar.length
-    ? evitar.map(a=>`<li><strong>${a.ticker}</strong>: ${a.score < 55 ? "puntaje bajo" : "riesgo muy alto"}. ${a.noticia || "Sin ventaja clara."}</li>`).join("")
-    : "<li>No hay activos marcados para evitar con los datos cargados.</li>";
-
-  const cauciones = analizados.filter(a => String(a.tipo||"").toLowerCase().includes("caución"));
-  const mejores = analizados.filter(a => a.score >= 75 && !String(a.tipo||"").toLowerCase().includes("caución"));
-  $("refugio").innerHTML =
-    cauciones.length
-      ? cauciones.map(a=>`<li><strong>${a.ticker}</strong>: ${a.accion}. Útil cuando no hay entrada limpia en renta variable.</li>`).join("")
-      : mejores.length
-        ? "<li>Hay oportunidades con puntaje aceptable. Mantener parte del capital líquido para no perseguir precios.</li>"
-        : "<li>Sin oportunidades claras: considerar caución o liquidez hasta que aparezca mejor relación riesgo/beneficio.</li>";
-
-  const alertas = datosActuales?.alertas || [];
-  $("alertas").innerHTML = alertas.length
-    ? alertas.map(x=>`<li>${x}</li>`).join("")
-    : "<li>Cargar alertas del día: BCRA, inflación, FED, balances, riesgo país, dólar y noticias relevantes.</li>";
-}
-
-function renderTodo(){
-  renderEstado();
-  renderResumen();
-  renderMensajes();
-  const analizados = renderRecomendaciones();
-  renderListas(analizados || []);
-  guardarLocal();
-}
-
-$("btnEjemplo").addEventListener("click", () => {
-  datosActuales = JSON.parse(JSON.stringify(EJEMPLO_EDUCATIVO));
-  $("jsonDatos").value = JSON.stringify(datosActuales, null, 2);
-  $("mensajeJson").innerHTML = '<div class="alerta">Ejemplo educativo cargado. No usar como recomendación real.</div>';
-  renderTodo();
-});
-
-$("btnLimpiar").addEventListener("click", () => {
-  datosActuales = null;
-  $("jsonDatos").value = "";
-  localStorage.removeItem("iolRadarDatos");
-  $("mensajeJson").innerHTML = '<div class="okmsg">Datos limpiados.</div>';
-  renderTodo();
-});
-
-$("btnAnalizar").addEventListener("click", renderTodo);
-
-$("btnCargarJson").addEventListener("click", () => {
-  try{
-    const raw = $("jsonDatos").value.trim();
-    if(!raw) throw new Error("Pegá datos en formato JSON antes de analizar.");
-    const data = JSON.parse(raw);
-    if(!Array.isArray(data.activos)) throw new Error("El JSON debe incluir una lista llamada activos.");
-    datosActuales = data;
-    $("mensajeJson").innerHTML = '<div class="okmsg">Datos cargados correctamente.</div>';
-    renderTodo();
-  }catch(e){
-    $("mensajeJson").innerHTML = '<div class="error">Error al cargar datos: ' + e.message + '</div>';
-  }
-});
-
-$("btnCopiarFormato").addEventListener("click", async () => {
-  const texto = JSON.stringify(FORMATO_BASE, null, 2);
-  $("jsonDatos").value = texto;
-  try{
-    await navigator.clipboard.writeText(texto);
-    $("mensajeJson").innerHTML = '<div class="okmsg">Formato base copiado. Completalo con datos reales.</div>';
-  }catch(e){
-    $("mensajeJson").innerHTML = '<div class="okmsg">Formato base cargado en el cuadro de texto.</div>';
-  }
-});
-
-["capital","perfil","horizonte"].forEach(id => {
-  $(id).addEventListener("change", renderTodo);
-  $(id).addEventListener("input", () => localStorage.setItem("iolRadar"+id, $(id).value));
-});
-
-window.addEventListener("beforeinstallprompt", (e) => {
-  e.preventDefault();
-  diferidoInstalacion = e;
-  $("btnInstalar").style.display = "block";
-});
-
-$("btnInstalar").addEventListener("click", async () => {
-  if(!diferidoInstalacion) return;
-  diferidoInstalacion.prompt();
-  await diferidoInstalacion.userChoice;
-  diferidoInstalacion = null;
-  $("btnInstalar").style.display = "none";
-});
-
-if("serviceWorker" in navigator){
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js").catch(()=>{});
-  });
-}
-
-cargarLocal();
-renderTodo();
+boot();
 </script>
 </body>
 </html>
