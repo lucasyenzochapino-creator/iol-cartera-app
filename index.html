@@ -110,30 +110,10 @@
     nav{
       position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(13,17,23,.96);
       backdrop-filter:blur(16px);border-top:1px solid var(--line);
-      display:flex;padding:7px 5px calc(7px + env(safe-area-inset-bottom));gap:3px
+      display:flex;padding:8px 6px calc(8px + env(safe-area-inset-bottom))
     }
-    .tab{
-      flex:1;background:transparent;border:1px solid transparent;color:var(--muted2);
-      font-size:10px;font-weight:900;padding:7px 2px;border-radius:14px;
-      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-      min-height:54px
-    }
-    .tab svg{width:19px;height:19px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
-    .tab.active{color:var(--accent);background:rgba(245,201,123,.09);border-color:rgba(245,201,123,.20)}
-    .consulta-box{
-      background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:12px
-    }
-    .textarea{
-      width:100%;min-height:110px;padding:14px;border-radius:13px;background:var(--card2);
-      border:1px solid var(--line);color:var(--txt);outline:0;resize:vertical
-    }
-    .textarea:focus{border-color:var(--accent)}
-    .money-hidden .money-sensitive{filter:blur(8px);user-select:none}
-    .money-hidden .money-sensitive::selection{background:transparent}
-    .hide-money-btn{
-      margin-top:10px;width:100%;background:var(--card2);color:var(--txt);border:1px solid var(--line);
-      border-radius:13px;padding:11px;font-weight:900
-    }
+    .tab{flex:1;background:transparent;border:0;color:var(--muted2);font-size:11px;font-weight:900;padding:8px 2px}
+    .tab.active{color:var(--accent)}
     pre{
       white-space:pre-wrap;word-break:break-word;background:#090c10;border:1px solid var(--line);
       padding:12px;border-radius:12px;color:#c9d1d9;max-height:360px;overflow:auto
@@ -183,7 +163,7 @@
       <div class="row">
         <div>
           <div class="eyebrow">Cartera real IOL</div>
-          <div class="total money-sensitive" id="mainTotal">—</div>
+          <div class="total" id="mainTotal">—</div>
           <div class="muted small" id="mainSub">Esperando datos desde IOL</div>
         </div>
         <span id="modePill" class="pill warn">Solo lectura</span>
@@ -194,26 +174,11 @@
       <div class="row">
         <div>
           <div class="eyebrow">Saldo disponible para operar</div>
-          <h2 style="margin:4px 0 8px">Pesos y dólares</h2>
-          <div class="muted small" id="availableCashSub">Esperando saldos reales desde IOL</div>
+          <div class="total" id="availableCashMain">—</div>
+          <div class="muted small" id="availableCashSub">Esperando saldo real desde IOL</div>
         </div>
         <span id="availableCashPill" class="pill warn">No detectado</span>
       </div>
-
-      <div class="grid" style="margin-top:12px">
-        <div class="stat">
-          <div class="label">Disponible en pesos</div>
-          <div class="value mono money-sensitive" id="availableARSMain">—</div>
-          <div class="tiny" id="availableARSPath">ARS</div>
-        </div>
-        <div class="stat">
-          <div class="label">Disponible en dólares</div>
-          <div class="value mono money-sensitive" id="availableUSDMain">—</div>
-          <div class="tiny" id="availableUSDPath">USD</div>
-        </div>
-      </div>
-
-      <button class="hide-money-btn" onclick="toggleMoneyVisibility()" id="hideMoneyBtn">Ocultar todos los montos</button>
       <div id="availableCashWarning" style="margin-top:12px"></div>
     </div>
 
@@ -240,31 +205,6 @@
 
     <div class="section">Ideas / lista de seguimiento</div>
     <div id="ideasList"><div class="notice">Se carga con la lista de seguimiento configurada en el servidor.</div></div>
-  </section>
-
-  <section id="screen-consulta" class="hide">
-    <div class="card">
-      <div class="eyebrow">Consulta rápida</div>
-      <h2>Preguntar sobre una inversión</h2>
-      <p class="muted small">
-        Escribí el ticker o instrumento y tu duda. La respuesta usa los datos cargados desde IOL en esta app: tenencias, cotizaciones, variación, riesgo y saldo disponible.
-      </p>
-
-      <label class="label" for="consultaTicker" style="margin-top:12px">Instrumento</label>
-      <input id="consultaTicker" class="input mono" placeholder="Ej: GGAL, AL30, NVDA, CAUCIÓN" autocomplete="off" />
-
-      <label class="label" for="consultaTexto" style="margin-top:12px">Tu duda</label>
-      <textarea id="consultaTexto" class="textarea" placeholder="Ej: ¿Conviene comprar GGAL hoy con mi disponible? ¿Me conviene caución a 1 día o 7 días? ¿Mantengo AL30?"></textarea>
-
-      <div class="actions">
-        <button class="btn btn-primary" onclick="responderConsulta()">Analizar duda</button>
-        <button class="btn btn-secondary" onclick="limpiarConsulta()">Limpiar</button>
-      </div>
-
-      <div id="consultaRespuesta" style="margin-top:12px">
-        <div class="notice">Actualizá la app y consultá por un instrumento. No ejecuta órdenes ni reemplaza tu decisión final.</div>
-      </div>
-    </div>
   </section>
 
   <section id="screen-cartera" class="hide">
@@ -302,30 +242,11 @@
 </main>
 
 <nav>
-  <button class="tab active" onclick="showTab('hoy', this)" aria-label="Hoy">
-    <svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10.5V20h14v-9.5"/><path d="M9 20v-6h6v6"/></svg>
-    <span>Hoy</span>
-  </button>
-  <button class="tab" onclick="showTab('recs', this)" aria-label="Recomendaciones">
-    <svg viewBox="0 0 24 24"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 16l3-4 3 2 5-7"/></svg>
-    <span>Recom.</span>
-  </button>
-  <button class="tab" onclick="showTab('cartera', this)" aria-label="Cartera">
-    <svg viewBox="0 0 24 24"><path d="M6 7h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M8 13h8"/></svg>
-    <span>Cartera</span>
-  </button>
-  <button class="tab" onclick="showTab('consulta', this)" aria-label="Consulta">
-    <svg viewBox="0 0 24 24"><path d="M21 12a8.5 8.5 0 0 1-9 8.5 9.5 9.5 0 0 1-4-.9L3 21l1.5-4.4A8.5 8.5 0 1 1 21 12Z"/><path d="M9.5 9a2.5 2.5 0 0 1 4.7 1.2c0 1.8-2.2 2.2-2.2 3.8"/><path d="M12 17h.01"/></svg>
-    <span>Consulta</span>
-  </button>
-  <button class="tab" onclick="showTab('config', this)" aria-label="Configuración">
-    <svg viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 0 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1A2 2 0 0 1 4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1A2 2 0 0 1 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1A2 2 0 0 1 19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.1a2 2 0 0 1 0 4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg>
-    <span>Config</span>
-  </button>
-  <button class="tab" onclick="showTab('raw', this)" aria-label="Técnico">
-    <svg viewBox="0 0 24 24"><path d="m8 9-4 3 4 3"/><path d="m16 9 4 3-4 3"/><path d="m14 5-4 14"/></svg>
-    <span>Técnico</span>
-  </button>
+  <button class="tab active" onclick="showTab('hoy', this)">Hoy</button>
+  <button class="tab" onclick="showTab('recs', this)">Recom.</button>
+  <button class="tab" onclick="showTab('cartera', this)">Cartera</button>
+  <button class="tab" onclick="showTab('config', this)">Config</button>
+  <button class="tab" onclick="showTab('raw', this)">Técnico</button>
 </nav>
 
 <script>
@@ -335,18 +256,6 @@ let timer = null;
 
 function $(id){return document.getElementById(id)}
 function money(n){ const num=toNumber(n); if(!Number.isFinite(num)) return '—'; return num.toLocaleString('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}); }
-function usdMoney(n){ const num=toNumber(n); if(!Number.isFinite(num)) return '—'; return 'US$ ' + num.toLocaleString('es-AR',{maximumFractionDigits:2}); }
-function wrapMoney(value){ return '<span class="money-sensitive">' + escapeHtml(value) + '</span>'; }
-function isMoneyHidden(){ return localStorage.getItem('HIDE_MONEY') === '1'; }
-function applyMoneyVisibility(){
-  document.body.classList.toggle('money-hidden', isMoneyHidden());
-  const btn = $('hideMoneyBtn');
-  if(btn) btn.textContent = isMoneyHidden() ? 'Mostrar todos los montos' : 'Ocultar todos los montos';
-}
-function toggleMoneyVisibility(){
-  localStorage.setItem('HIDE_MONEY', isMoneyHidden() ? '0' : '1');
-  applyMoneyVisibility();
-}
 function pct(n){ const num=toNumber(n); if(!Number.isFinite(num)) return '—'; return (num>0?'+':'') + num.toLocaleString('es-AR',{maximumFractionDigits:2}) + '%'; }
 function fmtDate(iso){ if(!iso) return '—'; try { return new Date(iso).toLocaleString('es-AR',{dateStyle:'short', timeStyle:'short'}); } catch { return iso; } }
 function toNumber(v){
@@ -432,7 +341,7 @@ function testConnection(){
   refreshNow(true);
 }
 function showTab(name, btn){
-  ['hoy','recs','cartera','consulta','config','raw'].forEach(x=>$('screen-'+x).classList.add('hide'));
+  ['hoy','recs','cartera','config','raw'].forEach(x=>$('screen-'+x).classList.add('hide'));
   $('screen-'+name).classList.remove('hide');
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
@@ -787,96 +696,27 @@ function buildIdeas(quotes, positions){
 }
 
 
-function findCashLikeValuesByCurrency(obj, depth=0, path=''){
-  if(!obj || depth > 7) return [];
-  const out = [];
-  const cashWords = [
-    'disponible','saldoDisponible','poderCompra','buyingPower','cashAvailable',
-    'availableCash','disponibleOperar','montoDisponible','efectivoDisponible',
-    'saldoParaOperar','disponibleInmediato','efectivo','liquidez','cash','saldo'
-  ];
-
-  function pathLooksPortfolioValuation(p){
-    const pl = String(p || '').toLowerCase();
-    return pl.includes('valuacion') || pl.includes('valoractual') || pl.includes('valorizado') ||
-      pl.includes('tenencia') || pl.includes('portfolio') || pl.includes('portafolio') ||
-      pl.includes('instrumento') || pl.includes('titulo');
-  }
-
-  function detectCurrency(fullPath, objValue){
-    const p = String(fullPath || '').toLowerCase();
-    const s = String(objValue ?? '').toLowerCase();
-    if(p.includes('usd') || p.includes('dolar') || p.includes('dólar') || p.includes('dolares') || p.includes('dólares') || s.includes('usd') || s.includes('u$s') || s.includes('us$')) return 'USD';
-    if(p.includes('ars') || p.includes('peso') || p.includes('pesos') || p.includes('arg') || s.includes('ars')) return 'ARS';
-    return 'UNKNOWN';
-  }
-
-  function keyLooksCash(k){
-    const kl = String(k || '').toLowerCase();
-    return cashWords.some(w => kl === w.toLowerCase() || kl.includes(w.toLowerCase()));
-  }
-
-  if(Array.isArray(obj)){
-    obj.forEach((v,i)=>out.push(...findCashLikeValuesByCurrency(v, depth+1, path+'.'+i)));
-    return out;
-  }
-
-  if(typeof obj === 'object'){
-    Object.keys(obj).forEach(k=>{
-      const v = obj[k];
-      const fullPath = path ? path + '.' + k : k;
-      const n = toNumber(v);
-      if(Number.isFinite(n) && n > 0 && keyLooksCash(k) && !pathLooksPortfolioValuation(fullPath)){
-        const currency = detectCurrency(fullPath, v);
-        let confidence = currency === 'UNKNOWN' ? 1 : 3;
-        if(String(k).toLowerCase().includes('disponible')) confidence += 1;
-        out.push({path:fullPath, value:n, currency, confidence});
-      }
-      if(typeof v === 'object') out.push(...findCashLikeValuesByCurrency(v, depth+1, fullPath));
-    });
-  }
-  return out;
-}
-
-function detectAvailableBalances(data, total){
-  const values = findCashLikeValuesByCurrency(data || {});
-  const maxReasonable = Number.isFinite(total) && total > 0 ? total * 1.25 : Infinity;
-  const valid = values
-    .filter(x => Number.isFinite(x.value) && x.value > 0 && (x.currency === 'USD' || x.value <= maxReasonable))
-    .sort((a,b) => (b.confidence - a.confidence) || (b.value - a.value));
-
-  const ars = valid.find(x => x.currency === 'ARS') || valid.find(x => x.currency === 'UNKNOWN' && x.value > 1000);
-  const usd = valid.find(x => x.currency === 'USD');
-  return {
-    ars: ars ? {detected:true, amount:ars.value, path:ars.path} : {detected:false, amount:0, path:''},
-    usd: usd ? {detected:true, amount:usd.value, path:usd.path} : {detected:false, amount:0, path:''}
-  };
-}
-
 function renderMainAvailableCash(data, total){
-  const balances = detectAvailableBalances(data, total);
-  const ars = balances.ars;
-  const usd = balances.usd;
+  const cash = detectAvailableCash(data, total);
 
-  $('availableARSMain').innerHTML = ars.detected ? wrapMoney(money(ars.amount)) : 'No detectado';
-  $('availableARSPath').textContent = ars.detected ? ('Origen: ' + ars.path) : 'ARS no identificado';
-
-  $('availableUSDMain').innerHTML = usd.detected ? wrapMoney(usdMoney(usd.amount)) : 'No detectado';
-  $('availableUSDPath').textContent = usd.detected ? ('Origen: ' + usd.path) : 'USD no identificado';
-
-  if(ars.detected || usd.detected){
-    $('availableCashSub').textContent = 'Saldos disponibles reales leídos desde IOL';
+  if(cash.detected){
+    $('availableCashMain').textContent = money(cash.amount);
+    $('availableCashSub').textContent = 'Disponible real leído desde IOL para operar';
     $('availableCashPill').className = 'pill';
     $('availableCashPill').textContent = 'Disponible';
-    $('availableCashWarning').innerHTML = '<div class="success tiny">La app separa disponible en pesos y dólares. Las recomendaciones en pesos usan el disponible en ARS.</div>';
-  } else {
-    $('availableCashSub').textContent = 'IOL respondió, pero no pude identificar saldos disponibles';
-    $('availableCashPill').className = 'pill warn';
-    $('availableCashPill').textContent = 'Revisar';
-    $('availableCashWarning').innerHTML = '<div class="warning"><b>Atención:</b> no voy a calcular montos operativos hasta leer el disponible real. Revisá la pestaña Técnico para ver cómo llega el saldo desde IOL.</div>';
+    $('availableCashWarning').innerHTML = cash.path
+      ? '<div class="success tiny">Origen detectado: '+escapeHtml(cash.path)+'</div>'
+      : '';
+    return cash;
   }
-  applyMoneyVisibility();
-  return balances;
+
+  $('availableCashMain').textContent = 'No detectado';
+  $('availableCashSub').textContent = 'IOL respondió, pero no pude identificar el campo de saldo disponible';
+  $('availableCashPill').className = 'pill warn';
+  $('availableCashPill').textContent = 'Revisar';
+  $('availableCashWarning').innerHTML =
+    '<div class="warning"><b>Atención:</b> no voy a calcular montos operativos hasta leer el disponible real. Revisá la pestaña Técnico para ver cómo llega el saldo desde IOL.</div>';
+  return cash;
 }
 
 function render(data,cached=false){
@@ -896,7 +736,7 @@ function render(data,cached=false){
     a.signal==='Selectivo' ? '<span class="ok">Selectivo</span>' :
     a.signal==='Revisar' ? '<span class="warnc">Revisar</span>' :
     '<span class="warnc">Esperar</span>';
-  $('mainTotal').innerHTML = a.total ? wrapMoney(money(a.total)) : 'Cartera IOL';
+  $('mainTotal').textContent = a.total ? money(a.total) : 'Cartera IOL';
   $('mainSub').textContent = (data.source || 'IOL API') + (cached ? ' · guardado local' : '');
 
   const warnings = data.warnings || [];
@@ -1358,18 +1198,25 @@ function findCashLikeValues(obj, depth=0, path=''){
 }
 
 function detectAvailableCash(data, total){
-  const balances = detectAvailableBalances(data, total);
-  if(balances.ars.detected){
+  const values = findCashLikeValues(data || {});
+  const maxReasonable = Number.isFinite(total) && total > 0 ? total * 1.05 : Infinity;
+
+  const candidates = values
+    .filter(x => Number.isFinite(x.value) && x.value > 1000 && x.value <= maxReasonable)
+    .sort((a,b) => (b.confidence - a.confidence) || (b.value - a.value));
+
+  if(candidates.length){
     return {
-      amount:balances.ars.amount,
-      source:'Efectivo disponible en pesos leído desde IOL',
+      amount:candidates[0].value,
+      source:'Efectivo disponible para operar leído desde IOL',
       detected:true,
-      path:balances.ars.path
+      path:candidates[0].path
     };
   }
+
   return {
     amount:0,
-    source:'No pude detectar efectivo disponible en pesos desde IOL. No se asignan montos para comprar.',
+    source:'No pude detectar efectivo disponible para operar desde IOL. No se asignan montos para comprar.',
     detected:false,
     path:''
   };
@@ -1640,7 +1487,7 @@ function renderDailyConcretePortfolio(a){
           <div class="grid">
             <div>
               <div class="label">Monto</div>
-              <div class="value mono">${wrapMoney(moneyOrUnavailable(x.monto, p.cashDetected)}</div>
+              <div class="value mono">${moneyOrUnavailable(x.monto, p.cashDetected)}</div>
             </div>
             <div>
               <div class="label">Porcentaje</div>
@@ -1897,135 +1744,7 @@ function renderPortfolio(a){
     </div>`).join('');
 }
 
-
-function normalizarTickerConsulta(valor){
-  const t = String(valor || '').trim().toUpperCase();
-  if(!t) return '';
-  if(t.includes('CAUC')) return 'CAUCIÓN';
-  return t.replace(/[^A-Z0-9Ñ.]/g,'');
-}
-
-function buscarInstrumentoConsulta(ticker, texto){
-  if(!lastData) return null;
-  const a = buildAnalysis(lastData);
-  const universe = buildCandidateUniverse(a);
-  const details = a.instrumentDetails || [];
-  const all = [...details, ...universe];
-
-  const wanted = normalizarTickerConsulta(ticker) || normalizarTickerConsulta((String(texto || '').match(/[A-ZÑ]{2,6}[0-9]?/i) || [''])[0]);
-
-  if(wanted === 'CAUCIÓN'){
-    return {
-      sym:'CAUCIÓN',
-      type:'Caución',
-      score:82,
-      action:'Colocar como refugio táctico',
-      px:NaN,
-      ch:NaN,
-      entry:'Colocar solo dinero disponible que no necesites para una entrada inmediata.',
-      exit:'Salir al vencimiento o si aparece una oportunidad mejor.',
-      horizon:'1 a 3 días',
-      risk:'Bajo frente a renta variable; revisar tasa, plazo y disponibilidad.'
-    };
-  }
-
-  const found = all.find(x => String(x.sym || '').toUpperCase() === wanted);
-  if(!found) return null;
-
-  return {
-    sym:found.sym,
-    type:found.type || inferType(found.sym),
-    score:Number(found.score || scoreOpportunity(found)),
-    action:found.action || instrumentActionFromScore(found),
-    px:found.px,
-    ch:found.ch,
-    entry:found.entryCondition || found.entry || specificEntryCondition(found),
-    exit:found.exitCondition || found.exit || specificExitCondition(found),
-    horizon:found.horizonSpecific || found.horizon || specificHorizonForInstrument(found),
-    risk:found.riskSpecific || found.risk || specificRiskForInstrument(found)
-  };
-}
-
-function responderConsulta(){
-  const ticker = $('consultaTicker').value;
-  const texto = $('consultaTexto').value;
-
-  if(!lastData){
-    $('consultaRespuesta').innerHTML = '<div class="error">Primero tocá Actualizar para cargar datos reales desde IOL.</div>';
-    return;
-  }
-
-  const analysis = buildAnalysis(lastData);
-  const balances = detectAvailableBalances(lastData, analysis.total);
-  const inst = buscarInstrumentoConsulta(ticker, texto);
-
-  if(!inst){
-    $('consultaRespuesta').innerHTML = `
-      <div class="warning">
-        <b>No encontré ese instrumento en tus datos actuales.</b><br>
-        Escribí el ticker exacto que figure en Cartera o en la lista de seguimiento. Ejemplo: GGAL, AL30, NVDA, CAUCIÓN.
-      </div>
-    `;
-    return;
-  }
-
-  const decision = dailyDecisionForCandidate(inst);
-  const alloc = allocationForSpecificInstrument(inst, balances.ars.detected ? balances.ars.amount : 0, [inst]);
-  const montoTexto = balances.ars.detected && alloc.pct > 0 ? money(balances.ars.amount * alloc.pct / 100) : 'No calculado';
-
-  $('consultaRespuesta').innerHTML = `
-    <div class="consulta-box">
-      <div class="row">
-        <div>
-          <h3>${escapeHtml(inst.sym)}</h3>
-          <div class="tiny">${escapeHtml(inst.type)} · Puntaje ${inst.score || '—'}</div>
-        </div>
-        <span class="${pillClass(decision.eligible ? 'ok' : 'warn')}">${escapeHtml(decision.accion)}</span>
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="grid">
-        <div class="stat">
-          <div class="label">Disponible ARS</div>
-          <div class="value mono">${balances.ars.detected ? wrapMoney(money(balances.ars.amount)) : 'No detectado'}</div>
-        </div>
-        <div class="stat">
-          <div class="label">Disponible USD</div>
-          <div class="value mono">${balances.usd.detected ? wrapMoney(usdMoney(balances.usd.amount)) : 'No detectado'}</div>
-        </div>
-        <div class="stat">
-          <div class="label">Monto sugerido</div>
-          <div class="value mono">${wrapMoney(montoTexto)}</div>
-        </div>
-        <div class="stat">
-          <div class="label">Porcentaje</div>
-          <div class="value mono">${alloc.pct}%</div>
-        </div>
-      </div>
-
-      <div class="analysisbox">
-        <div class="mini-title">Respuesta directa</div>
-        <p class="muted small"><b>Decisión:</b> ${escapeHtml(decision.accion)}</p>
-        <p class="muted small"><b>Plazo:</b> ${escapeHtml(decision.plazo || inst.horizon)}</p>
-        <p class="muted small"><b>Motivo:</b> ${escapeHtml(decision.motivo)}</p>
-        <p class="muted small"><b>Entrada:</b> ${escapeHtml(inst.entry)}</p>
-        <p class="muted small"><b>Salida / invalidación:</b> ${escapeHtml(inst.exit)}</p>
-        <p class="tiny"><b>Riesgo:</b> ${escapeHtml(inst.risk)}</p>
-      </div>
-    </div>
-  `;
-  applyMoneyVisibility();
-}
-
-function limpiarConsulta(){
-  $('consultaTicker').value = '';
-  $('consultaTexto').value = '';
-  $('consultaRespuesta').innerHTML = '<div class="notice">Escribí un instrumento y tu duda para analizar.</div>';
-}
-
 function boot(){
-  applyMoneyVisibility();
   const pin=getPin();
   if(pin){
     $('setupCard').classList.add('hide');
