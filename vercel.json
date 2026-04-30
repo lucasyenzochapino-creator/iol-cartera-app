@@ -1,0 +1,18 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/.netlify/functions/iol-dashboard",
+      "destination": "/api/iol-dashboard"
+    },
+    {
+      "source": "/.netlify/functions/:path*",
+      "destination": "/api/:path*"
+    }
+  ],
+  "functions": {
+    "api/*.js": {
+      "runtime": "nodejs22.x"
+    }
+  }
+}
