@@ -109,6 +109,11 @@
       background:rgba(245,201,123,.12);color:var(--accent);border:1px solid rgba(245,201,123,.24);
       font-size:12px;font-weight:900
     }
+    .decisionbox{
+      margin-top:10px;background:var(--card3);border:1px solid var(--line);border-radius:13px;
+      padding:10px;color:var(--muted);font-size:13px
+    }
+    .decisionbox b{color:var(--txt)}
     nav{
       position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(13,17,23,.96);
       backdrop-filter:blur(16px);border-top:1px solid var(--line);
@@ -185,12 +190,12 @@
     <div class="card">
       <div class="eyebrow">Recomendaciones</div>
       <h2>Qué haría hoy</h2>
-      <p class="muted small">Motor táctico basado en tus tenencias reales de IOL, concentración, variación diaria, precio, contexto económico local e internacional cuando está disponible. No ejecuta órdenes.</p>
+      <p class="muted small">Motor táctico basado en tus tenencias reales de IOL, concentración, variación diaria, precio y contexto económico local/internacional cuando está disponible. Si no confirma fuentes confiables, baja la señal a preliminar. No ejecuta órdenes.</p>
     </div>
     <div id="recommendationsList"><div class="notice">Actualizá la app para ver recomendaciones.</div></div>
 
-    <div class="section">Ideas / watchlist</div>
-    <div id="ideasList"><div class="notice">Se carga con la watchlist configurada en el backend.</div></div>
+    <div class="section">Ideas / lista de seguimiento</div>
+    <div id="ideasList"><div class="notice">Se carga con la lista de seguimiento configurada en el servidor.</div></div>
   </section>
 
   <section id="screen-cartera" class="hide">
@@ -499,15 +504,15 @@ function buildAnalysis(data){
   const losers = positions.filter(p=>Number.isFinite(p.ch) && p.ch<=-3).sort((a,b)=>a.ch-b.ch);
   if(losers.length){
     const l=losers[0];
-    recs.push({title:`Proteger ${l.sym}`,tag:'Riesgo',kind:'bad',text:`Cae ${pct(l.ch)}. No promediar abajo sin señal. Definir stop y esperar estabilización.`});
-    plan.push(`No comprar más ${l.sym} mientras siga débil; revisar stop.`);
+    recs.push({title:`Proteger ${l.sym}`,tag:'Riesgo',kind:'bad',text:`Cae ${pct(l.ch)}. No promediar abajo sin señal. Definir pérdida máxima y esperar estabilización.`});
+    plan.push(`No comprar más ${l.sym} mientras siga débil; revisar pérdida máxima.`);
   }
 
   const winners = positions.filter(p=>Number.isFinite(p.ch) && p.ch>=2).sort((a,b)=>b.ch-a.ch);
   if(winners.length){
     const w=winners[0];
     recs.push({title:`Tomar parcial si ${w.sym} acelera`,tag:'Impulso',kind:'ok',text:`Sube ${pct(w.ch)}. Mantener si conserva fuerza; tomar parcial si llega a objetivo intradiario.`});
-    plan.push(`En ${w.sym}, no perseguir: mantener con stop dinámico o tomar parcial si estira.`);
+    plan.push(`En ${w.sym}, no perseguir: mantener con pérdida máxima dinámica o tomar parcial si estira.`);
   }
 
   const bondsWeight = positions.filter(p=>p.type==='Bono').reduce((a,p)=>a+(p.weight||0),0);
@@ -565,12 +570,12 @@ function assetRecommendation(p,total,contextOk){
   if(!Number.isFinite(p.ch)) reasons.push('sin variación diaria disponible');
   if(!Number.isFinite(p.px)) reasons.push('sin precio disponible');
 
-  const multStop = p.type==='Bono'?0.965:0.97;
+  const multPérdida máxima = p.type==='Bono'?0.965:0.97;
   const multTarget=p.type==='Bono'?1.035:1.045;
 
   return {
     sym:p.sym,type:p.type,action,kind,score,horizonte,weight:p.weight,px:p.px,ch:p.ch,value:p.value,
-    stop:Number.isFinite(p.px)?p.px*multStop:NaN,
+    pérdida máxima:Number.isFinite(p.px)?p.px*multPérdida máxima:NaN,
     target:Number.isFinite(p.px)?p.px*multTarget:NaN,
     reasons
   };
@@ -587,7 +592,12 @@ function buildIdeas(quotes, positions){
       if(Number.isFinite(ch)&&ch>1&&ch<5){tag='Impulso';kind='ok';text='Tiene fuerza relativa. Entrada solo si confirma, con pérdida máxima definida y contexto externo a favor.'}
       if(Number.isFinite(ch)&&ch<=-2){tag='Esperar';kind='warn';text='Está débil. No agarrar cuchillo cayendo; esperar estabilización.'}
       if(Number.isFinite(ch)&&ch>=5){tag='No perseguir';kind='warn';text='Subió demasiado para entrada tardía. Esperar retroceso o nueva zona de entrada.'}
-      return {sym,kind,tag,text,px,ch,type:inferType(sym)};
+      return {
+        sym,kind,tag,text,px,ch,type:inferType(sym),
+        horizonte: inferType(sym)==='Bono' ? 'Mediano plazo' : 'Corto a mediano plazo',
+        condicion: Number.isFinite(ch) && ch > 0 ? 'Entrar solo con confirmación y contexto externo a favor.' : 'Esperar señal clara antes de entrar.',
+        riesgo: inferType(sym)==='Bono' ? 'Moderado / alto por riesgo país' : 'Variable según volumen, dólar y mercado externo'
+      };
     }).slice(0,12);
 }
 
@@ -678,7 +688,7 @@ function renderRecommendations(a){
         <div class="grid">
           <div><div class="label">Precio</div><div class="value mono">${Number.isFinite(r.px)?money(r.px):'—'}</div></div>
           <div><div class="label">Día</div><div class="value mono ${r.ch<0?'bad':r.ch>0?'ok':''}">${pct(r.ch)}</div></div>
-          <div><div class="label">Pérdida máxima</div><div class="value mono">${Number.isFinite(r.stop)?money(r.stop):'—'}</div></div>
+          <div><div class="label">Pérdida máxima</div><div class="value mono">${Number.isFinite(r.pérdida máxima)?money(r.pérdida máxima):'—'}</div></div>
           <div><div class="label">Objetivo parcial</div><div class="value mono">${Number.isFinite(r.target)?money(r.target):'—'}</div></div>
         </div>
         <div class="scorebar"><span style="width:${Math.max(10,Math.min(100,r.score))}%"></span></div>
@@ -690,7 +700,7 @@ function renderRecommendations(a){
 }
 function renderIdeas(a){
   if(!a.ideas.length){
-    $('ideasList').innerHTML = '<div class="notice">No llegaron cotizaciones de watchlist. Igual se muestran recomendaciones por tus tenencias.</div>';
+    $('ideasList').innerHTML = '<div class="notice">No llegaron cotizaciones de la lista de seguimiento. Igual se muestran recomendaciones por tus tenencias.</div>';
     return;
   }
   $('ideasList').innerHTML = a.ideas.map(i=>`
@@ -704,7 +714,12 @@ function renderIdeas(a){
         <div><div class="label">Precio</div><div class="value mono">${Number.isFinite(i.px)?money(i.px):'—'}</div></div>
         <div><div class="label">Día</div><div class="value mono ${i.ch<0?'bad':i.ch>0?'ok':''}">${pct(i.ch)}</div></div>
       </div>
-      <p class="muted small">${escapeHtml(i.text)}</p>
+      <div class="decisionbox">
+        <b>Horizonte:</b> ${escapeHtml(i.horizonte || 'Corto plazo')}<br>
+        <b>Lectura:</b> ${escapeHtml(i.text)}<br>
+        <b>Condición:</b> ${escapeHtml(i.condicion || 'Esperar confirmación.')}<br>
+        <b>Riesgo:</b> ${escapeHtml(i.riesgo || 'Variable según mercado.')}
+      </div>
     </div>`).join('');
 }
 function renderPortfolio(a){
