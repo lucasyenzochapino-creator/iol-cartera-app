@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0d1117" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <title>IOL Cartera Pro - Reparada</title>
+  <title>IOL Cartera Pro</title>
   <link rel="manifest" href="./manifest.json" />
   <link rel="apple-touch-icon" href="./icon-192.png" />
   <link rel="icon" href="./icon-192.png" />
@@ -180,13 +180,13 @@
     </div>
     <div id="recommendationsList"><div class="notice">Actualizá la app para ver recomendaciones.</div></div>
 
-    <div class="section">Ideas / watchlist</div>
-    <div id="ideasList"><div class="notice">Se carga con la watchlist configurada en el backend.</div></div>
+    <div class="section">Ideas / lista de seguimiento</div>
+    <div id="ideasList"><div class="notice">Se carga con la lista de seguimiento configurada en el servidor.</div></div>
   </section>
 
   <section id="screen-cartera" class="hide">
     <div class="section">Tenencias</div>
-    <div id="portfolioList"><div class="notice">Cuando guardes el PIN y actualices, acá se cargará tu cartera real.</div></div>
+    <div id="carteraList"><div class="notice">Cuando guardes el PIN y actualices, acá se cargará tu cartera real.</div></div>
   </section>
 
   <section id="screen-config" class="hide">
@@ -322,7 +322,7 @@ async function refreshNow(test=false){
   $('messageArea').innerHTML = '';
 
   try{
-    const res = await fetch(API,{headers:{'x-app-pin':pin},cache:'no-store'});
+    const res = await fetch(API,{headers:{'x-app-pin':pin},guardado:'no-store'});
     const data = await res.json().catch(()=>({ok:false,error:'Respuesta no JSON'}));
     $('rawJson').textContent = JSON.stringify(data,null,2);
     if(!res.ok || !data.ok){ throw new Error(data.error || ('Error HTTP '+res.status)); }
@@ -333,8 +333,8 @@ async function refreshNow(test=false){
     $('statusText').textContent='Error de conexión';
     $('connState').innerHTML='<span class="bad">Error</span>';
     $('messageArea').innerHTML='<div class="error"><b>No pude actualizar.</b><br>'+escapeHtml(e.message)+'<br><span class="tiny">Revisá APP_PIN, variables privadas en Netlify y que exista la función iol-dashboard.</span></div>';
-    const cached = localStorage.getItem('LAST_IOL_DATA');
-    if(cached){ try{ render(JSON.parse(cached),true); }catch{} }
+    const guardadod = localStorage.getItem('LAST_IOL_DATA');
+    if(guardadod){ try{ render(JSON.parse(guardadod),true); }catch{} }
     if(test) $('setupMsg').innerHTML='<div class="error">'+escapeHtml(e.message)+'</div>';
   }
 }
@@ -346,13 +346,13 @@ function findArrayWithSymbols(obj, depth=0){
     if(score>0) return obj;
     for(const item of obj){ const r=findArrayWithSymbols(item, depth+1); if(r.length) return r; }
   } else if(typeof obj==='object'){
-    const common = ['activos','titulos','tenencias','items','portafolio','portfolio','instrumentos','posiciones','resultado','data'];
+    const common = ['activos','titulos','tenencias','items','portafolio','cartera','instrumentos','posiciones','resultado','data'];
     for(const k of common){ const r=findArrayWithSymbols(obj[k], depth+1); if(r.length) return r; }
     for(const k of Object.keys(obj)){ const r=findArrayWithSymbols(obj[k], depth+1); if(r.length) return r; }
   }
   return [];
 }
-function extractPortfolioArray(portfolio){ return findArrayWithSymbols(portfolio); }
+function extractCarteraArray(cartera){ return findArrayWithSymbols(cartera); }
 function symbolFromItem(item){
   return (
     item?.simbolo || item?.ticker || item?.symbol ||
@@ -397,7 +397,7 @@ function inferType(sym){
 }
 
 function buildAnalysis(data){
-  const arr = extractPortfolioArray(data.portfolio).map(it=>({
+  const arr = extractCarteraArray(data.cartera).map(it=>({
     raw:it,
     sym:symbolFromItem(it),
     qty:qtyFromItem(it),
@@ -438,15 +438,15 @@ function buildAnalysis(data){
   const losers = positions.filter(p=>Number.isFinite(p.ch) && p.ch<=-3).sort((a,b)=>a.ch-b.ch);
   if(losers.length){
     const l=losers[0];
-    recs.push({title:`Proteger ${l.sym}`,tag:'Riesgo',kind:'bad',text:`Cae ${pct(l.ch)}. No promediar abajo sin señal. Definir stop y esperar estabilización.`});
-    plan.push(`No comprar más ${l.sym} mientras siga débil; revisar stop.`);
+    recs.push({title:`Proteger ${l.sym}`,tag:'Riesgo',kind:'bad',text:`Cae ${pct(l.ch)}. No promediar abajo sin señal. Definir pérdida máxima y esperar estabilización.`});
+    plan.push(`No comprar más ${l.sym} mientras siga débil; revisar pérdida máxima.`);
   }
 
   const winners = positions.filter(p=>Number.isFinite(p.ch) && p.ch>=2).sort((a,b)=>b.ch-a.ch);
   if(winners.length){
     const w=winners[0];
-    recs.push({title:`Tomar parcial si ${w.sym} acelera`,tag:'Momentum',kind:'ok',text:`Sube ${pct(w.ch)}. Mantener si conserva fuerza; tomar parcial si llega a objetivo intradiario.`});
-    plan.push(`En ${w.sym}, no perseguir: mantener con stop dinámico o tomar parcial si estira.`);
+    recs.push({title:`Tomar parcial si ${w.sym} acelera`,tag:'Impulso',kind:'ok',text:`Sube ${pct(w.ch)}. Mantener si conserva fuerza; tomar parcial si llega a objetivo intradiario.`});
+    plan.push(`En ${w.sym}, no perseguir: mantener con pérdida máxima dinámica o tomar parcial si estira.`);
   }
 
   const bondsWeight = positions.filter(p=>p.type==='Bono').reduce((a,p)=>a+(p.weight||0),0);
@@ -472,15 +472,15 @@ function generalSignal(recs){
 function assetRecommendation(p,total){
   let action='Mantener'; let kind='blue'; let score=55; let reasons=[];
   if(p.weight>38){ action='Reducir parcial'; kind='bad'; score=85; reasons.push(`peso alto ${pct(p.weight)}`); }
-  if(Number.isFinite(p.ch) && p.ch<=-3){ action='Proteger / stop'; kind='bad'; score=Math.max(score,82); reasons.push(`caída diaria ${pct(p.ch)}`); }
-  if(Number.isFinite(p.ch) && p.ch>=2 && p.weight<35){ action='Mantener momentum'; kind='ok'; score=Math.max(score,72); reasons.push(`momentum ${pct(p.ch)}`); }
+  if(Number.isFinite(p.ch) && p.ch<=-3){ action='Proteger / pérdida máxima'; kind='bad'; score=Math.max(score,82); reasons.push(`caída diaria ${pct(p.ch)}`); }
+  if(Number.isFinite(p.ch) && p.ch>=2 && p.weight<35){ action='Mantener impulso'; kind='ok'; score=Math.max(score,72); reasons.push(`impulso ${pct(p.ch)}`); }
   if(!Number.isFinite(p.ch)) reasons.push('sin variación disponible');
   if(!Number.isFinite(p.px)) reasons.push('sin precio disponible');
-  const multStop = p.type==='Bono'?0.965:0.97;
+  const multPérdida máxima = p.type==='Bono'?0.965:0.97;
   const multTarget=p.type==='Bono'?1.035:1.045;
   return {
     sym:p.sym,type:p.type,action,kind,score,weight:p.weight,px:p.px,ch:p.ch,value:p.value,
-    stop:Number.isFinite(p.px)?p.px*multStop:NaN,
+    pérdida máxima:Number.isFinite(p.px)?p.px*multPérdida máxima:NaN,
     target:Number.isFinite(p.px)?p.px*multTarget:NaN,
     reasons
   };
@@ -493,21 +493,21 @@ function buildIdeas(quotes, positions){
       const sym=(q.symbol||'').toUpperCase();
       const ch=pctFromQuote(q);
       const px=priceFromQuote(q);
-      let tag='Watch'; let kind='blue'; let text='Seguir sin entrar apurado. Esperar volumen y confirmación.';
-      if(Number.isFinite(ch)&&ch>1&&ch<5){tag='Momentum';kind='ok';text='Tiene fuerza relativa. Entrada solo si confirma y con stop corto.'}
+      let tag='Seguimiento'; let kind='blue'; let text='Seguir sin entrar apurado. Esperar volumen y confirmación.';
+      if(Number.isFinite(ch)&&ch>1&&ch<5){tag='Impulso';kind='ok';text='Tiene fuerza relativa. Entrada solo si confirma y con pérdida máxima corta.'}
       if(Number.isFinite(ch)&&ch<=-2){tag='Esperar';kind='warn';text='Está débil. No agarrar cuchillo cayendo; esperar estabilización.'}
       if(Number.isFinite(ch)&&ch>=5){tag='No perseguir';kind='warn';text='Subió demasiado para entrada tardía. Esperar retroceso.'}
       return {sym,kind,tag,text,px,ch,type:inferType(sym)};
     }).slice(0,12);
 }
 
-function render(data,cached=false){
+function render(data,guardadod=false){
   lastData=data;
   const a=buildAnalysis(data);
 
   $('setupCard').classList.add('hide');
-  $('statusText').textContent = cached ? 'Mostrando último dato guardado' : 'Datos reales desde IOL';
-  $('connState').innerHTML = cached ? '<span class="warnc">Cache</span>' : '<span class="ok">Conectado</span>';
+  $('statusText').textContent = guardadod ? 'Mostrando último dato guardado' : 'Datos reales desde IOL';
+  $('connState').innerHTML = guardadod ? '<span class="warnc">Guardado</span>' : '<span class="ok">Conectado</span>';
   $('updatedAt').textContent = fmtDate(data.updatedAt);
   $('modePill').className = data.security?.ordersEnabled ? 'pill bad' : 'pill';
   $('modePill').textContent = data.security?.ordersEnabled ? 'Órdenes activas' : 'Solo lectura';
@@ -518,7 +518,7 @@ function render(data,cached=false){
     a.signal==='Revisar' ? '<span class="warnc">Revisar</span>' :
     '<span class="warnc">Esperar</span>';
   $('mainTotal').textContent = a.total ? money(a.total) : 'Cartera IOL';
-  $('mainSub').textContent = (data.source || 'IOL API') + (cached ? ' · guardado local' : '');
+  $('mainSub').textContent = (data.source || 'IOL API') + (guardadod ? ' · guardado local' : '');
 
   const warnings = data.warnings || [];
   $('messageArea').innerHTML = warnings.length
@@ -527,7 +527,7 @@ function render(data,cached=false){
 
   $('dailyPlan').innerHTML = a.plan.slice(0,5).map(x=>`<li>${escapeHtml(x)}</li>`).join('');
   renderRecommendations(a);
-  renderPortfolio(a);
+  renderCartera(a);
   renderIdeas(a);
 }
 function pillClass(kind){
@@ -554,7 +554,7 @@ function renderRecommendations(a){
         <div class="grid">
           <div><div class="label">Precio</div><div class="value mono">${Number.isFinite(r.px)?money(r.px):'—'}</div></div>
           <div><div class="label">Día</div><div class="value mono ${r.ch<0?'bad':r.ch>0?'ok':''}">${pct(r.ch)}</div></div>
-          <div><div class="label">Stop sugerido</div><div class="value mono">${Number.isFinite(r.stop)?money(r.stop):'—'}</div></div>
+          <div><div class="label">Pérdida máxima sugerida</div><div class="value mono">${Number.isFinite(r.pérdida máxima)?money(r.pérdida máxima):'—'}</div></div>
           <div><div class="label">Objetivo parcial</div><div class="value mono">${Number.isFinite(r.target)?money(r.target):'—'}</div></div>
         </div>
         <div class="scorebar"><span style="width:${Math.max(10,Math.min(100,r.score))}%"></span></div>
@@ -566,7 +566,7 @@ function renderRecommendations(a){
 }
 function renderIdeas(a){
   if(!a.ideas.length){
-    $('ideasList').innerHTML = '<div class="notice">No llegaron cotizaciones de watchlist. Igual se muestran recomendaciones por tus tenencias.</div>';
+    $('ideasList').innerHTML = '<div class="notice">No llegaron cotizaciones de la lista de seguimiento. Igual se muestran recomendaciones por tus tenencias.</div>';
     return;
   }
   $('ideasList').innerHTML = a.ideas.map(i=>`
@@ -583,12 +583,12 @@ function renderIdeas(a){
       <p class="muted small">${escapeHtml(i.text)}</p>
     </div>`).join('');
 }
-function renderPortfolio(a){
+function renderCartera(a){
   if(!a.positions.length){
-    $('portfolioList').innerHTML='<div class="notice">IOL respondió, pero no pude reconocer la lista de activos. Abrí Técnico y pasame esa respuesta.</div>';
+    $('carteraList').innerHTML='<div class="notice">IOL respondió, pero no pude reconocer la lista de activos. Abrí Técnico y pasame esa respuesta.</div>';
     return;
   }
-  $('portfolioList').innerHTML = a.positions.map(p=>`
+  $('carteraList').innerHTML = a.positions.map(p=>`
     <div class="asset">
       <div class="row">
         <div>
