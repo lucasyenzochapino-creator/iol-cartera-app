@@ -170,6 +170,18 @@
       </div>
     </div>
 
+    <div class="card">
+      <div class="row">
+        <div>
+          <div class="eyebrow">Saldo disponible para operar</div>
+          <div class="total" id="availableCashMain">—</div>
+          <div class="muted small" id="availableCashSub">Esperando saldo real desde IOL</div>
+        </div>
+        <span id="availableCashPill" class="pill warn">No detectado</span>
+      </div>
+      <div id="availableCashWarning" style="margin-top:12px"></div>
+    </div>
+
     <div class="grid">
       <div class="stat"><div class="label">Estado</div><div class="value" id="connState">No conectado</div></div>
       <div class="stat"><div class="label">Última lectura</div><div class="value small" id="updatedAt">—</div></div>
@@ -683,9 +695,34 @@ function buildIdeas(quotes, positions){
     }).slice(0,12);
 }
 
+
+function renderMainAvailableCash(data, total){
+  const cash = detectAvailableCash(data, total);
+
+  if(cash.detected){
+    $('availableCashMain').textContent = money(cash.amount);
+    $('availableCashSub').textContent = 'Disponible real leído desde IOL para operar';
+    $('availableCashPill').className = 'pill';
+    $('availableCashPill').textContent = 'Disponible';
+    $('availableCashWarning').innerHTML = cash.path
+      ? '<div class="success tiny">Origen detectado: '+escapeHtml(cash.path)+'</div>'
+      : '';
+    return cash;
+  }
+
+  $('availableCashMain').textContent = 'No detectado';
+  $('availableCashSub').textContent = 'IOL respondió, pero no pude identificar el campo de saldo disponible';
+  $('availableCashPill').className = 'pill warn';
+  $('availableCashPill').textContent = 'Revisar';
+  $('availableCashWarning').innerHTML =
+    '<div class="warning"><b>Atención:</b> no voy a calcular montos operativos hasta leer el disponible real. Revisá la pestaña Técnico para ver cómo llega el saldo desde IOL.</div>';
+  return cash;
+}
+
 function render(data,cached=false){
   lastData=data;
   const a=buildAnalysis(data);
+  renderMainAvailableCash(data, a.total);
 
   $('setupCard').classList.add('hide');
   $('statusText').textContent = cached ? 'Mostrando último dato guardado' : 'Datos reales desde IOL';
