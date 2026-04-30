@@ -17,7 +17,8 @@
       --accent:#f5c97b;--green:#56d364;--red:#ff7b72;--yellow:#ffd33d;
       --blue:#79c0ff;--violet:#c297ff;--shadow:0 12px 32px rgba(0,0,0,.24)
     }
-    *{box-sizing:border-box}
+    *{box-sizing:border-box;min-width:0}
+    html,body{width:100%;max-width:100%;overflow-x:hidden}
     body{
       margin:0;background:var(--bg);color:var(--txt);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
@@ -26,7 +27,8 @@
     header{
       position:sticky;top:0;z-index:10;background:rgba(13,17,23,.94);
       backdrop-filter:blur(16px);padding:calc(env(safe-area-inset-top) + 15px) 16px 13px;
-      border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px
+      border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;
+      width:100%;max-width:100%;overflow:hidden
     }
     .brand{display:flex;align-items:center;gap:10px;min-width:0}
     .logo{
@@ -38,14 +40,15 @@
     h2{font-size:19px;margin:0 0 10px;letter-spacing:-.02em}
     h3{font-size:18px;margin:0}
     .sub{font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:210px}
-    .wrap{max-width:820px;margin:0 auto;padding:16px}
+    .wrap{width:100%;max-width:820px;margin:0 auto;padding:16px;overflow-x:hidden}
     .card{
+      width:100%;max-width:100%;overflow:hidden;
       background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)
     }
     .hero{background:linear-gradient(145deg,#1d2634,#111722);border-color:#39424f}
     .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.16em;color:var(--accent);font-weight:900}
     .total{font-size:34px;font-weight:950;letter-spacing:-.05em;margin:8px 0 2px}
-    .muted{color:var(--muted)}.small{font-size:13px}.tiny{font-size:12px;color:var(--muted2)}
+    .muted{color:var(--muted)}.small{font-size:13px}.tiny{font-size:12px;color:var(--muted2);overflow-wrap:anywhere;word-break:break-word}
     button,input{font:inherit}
     .btn{
       border:0;border-radius:13px;padding:13px 14px;font-weight:900;cursor:pointer;min-height:46px
@@ -55,11 +58,11 @@
     .btn-danger{background:rgba(255,123,114,.15);color:var(--red);border:1px solid rgba(255,123,114,.28)}
     .btn:active{transform:scale(.99)}
     .topbtn{white-space:nowrap;padding:12px 13px}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-    .stat{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px}
-    .label{font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted2);font-weight:900}
-    .value{font-size:17px;font-weight:900;margin-top:5px;word-break:break-word}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+    .stat{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px;min-width:0;overflow:hidden}
+    .label{font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted2);font-weight:900;overflow-wrap:anywhere}
+    .value{font-size:17px;font-weight:900;margin-top:5px;word-break:break-word;overflow-wrap:anywhere;max-width:100%}
     .ok{color:var(--green)}.bad{color:var(--red)}.warnc{color:var(--yellow)}.blue{color:var(--blue)}.violet{color:var(--violet)}
     .pill{
       display:inline-flex;gap:6px;align-items:center;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:900;
@@ -150,8 +153,13 @@
     }
     @keyframes spin{to{transform:rotate(360deg)}}
     @media(max-width:560px){
-      .wrap{padding:14px}.grid3{grid-template-columns:1fr}.total{font-size:31px}
-      .sub{max-width:170px}.actions{grid-template-columns:1fr}
+      .wrap{padding:14px;max-width:100vw}
+      .grid,.grid3{grid-template-columns:1fr}
+      .total{font-size:29px;line-height:1.05;overflow-wrap:anywhere}
+      .sub{max-width:150px}
+      .actions{grid-template-columns:1fr}
+      .topbtn{padding:11px 12px;min-width:auto}
+      .row{align-items:flex-start}
     }
   </style>
 </head>
@@ -250,25 +258,28 @@
 
   <section id="screen-consulta" class="hide">
     <div class="card">
-      <div class="eyebrow">Consulta rápida</div>
-      <h2>Preguntar sobre una inversión</h2>
+      <div class="eyebrow">Consulta abierta</div>
+      <h2>Preguntar cualquier duda de inversión</h2>
       <p class="muted small">
-        Escribí el ticker o instrumento y tu duda. La respuesta usa los datos que la app ya tiene desde IOL: cartera, cotizaciones, variación, riesgo y saldos disponibles.
+        Escribí tu pregunta en lenguaje normal. No hace falta cargar un instrumento. La app usa tus datos reales de IOL: cartera, cotizaciones, saldos disponibles y recomendaciones del día.
       </p>
 
-      <label class="label" for="consultaTicker" style="margin-top:12px">Instrumento</label>
-      <input id="consultaTicker" class="input mono" placeholder="Ej: GGAL, AL30, NVDA, CAUCIÓN" autocomplete="off" />
+      <label class="label" for="consultaTexto" style="margin-top:12px">Tu pregunta</label>
+      <textarea id="consultaTexto" class="textarea" placeholder="Ej: ¿Qué hago hoy con mi cartera? ¿Conviene caución o comprar algo? ¿Qué activo debería evitar? ¿Cuánto dinero tengo disponible para operar? ¿Qué hago con GGAL?"></textarea>
 
-      <label class="label" for="consultaTexto" style="margin-top:12px">Tu duda</label>
-      <textarea id="consultaTexto" class="textarea" placeholder="Ej: ¿Conviene comprar GGAL hoy? ¿Pongo caución a 1 día o 7 días? ¿Mantengo AL30?"></textarea>
+      <label class="label" for="consultaTicker" style="margin-top:12px">Instrumento opcional</label>
+      <input id="consultaTicker" class="input mono" placeholder="Opcional: GGAL, AL30, NVDA, CAUCIÓN" autocomplete="off" />
 
       <div class="actions">
-        <button class="btn btn-primary" onclick="responderConsulta()">Analizar duda</button>
+        <button class="btn btn-primary" onclick="responderConsulta()">Responder consulta</button>
+        <button class="btn btn-secondary" onclick="consultaGeneralRapida()">Recomendación general</button>
+      </div>
+      <div class="actions">
         <button class="btn btn-secondary" onclick="limpiarConsulta()">Limpiar</button>
       </div>
 
       <div id="consultaRespuesta" style="margin-top:12px">
-        <div class="notice">Actualizá la app y consultá por un instrumento. No ejecuta órdenes.</div>
+        <div class="notice">Podés preguntar por la cartera completa o por un activo puntual. No ejecuta órdenes.</div>
       </div>
     </div>
   </section>
@@ -364,6 +375,11 @@ function toNumber(v){
   return Number.isFinite(n)?n:NaN;
 }
 function escapeHtml(s){return String(s ?? '').replace(/[&<>'"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+function shortPath(path){
+  const parts = String(path || '').split('.').filter(Boolean);
+  if(parts.length <= 3) return String(path || '');
+  return '...' + parts.slice(-3).join('.');
+}
 
 function getPin(){
   const keys = [
@@ -907,10 +923,10 @@ function renderMainAvailableCash(data, total){
   const usd = balances.usd;
 
   $('availableARSMain').textContent = ars.detected ? money(ars.amount) : 'No detectado';
-  $('availableARSPath').textContent = ars.detected ? ('Origen: ' + ars.path) : 'ARS no identificado';
+  $('availableARSPath').textContent = ars.detected ? ('Origen: ' + shortPath(ars.path)) : 'ARS no identificado';
 
   $('availableUSDMain').textContent = usd.detected ? usdMoney(usd.amount) : 'No detectado';
-  $('availableUSDPath').textContent = usd.detected ? ('Origen: ' + usd.path) : 'USD no identificado en respuesta de IOL';
+  $('availableUSDPath').textContent = usd.detected ? ('Origen: ' + shortPath(usd.path)) : 'USD no identificado en respuesta de IOL';
 
   if(ars.detected || usd.detected){
     $('availableCashSub').textContent = 'Saldos disponibles reales leídos desde IOL';
@@ -2034,6 +2050,26 @@ function normalizarTickerConsulta(valor){
   return t.replace(/[^A-Z0-9Ñ.]/g,'');
 }
 
+function detectarTickerEnTexto(texto){
+  const raw = String(texto || '').toUpperCase();
+
+  if(raw.includes('CAUC')) return 'CAUCIÓN';
+
+  const candidatos = [];
+  try{
+    if(lastData){
+      const a = buildAnalysis(lastData);
+      (a.positions || []).forEach(p => p.sym && candidatos.push(String(p.sym).toUpperCase()));
+      (a.instrumentDetails || []).forEach(p => p.sym && candidatos.push(String(p.sym).toUpperCase()));
+      (a.allTypes || []).forEach(p => p.sym && p.sym !== 'Sin dato' && candidatos.push(String(p.sym).toUpperCase()));
+      (a.actionable || []).forEach(p => p.sym && candidatos.push(String(p.sym).toUpperCase()));
+    }
+  }catch(e){}
+
+  const unico = [...new Set(candidatos)].sort((a,b)=>b.length-a.length);
+  return unico.find(sym => raw.includes(sym)) || '';
+}
+
 function buscarInstrumentoConsulta(ticker, texto){
   if(!lastData) return null;
 
@@ -2041,10 +2077,12 @@ function buscarInstrumentoConsulta(ticker, texto){
   const details = Array.isArray(a.instrumentDetails) ? a.instrumentDetails : [];
   const allTypes = Array.isArray(a.allTypes) ? a.allTypes : [];
   const actionable = Array.isArray(a.actionable) ? a.actionable : [];
-  const all = [...details, ...allTypes, ...actionable];
+  const universe = typeof buildCandidateUniverse === 'function' ? buildCandidateUniverse(a) : [];
+  const all = [...details, ...allTypes, ...actionable, ...universe];
 
-  const rawText = String(ticker || '') + ' ' + String(texto || '');
-  const wanted = normalizarTickerConsulta(ticker) || normalizarTickerConsulta((rawText.match(/[A-ZÑ]{2,8}[0-9]?/i) || [''])[0]);
+  const wanted = normalizarTickerConsulta(ticker) || detectarTickerEnTexto(texto);
+
+  if(!wanted) return null;
 
   if(wanted === 'CAUCIÓN'){
     return {
@@ -2083,34 +2121,120 @@ function buscarInstrumentoConsulta(ticker, texto){
   };
 }
 
-function responderConsulta(){
-  const ticker = $('consultaTicker').value;
-  const texto = $('consultaTexto').value;
-
-  if(!lastData){
-    $('consultaRespuesta').innerHTML = '<div class="error">Primero tocá Actualizar para cargar datos reales desde IOL.</div>';
-    return;
-  }
-
-  const analysis = buildAnalysis(lastData);
+function resumenSaldosConsulta(analysis){
   const balances = detectAvailableBalances(lastData, analysis.total);
-  const inst = buscarInstrumentoConsulta(ticker, texto);
+  return {
+    balances,
+    arsTexto: balances.ars.detected ? money(balances.ars.amount) : 'No detectado',
+    usdTexto: balances.usd.detected ? usdMoney(balances.usd.amount) : 'No detectado'
+  };
+}
 
-  if(!inst){
-    $('consultaRespuesta').innerHTML = `
-      <div class="warning">
-        <b>No encontré ese instrumento en tus datos actuales.</b><br>
-        Escribí el ticker exacto que figure en Cartera o en la lista de seguimiento. Ejemplo: GGAL, AL30, NVDA, CAUCIÓN.
-      </div>
-    `;
-    return;
+function armarRespuestaGeneral(texto){
+  const analysis = buildAnalysis(lastData);
+  const saldos = resumenSaldosConsulta(analysis);
+  const concreta = typeof buildDailyConcretePortfolio === 'function'
+    ? buildDailyConcretePortfolio(analysis)
+    : null;
+
+  const asignaciones = concreta && Array.isArray(concreta.allocations)
+    ? concreta.allocations.slice(0,4)
+    : [];
+
+  const noOperar = concreta && Array.isArray(concreta.avoid)
+    ? concreta.avoid.slice(0,5)
+    : [];
+
+  const señal = generalSignal(analysis.recs || []);
+  const activos = analysis.positions || [];
+
+  let respuestaDirecta = 'Con los datos actuales, conviene operar de forma selectiva y priorizar preservación de capital.';
+  const consulta = String(texto || '').toLowerCase();
+
+  if(consulta.includes('cauc') || consulta.includes('caución')){
+    respuestaDirecta = 'Si no hay entrada clara en activos de riesgo, la caución corta es la alternativa defensiva principal. Usar plazos cortos para no perder flexibilidad.';
+  } else if(consulta.includes('qué hago') || consulta.includes('que hago') || consulta.includes('hoy') || consulta.includes('recomend')){
+    respuestaDirecta = 'Para hoy, la decisión debe salir del disponible real, no del total de cartera. Si hay señal débil, priorizar caución y evitar compras forzadas.';
+  } else if(consulta.includes('saldo') || consulta.includes('disponible') || consulta.includes('dinero')){
+    respuestaDirecta = 'El dinero operable debe ser solo el saldo disponible. No se debe contar como disponible lo que ya está invertido en tenencias.';
+  } else if(consulta.includes('riesgo')){
+    respuestaDirecta = 'El principal riesgo actual se mide por concentración, caídas fuertes, falta de confirmación y no respetar pérdida máxima.';
   }
 
-  const decision = dailyDecisionForCandidate(inst);
-  const alloc = allocationForSpecificInstrument(inst, balances.ars.detected ? balances.ars.amount : 0, [inst]);
-  const montoTexto = balances.ars.detected && alloc.pct > 0 ? money(balances.ars.amount * alloc.pct / 100) : 'No calculado';
+  return `
+    <div class="consulta-box">
+      <div class="eyebrow">Respuesta general</div>
+      <h2>Recomendación directa</h2>
+      <p class="muted small"><b>${escapeHtml(respuestaDirecta)}</b></p>
 
-  $('consultaRespuesta').innerHTML = `
+      <div class="grid">
+        <div class="stat">
+          <div class="label">Disponible ARS</div>
+          <div class="value mono money-sensitive">${escapeHtml(saldos.arsTexto)}</div>
+        </div>
+        <div class="stat">
+          <div class="label">Disponible USD</div>
+          <div class="value mono money-sensitive">${escapeHtml(saldos.usdTexto)}</div>
+        </div>
+        <div class="stat">
+          <div class="label">Señal general</div>
+          <div class="value">${escapeHtml(señal)}</div>
+        </div>
+        <div class="stat">
+          <div class="label">Activos en cartera</div>
+          <div class="value">${activos.length}</div>
+        </div>
+      </div>
+
+      ${asignaciones.length ? `
+        <div class="section">Cartera sugerida para hoy</div>
+        ${asignaciones.map((x,idx)=>`
+          <div class="asset">
+            <div class="row">
+              <div>
+                <h3>${idx+1}) ${escapeHtml(x.sym)}</h3>
+                <div class="tiny">${escapeHtml(x.type)} · ${escapeHtml(x.plazo || 'Plazo no definido')}</div>
+              </div>
+              <span class="${pillClass(x.type === 'Caución' ? 'ok' : 'blue')}">${escapeHtml(x.accion || 'Evaluar')}</span>
+            </div>
+            <div class="grid">
+              <div><div class="label">Monto</div><div class="value mono money-sensitive">${Number.isFinite(x.monto) ? money(x.monto) : 'No calculado'}</div></div>
+              <div><div class="label">Porcentaje</div><div class="value mono">${Number(x.pct || 0).toFixed(0)}%</div></div>
+            </div>
+            <p class="muted small"><b>Motivo:</b> ${escapeHtml(x.motivo || '')}</p>
+          </div>
+        `).join('')}
+      ` : `
+        <div class="warning" style="margin-top:12px">No pude armar una cartera sugerida concreta con los datos actuales. Revisá disponible real y cotizaciones.</div>
+      `}
+
+      ${noOperar.length ? `
+        <div class="section">Evitar / no operar</div>
+        ${noOperar.map(x=>`
+          <div class="asset">
+            <div class="row">
+              <div>
+                <h3>${escapeHtml(x.sym)}</h3>
+                <div class="tiny">${escapeHtml(x.type || '')}</div>
+              </div>
+              <span class="pill warn">${escapeHtml(x.decision?.accion || 'No operar')}</span>
+            </div>
+            <p class="muted small">${escapeHtml(x.decision?.motivo || 'Sin ventaja clara.')}</p>
+          </div>
+        `).join('')}
+      ` : ''}
+    </div>
+  `;
+}
+
+function armarRespuestaInstrumento(inst){
+  const analysis = buildAnalysis(lastData);
+  const saldos = resumenSaldosConsulta(analysis);
+  const decision = dailyDecisionForCandidate(inst);
+  const alloc = allocationForSpecificInstrument(inst, saldos.balances.ars.detected ? saldos.balances.ars.amount : 0, [inst]);
+  const montoTexto = saldos.balances.ars.detected && alloc.pct > 0 ? money(saldos.balances.ars.amount * alloc.pct / 100) : 'No calculado';
+
+  return `
     <div class="consulta-box">
       <div class="row">
         <div>
@@ -2125,15 +2249,15 @@ function responderConsulta(){
       <div class="grid">
         <div class="stat">
           <div class="label">Disponible ARS</div>
-          <div class="value mono money-sensitive">${balances.ars.detected ? money(balances.ars.amount) : 'No detectado'}</div>
+          <div class="value mono money-sensitive">${escapeHtml(saldos.arsTexto)}</div>
         </div>
         <div class="stat">
           <div class="label">Disponible USD</div>
-          <div class="value mono money-sensitive">${balances.usd.detected ? usdMoney(balances.usd.amount) : 'No detectado'}</div>
+          <div class="value mono money-sensitive">${escapeHtml(saldos.usdTexto)}</div>
         </div>
         <div class="stat">
           <div class="label">Monto sugerido</div>
-          <div class="value mono money-sensitive">${montoTexto}</div>
+          <div class="value mono money-sensitive">${escapeHtml(montoTexto)}</div>
         </div>
         <div class="stat">
           <div class="label">Porcentaje</div>
@@ -2152,13 +2276,32 @@ function responderConsulta(){
       </div>
     </div>
   `;
+}
+
+function responderConsulta(){
+  const ticker = $('consultaTicker').value;
+  const texto = $('consultaTexto').value;
+
+  if(!lastData){
+    $('consultaRespuesta').innerHTML = '<div class="error">Primero tocá Actualizar para cargar datos reales desde IOL.</div>';
+    return;
+  }
+
+  const inst = buscarInstrumentoConsulta(ticker, texto);
+  $('consultaRespuesta').innerHTML = inst ? armarRespuestaInstrumento(inst) : armarRespuestaGeneral(texto);
   applyMoneyVisibility();
+}
+
+function consultaGeneralRapida(){
+  $('consultaTicker').value = '';
+  if(!$('consultaTexto').value.trim()) $('consultaTexto').value = 'Dame una recomendación general para hoy con mi cartera y mi saldo disponible.';
+  responderConsulta();
 }
 
 function limpiarConsulta(){
   $('consultaTicker').value = '';
   $('consultaTexto').value = '';
-  $('consultaRespuesta').innerHTML = '<div class="notice">Escribí un instrumento y tu duda para analizar.</div>';
+  $('consultaRespuesta').innerHTML = '<div class="notice">Podés preguntar por la cartera completa o por un activo puntual.</div>';
 }
 
 function boot(){
