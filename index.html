@@ -187,7 +187,7 @@
     <div class="card">
       <div class="eyebrow">Recomendaciones</div>
       <h2>Qué haría hoy</h2>
-      <p class="muted small">Motor táctico basado en tus tenencias reales, cotizaciones disponibles desde IOL y método combinado: análisis técnico + análisis fundamental. Evalúa acciones argentinas, CEDEARs/ETF, bonos y caución. Primero muestra una cartera sugerida concreta para hoy: instrumento, monto, porcentaje, plazo, motivo, entrada, salida e instrumentos a no operar. No ejecuta órdenes.</p>
+      <p class="muted small">Motor táctico basado en tus tenencias reales, cotizaciones disponibles desde IOL y método combinado: análisis técnico + análisis fundamental. Evalúa acciones argentinas, CEDEARs/ETF, bonos y caución. Primero muestra una cartera sugerida concreta para hoy usando únicamente dinero disponible para operar. Si no detecta disponible en IOL, no inventa montos. No ejecuta órdenes.</p>
     </div>
     <div id="recommendationsList"><div class="notice">Actualizá la app para ver recomendaciones.</div></div>
 
@@ -1085,12 +1085,52 @@ function buildSpecificInstrumentRecommendations(positions, quotes, total, allTyp
 
 
 function findCashLikeValues(obj, depth=0, path=''){
-  if(!obj || depth > 6) return [];
+  if(!obj || depth > 7) return [];
+
   const out = [];
-  const keysCash = [
-    'disponible','saldo','saldos','cash','efectivo','liquidez','pesos','ars',
-    'saldoDisponible','poderCompra','buyingPower','cuentaCorriente','disponibleOperar'
+  const strongCashKeys = [
+    'disponible',
+    'saldoDisponible',
+    'poderCompra',
+    'buyingPower',
+    'cashAvailable',
+    'availableCash',
+    'disponibleOperar',
+    'montoDisponible',
+    'efectivoDisponible',
+    'saldoParaOperar',
+    'disponibleInmediato'
   ];
+
+  const weakButValidKeys = [
+    'efectivo',
+    'liquidez',
+    'cash'
+  ];
+
+  function keyLooksAvailable(k){
+    const kl = String(k || '').toLowerCase();
+    return strongCashKeys.some(w => kl === w.toLowerCase() || kl.includes(w.toLowerCase()));
+  }
+
+  function keyLooksPossiblyCash(k){
+    const kl = String(k || '').toLowerCase();
+    return weakButValidKeys.some(w => kl === w.toLowerCase() || kl.includes(w.toLowerCase()));
+  }
+
+  function pathLooksPortfolioValuation(p){
+    const pl = String(p || '').toLowerCase();
+    return (
+      pl.includes('valuacion') ||
+      pl.includes('valoractual') ||
+      pl.includes('valorizado') ||
+      pl.includes('tenencia') ||
+      pl.includes('portfolio') ||
+      pl.includes('portafolio') ||
+      pl.includes('instrumento') ||
+      pl.includes('titulo')
+    );
+  }
 
   if(Array.isArray(obj)){
     obj.forEach((v,i)=>out.push(...findCashLikeValues(v, depth+1, path+'.'+i)));
@@ -1100,36 +1140,54 @@ function findCashLikeValues(obj, depth=0, path=''){
   if(typeof obj === 'object'){
     Object.keys(obj).forEach(k=>{
       const v = obj[k];
-      const kl = String(k).toLowerCase();
-      if(keysCash.some(w=>kl.includes(w.toLowerCase()))){
-        const n = toNumber(v);
-        if(Number.isFinite(n) && n > 0) out.push({path:path+'.'+k, value:n});
+      const fullPath = path ? path + '.' + k : k;
+      const n = toNumber(v);
+
+      if(Number.isFinite(n) && n > 0 && !pathLooksPortfolioValuation(fullPath)){
+        if(keyLooksAvailable(k)){
+          out.push({path:fullPath, value:n, confidence:3});
+        } else if(keyLooksPossiblyCash(k)){
+          out.push({path:fullPath, value:n, confidence:2});
+        }
       }
-      if(typeof v === 'object') out.push(...findCashLikeValues(v, depth+1, path+'.'+k));
+
+      if(typeof v === 'object'){
+        out.push(...findCashLikeValues(v, depth+1, fullPath));
+      }
     });
   }
+
   return out;
 }
 
 function detectAvailableCash(data, total){
   const values = findCashLikeValues(data || {});
+  const maxReasonable = Number.isFinite(total) && total > 0 ? total * 1.05 : Infinity;
+
   const candidates = values
-    .map(x=>x.value)
-    .filter(v=>Number.isFinite(v) && v > 1000 && (!Number.isFinite(total) || v <= total * 1.5))
-    .sort((a,b)=>b-a);
+    .filter(x => Number.isFinite(x.value) && x.value > 1000 && x.value <= maxReasonable)
+    .sort((a,b) => (b.confidence - a.confidence) || (b.value - a.value));
 
   if(candidates.length){
     return {
-      amount:candidates[0],
-      source:'Efectivo disponible leído desde IOL'
+      amount:candidates[0].value,
+      source:'Efectivo disponible para operar leído desde IOL',
+      detected:true,
+      path:candidates[0].path
     };
   }
 
-  const fallback = Number.isFinite(total) && total > 0 ? total * 0.25 : 0;
   return {
-    amount:fallback,
-    source:'No se leyó efectivo disponible. Base táctica estimada: 25% de la cartera.'
+    amount:0,
+    source:'No pude detectar efectivo disponible para operar desde IOL. No se asignan montos para comprar.',
+    detected:false,
+    path:''
   };
+}
+
+function moneyOrUnavailable(n, cashDetected){
+  if(!cashDetected) return 'No calculado';
+  return money(n);
 }
 
 function buildCandidateUniverse(a){
@@ -1309,7 +1367,7 @@ function buildDailyConcretePortfolio(a){
       ...x,
       accion:x.decision.accion,
       pct,
-      monto:capital * pct / 100,
+      monto:cashInfo.detected ? capital * pct / 100 : NaN,
       plazo:x.decision.plazo,
       motivo:x.decision.motivo,
       riesgo:x.decision.riesgo,
@@ -1324,7 +1382,7 @@ function buildDailyConcretePortfolio(a){
     type:'Caución',
     accion:'COLOCAR',
     pct:caucionPct,
-    monto:capital * caucionPct / 100,
+    monto:cashInfo.detected ? capital * caucionPct / 100 : NaN,
     plazo: risky.length ? '24/48 hs' : '1 a 3 días',
     motivo: risky.length
       ? 'Mantener saldo libre rindiendo mientras se ejecutan compras solo si confirman.'
@@ -1337,11 +1395,13 @@ function buildDailyConcretePortfolio(a){
 
   allocations = allocations.filter(x=>x.pct > 0.1);
 
-  const totalAllocated = allocations.reduce((s,x)=>s+x.monto,0);
+  const totalAllocated = cashInfo.detected ? allocations.reduce((s,x)=>s+(Number.isFinite(x.monto) ? x.monto : 0),0) : NaN;
 
   return {
     capital,
     cashSource:cashInfo.source,
+    cashDetected:cashInfo.detected,
+    cashPath:cashInfo.path || '',
     allocations,
     avoid,
     totalAllocated
@@ -1369,9 +1429,11 @@ function renderDailyConcretePortfolio(a){
       <div class="eyebrow">Recomendación operativa de hoy</div>
       <h2>Cartera sugerida para hoy</h2>
       <p class="muted small">
-        Capital base para operar: <b>${money(p.capital)}</b><br>
-        ${escapeHtml(p.cashSource)}
+        Capital disponible para operar: <b>${p.cashDetected ? money(p.capital) : 'No detectado'}</b><br>
+        ${escapeHtml(p.cashSource)}${p.cashPath ? '<br><span class="tiny">Origen detectado: '+escapeHtml(p.cashPath)+'</span>' : ''}
       </p>
+
+      ${!p.cashDetected ? '<div class="warning"><b>Atención:</b> la app no pudo leer efectivo disponible desde IOL. Por seguridad no calcula montos de compra. Solo muestra porcentajes de referencia. Para operar, usar el dinero realmente disponible en IOL.</div>' : ''}
 
       ${rows.map((x, idx)=>`
         <div class="asset">
@@ -1388,7 +1450,7 @@ function renderDailyConcretePortfolio(a){
           <div class="grid">
             <div>
               <div class="label">Monto</div>
-              <div class="value mono">${money(x.monto)}</div>
+              <div class="value mono">${moneyOrUnavailable(x.monto, p.cashDetected)}</div>
             </div>
             <div>
               <div class="label">Porcentaje</div>
@@ -1414,7 +1476,7 @@ function renderDailyConcretePortfolio(a){
       `).join('')}
 
       <div class="notice">
-        <b>Total asignado:</b> ${money(p.totalAllocated)}. No ejecutar de golpe si el precio se escapa; priorizar confirmación y preservación de capital.
+        <b>Total asignado:</b> ${p.cashDetected ? money(p.totalAllocated) : 'No calculado porque no se detectó disponible'}. No ejecutar de golpe si el precio se escapa; priorizar confirmación y preservación de capital.
       </div>
 
       ${avoid.length ? `
