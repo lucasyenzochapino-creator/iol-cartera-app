@@ -187,7 +187,7 @@
     <div class="card">
       <div class="eyebrow">Recomendaciones</div>
       <h2>Qué haría hoy</h2>
-      <p class="muted small">Motor táctico basado en tus tenencias reales, cotizaciones disponibles desde IOL y método combinado: análisis técnico + análisis fundamental. Evalúa acciones argentinas, CEDEARs/ETF, bonos y caución. No ejecuta órdenes.</p>
+      <p class="muted small">Motor táctico basado en tus tenencias reales, cotizaciones disponibles desde IOL y método combinado: análisis técnico + análisis fundamental. Evalúa acciones argentinas, CEDEARs/ETF, bonos y caución. Primero muestra una cartera sugerida concreta para hoy: instrumento, monto, porcentaje, plazo, motivo, entrada, salida e instrumentos a no operar. No ejecuta órdenes.</p>
     </div>
     <div id="recommendationsList"><div class="notice">Actualizá la app para ver recomendaciones.</div></div>
 
@@ -604,7 +604,8 @@ function buildAnalysis(data){
       signal:'Revisar',
       actionable:[],
       ideas:buildIdeas(quotes, []),
-      allTypes:buildAllInvestmentTypes([], quotes, [])
+      allTypes:buildAllInvestmentTypes([], quotes, []),
+      instrumentDetails:buildSpecificInstrumentRecommendations([], quotes, 0, buildAllInvestmentTypes([], quotes, []))
     };
   }
 
@@ -642,7 +643,8 @@ function buildAnalysis(data){
   const actionable = positions.map(p=>assetRecommendation(p,total)).sort((a,b)=>b.score-a.score);
   const ideas = buildIdeas(quotes, positions);
   const allTypes = buildAllInvestmentTypes(positions, quotes, recs);
-  return {positions,total,recs,plan,signal:generalSignal(recs),actionable,ideas,allTypes};
+  const instrumentDetails = buildSpecificInstrumentRecommendations(positions, quotes, total, allTypes);
+  return {positions,total,recs,plan,signal:generalSignal(recs),actionable,ideas,allTypes,instrumentDetails};
 }
 function generalSignal(recs){
   if(recs.some(r=>r.kind==='bad')) return 'Defensivo';
@@ -782,6 +784,705 @@ function combinedConclusion(x){
   return 'Conclusión combinada: no hay ventaja suficiente. Mejor esperar, usar caución o mantener liquidez.';
 }
 
+
+function formatAllocationAmount(total, pct){
+  const n = toNumber(total);
+  const p = Number(pct || 0);
+  if(!Number.isFinite(n) || n <= 0 || p <= 0) return '—';
+  return money(n * p / 100);
+}
+
+function allocationForType(x, portfolioTotal, allTypes){
+  const score = Number(x.score || 0);
+  const type = String(x.type || '');
+  const action = String(x.action || '').toLowerCase();
+  const hasStrong = (allTypes || []).some(t => t.type !== 'Caución' && Number(t.score || 0) >= 72 && !String(t.action || '').toLowerCase().includes('evitar'));
+  const defensive = (allTypes || []).some(t => ['Acción AR','CEDEAR/ETF','Bono'].includes(t.type) && (Number(t.score || 0) < 58 || String(t.action || '').toLowerCase().includes('esperar')));
+
+  let pct = 0;
+  let days = 'No aplica';
+  let note = 'No comprar hasta tener mejor señal.';
+
+  if(action.includes('reducir')) {
+    pct = 0;
+    note = 'No aumentar posición. Si ya está comprado, evaluar venta parcial en rebote.';
+  } else if(type === 'Caución') {
+    if(hasStrong && !defensive){
+      pct = 20;
+      days = '1 día o 24/48 hs';
+      note = 'Usar para el saldo libre mientras se esperan entradas mejores.';
+    } else if(defensive){
+      pct = 60;
+      days = '1 a 3 días';
+      note = 'Priorizar liquidez. Colocar corto para poder salir rápido si aparece oportunidad.';
+    } else {
+      pct = 50;
+      days = '3 a 7 días';
+      note = 'Útil si no hay señal clara en acciones, CEDEARs o bonos.';
+    }
+  } else if(type === 'Acción AR') {
+    if(score >= 72){ pct = 12; note = 'Entrada táctica. No concentrar demasiado por volatilidad local.'; }
+    else if(score >= 58){ pct = 5; note = 'Solo posición chica o esperar confirmación.'; }
+    else { pct = 0; note = 'No comprar por ahora. Esperar mejor señal.'; }
+  } else if(type === 'CEDEAR/ETF') {
+    if(score >= 72){ pct = 15; note = 'Entrada táctica si acompaña la acción original y el mercado de EE.UU.'; }
+    else if(score >= 58){ pct = 5; note = 'Solo seguimiento o posición chica si confirma.'; }
+    else { pct = 0; note = 'No comprar por ahora. Falta confirmación.'; }
+  } else if(type === 'Bono') {
+    if(score >= 72){ pct = 15; note = 'Entrada medida. Controlar riesgo país, paridad y dólar.'; }
+    else if(score >= 58){ pct = 8; note = 'Solo posición moderada si mejora el contexto.'; }
+    else { pct = 0; note = 'No comprar bonos por ahora; mejor caución o liquidez.'; }
+  }
+
+  return {
+    pct,
+    amount: formatAllocationAmount(portfolioTotal, pct),
+    days,
+    note
+  };
+}
+
+
+function specificHorizonForInstrument(x){
+  const type = String(x.type || '');
+  const ch = toNumber(x.ch);
+  const score = Number(x.score || 0);
+
+  if(type === 'Caución') {
+    if(score >= 80) return '1 a 3 días';
+    if(score >= 60) return '24/48 hs';
+    return '1 día';
+  }
+
+  if(type === 'Bono') {
+    if(Number.isFinite(ch) && Math.abs(ch) >= 2.5) return 'Corto plazo táctico: 2 a 10 ruedas';
+    if(score >= 70) return 'Mediano plazo: 30 a 90 días';
+    return 'Esperar: sin plazo operativo';
+  }
+
+  if(type === 'CEDEAR/ETF') {
+    if(Number.isFinite(ch) && ch >= 3) return 'Muy corto plazo: 1 a 5 ruedas, no perseguir';
+    if(score >= 72) return 'Corto plazo: 3 a 15 ruedas';
+    if(score >= 58) return 'Seguimiento: 1 a 3 semanas';
+    return 'Esperar: sin compra';
+  }
+
+  if(type === 'Acción AR') {
+    if(Number.isFinite(ch) && Math.abs(ch) >= 3) return 'Muy corto plazo: 1 a 5 ruedas';
+    if(score >= 72) return 'Corto plazo: 3 a 10 ruedas';
+    if(score >= 58) return 'Seguimiento: 1 a 2 semanas';
+    return 'Esperar: sin compra';
+  }
+
+  return 'Corto plazo';
+}
+
+function specificEntryCondition(x){
+  const type = String(x.type || '');
+  const score = Number(x.score || 0);
+  const ch = toNumber(x.ch);
+
+  if(type === 'Caución'){
+    return 'Colocar solo pesos disponibles que no se necesiten para una entrada inmediata. Usar plazos cortos para no quedar inmovilizado.';
+  }
+
+  if(score < 58){
+    return 'No comprar ahora. Esperar mejor precio, mejor volumen o confirmación de contexto.';
+  }
+
+  if(Number.isFinite(ch) && ch >= 5){
+    return 'No entrar de golpe: subió demasiado. Esperar retroceso, consolidación o nueva zona de entrada.';
+  }
+
+  if(Number.isFinite(ch) && ch <= -2){
+    return 'No promediar a la baja. Entrar solo si recupera precio y deja de caer con volumen.';
+  }
+
+  if(type === 'Bono'){
+    return 'Entrar solo si mejora riesgo país, paridad y flujo de dólares. Evitar aumentar si el contexto político o de deuda empeora.';
+  }
+
+  if(type === 'CEDEAR/ETF'){
+    return 'Entrar solo si la acción original acompaña en EE.UU., el sector está firme y el CCL no distorsiona demasiado el precio local.';
+  }
+
+  if(type === 'Acción AR'){
+    return 'Entrar solo si el Merval acompaña, hay volumen local y el activo no abre demasiado separado de la zona razonable.';
+  }
+
+  return 'Entrar solo con confirmación y pérdida máxima definida.';
+}
+
+function specificExitCondition(x){
+  const type = String(x.type || '');
+  const score = Number(x.score || 0);
+  const ch = toNumber(x.ch);
+
+  if(type === 'Caución'){
+    return 'Salir al vencimiento o antes si aparece una oportunidad clara con mejor relación riesgo/beneficio.';
+  }
+
+  if(score < 58){
+    return 'Sin compra. Si ya está en cartera, revisar si conviene reducir o mantener solo posición chica.';
+  }
+
+  if(Number.isFinite(ch) && ch >= 4){
+    return 'Tomar ganancia parcial si acelera más; no esperar el máximo perfecto.';
+  }
+
+  if(type === 'Bono'){
+    return 'Tomar parcial si comprime riesgo país o sube fuerte la paridad. Invalidar si sube riesgo país o cae contra soporte.';
+  }
+
+  if(type === 'CEDEAR/ETF'){
+    return 'Tomar parcial si la acción original pierde fuerza o si Nasdaq/S&P giran en contra.';
+  }
+
+  if(type === 'Acción AR'){
+    return 'Tomar parcial si pierde volumen, si el Merval se debilita o si llega al primer objetivo.';
+  }
+
+  return 'Tomar parcial en objetivo y respetar pérdida máxima.';
+}
+
+function specificRiskForInstrument(x){
+  const type = String(x.type || '');
+  const weight = toNumber(x.weight);
+  const ch = toNumber(x.ch);
+  let risk = 'Moderado';
+
+  if(type === 'Caución') risk = 'Bajo frente a renta variable; riesgo principal: plazo, tasa y disponibilidad.';
+  if(type === 'Bono') risk = 'Moderado/alto: depende de riesgo país, paridad, dólar, licitaciones y confianza en deuda.';
+  if(type === 'CEDEAR/ETF') risk = 'Moderado/alto: depende de acción original, Wall Street, CCL y volumen local.';
+  if(type === 'Acción AR') risk = 'Alto: depende de Merval, volumen local, dólar, tasas y contexto político.';
+
+  if(Number.isFinite(weight) && weight > 35) risk += ' Además hay riesgo de concentración en cartera.';
+  if(Number.isFinite(ch) && Math.abs(ch) >= 5) risk += ' Volatilidad diaria elevada.';
+
+  return risk;
+}
+
+function allocationForSpecificInstrument(x, portfolioTotal, allItems){
+  const score = Number(x.score || 0);
+  const type = String(x.type || '');
+  const weight = toNumber(x.weight);
+  const actionText = String(x.action || '').toLowerCase();
+  let pctSuggested = 0;
+
+  if(type === 'Caución'){
+    const hasGoodRiskAssets = (allItems || []).some(i => i.type !== 'Caución' && Number(i.score || 0) >= 72);
+    const manyWeak = (allItems || []).filter(i => i.type !== 'Caución' && Number(i.score || 0) < 58).length >= 2;
+    if(manyWeak) pctSuggested = 60;
+    else if(hasGoodRiskAssets) pctSuggested = 20;
+    else pctSuggested = 45;
+  } else {
+    if(actionText.includes('reducir')) pctSuggested = 0;
+    else if(score >= 80) pctSuggested = type === 'Bono' ? 12 : 15;
+    else if(score >= 72) pctSuggested = type === 'Bono' ? 10 : 12;
+    else if(score >= 58) pctSuggested = type === 'Bono' ? 6 : 5;
+    else pctSuggested = 0;
+
+    if(Number.isFinite(weight) && weight > 25) pctSuggested = Math.min(pctSuggested, 5);
+    if(Number.isFinite(weight) && weight > 38) pctSuggested = 0;
+  }
+
+  return {
+    pct: pctSuggested,
+    amount: formatAllocationAmount(portfolioTotal, pctSuggested)
+  };
+}
+
+function instrumentActionFromScore(x){
+  const score = Number(x.score || 0);
+  const type = String(x.type || '');
+  const weight = toNumber(x.weight);
+  const ch = toNumber(x.ch);
+
+  if(type === 'Caución') return 'Colocar como refugio táctico';
+  if(Number.isFinite(weight) && weight > 38) return 'No comprar más / reducir parcial';
+  if(Number.isFinite(ch) && ch <= -3) return 'No promediar / proteger';
+  if(score >= 80) return 'Comprar medido';
+  if(score >= 72) return 'Comprar solo con confirmación';
+  if(score >= 58) return 'Observar / posición chica';
+  return 'No operar';
+}
+
+function buildSpecificInstrumentRecommendations(positions, quotes, total, allTypes){
+  const map = new Map();
+
+  positions.forEach(p => {
+    const base = {
+      sym:p.sym,
+      type:p.type,
+      px:p.px,
+      ch:p.ch,
+      weight:p.weight,
+      source:'Cartera actual',
+      score:scoreOpportunity(p)
+    };
+    base.action = instrumentActionFromScore(base);
+    map.set(base.sym, base);
+  });
+
+  (quotes || []).forEach(q => {
+    const sym = (q.symbol || '').toUpperCase();
+    if(!sym || !q.ok || map.has(sym)) return;
+    const base = {
+      sym,
+      type:inferType(sym),
+      px:priceFromQuote(q),
+      ch:pctFromQuote(q),
+      weight:NaN,
+      source:'Lista de seguimiento',
+      score:scoreOpportunity({
+        sym,
+        type:inferType(sym),
+        px:priceFromQuote(q),
+        ch:pctFromQuote(q),
+        weight:NaN
+      })
+    };
+    base.action = instrumentActionFromScore(base);
+    map.set(sym, base);
+  });
+
+  if(!map.has('CAUCIÓN')){
+    map.set('CAUCIÓN', {
+      sym:'CAUCIÓN',
+      type:'Caución',
+      px:NaN,
+      ch:NaN,
+      weight:NaN,
+      source:'Alternativa defensiva',
+      score:(allTypes || []).some(x=>x.type !== 'Caución' && Number(x.score || 0) >= 72) ? 65 : 82,
+      action:'Colocar como refugio táctico'
+    });
+  }
+
+  const items = Array.from(map.values())
+    .filter(x => ['Acción AR','CEDEAR/ETF','Bono','Caución'].includes(x.type))
+    .map(x => {
+      const alloc = allocationForSpecificInstrument(x, total, Array.from(map.values()));
+      return {
+        ...x,
+        pctSuggested: alloc.pct,
+        amountSuggested: alloc.amount,
+        horizonSpecific: specificHorizonForInstrument(x),
+        entryCondition: specificEntryCondition(x),
+        exitCondition: specificExitCondition(x),
+        riskSpecific: specificRiskForInstrument(x)
+      };
+    })
+    .sort((a,b) => {
+      const order = {'Caución':0,'Acción AR':1,'CEDEAR/ETF':2,'Bono':3};
+      if(order[a.type] !== order[b.type]) return order[a.type] - order[b.type];
+      return b.score - a.score;
+    });
+
+  return items;
+}
+
+
+
+function findCashLikeValues(obj, depth=0, path=''){
+  if(!obj || depth > 6) return [];
+  const out = [];
+  const keysCash = [
+    'disponible','saldo','saldos','cash','efectivo','liquidez','pesos','ars',
+    'saldoDisponible','poderCompra','buyingPower','cuentaCorriente','disponibleOperar'
+  ];
+
+  if(Array.isArray(obj)){
+    obj.forEach((v,i)=>out.push(...findCashLikeValues(v, depth+1, path+'.'+i)));
+    return out;
+  }
+
+  if(typeof obj === 'object'){
+    Object.keys(obj).forEach(k=>{
+      const v = obj[k];
+      const kl = String(k).toLowerCase();
+      if(keysCash.some(w=>kl.includes(w.toLowerCase()))){
+        const n = toNumber(v);
+        if(Number.isFinite(n) && n > 0) out.push({path:path+'.'+k, value:n});
+      }
+      if(typeof v === 'object') out.push(...findCashLikeValues(v, depth+1, path+'.'+k));
+    });
+  }
+  return out;
+}
+
+function detectAvailableCash(data, total){
+  const values = findCashLikeValues(data || {});
+  const candidates = values
+    .map(x=>x.value)
+    .filter(v=>Number.isFinite(v) && v > 1000 && (!Number.isFinite(total) || v <= total * 1.5))
+    .sort((a,b)=>b-a);
+
+  if(candidates.length){
+    return {
+      amount:candidates[0],
+      source:'Efectivo disponible leído desde IOL'
+    };
+  }
+
+  const fallback = Number.isFinite(total) && total > 0 ? total * 0.25 : 0;
+  return {
+    amount:fallback,
+    source:'No se leyó efectivo disponible. Base táctica estimada: 25% de la cartera.'
+  };
+}
+
+function buildCandidateUniverse(a){
+  const map = new Map();
+
+  (a.instrumentDetails || []).forEach(x=>{
+    if(!x || !x.sym) return;
+    map.set(x.sym, {
+      sym:x.sym,
+      type:x.type,
+      score:Number(x.score || 0),
+      action:x.action || instrumentActionFromScore(x),
+      px:x.px,
+      ch:x.ch,
+      risk:x.riskSpecific || specificRiskForInstrument(x),
+      entry:x.entryCondition || specificEntryCondition(x),
+      exit:x.exitCondition || specificExitCondition(x),
+      horizon:x.horizonSpecific || specificHorizonForInstrument(x)
+    });
+  });
+
+  (a.allTypes || []).forEach(x=>{
+    if(!x || !x.sym || x.sym === 'Sin dato') return;
+    if(!map.has(x.sym)){
+      map.set(x.sym, {
+        sym:x.sym,
+        type:x.type,
+        score:Number(x.score || 0),
+        action:x.action || 'Observar',
+        px:x.px,
+        ch:x.ch,
+        risk:x.risk || 'Riesgo variable',
+        entry:x.condition || 'Entrar solo con confirmación.',
+        exit:specificExitCondition(x),
+        horizon:x.horizon || specificHorizonForInstrument(x)
+      });
+    }
+  });
+
+  if(!map.has('CAUCIÓN')){
+    map.set('CAUCIÓN', {
+      sym:'CAUCIÓN',
+      type:'Caución',
+      score:82,
+      action:'Colocar',
+      px:NaN,
+      ch:NaN,
+      risk:'Bajo frente a renta variable; revisar tasa y plazo.',
+      entry:'Colocar pesos libres en plazo corto.',
+      exit:'Salir al vencimiento o si aparece oportunidad clara.',
+      horizon:'1 a 3 días'
+    });
+  }
+
+  return Array.from(map.values());
+}
+
+function dailyDecisionForCandidate(x){
+  const score = Number(x.score || 0);
+  const type = String(x.type || '');
+  const ch = toNumber(x.ch);
+  const action = String(x.action || '').toLowerCase();
+
+  if(type === 'Caución'){
+    return {
+      eligible:true,
+      accion:'COLOCAR',
+      motivo:'Refugio táctico para pesos libres cuando no hay ventaja clara o mientras se espera mejor entrada.',
+      plazo: score >= 80 ? '1 a 3 días' : '24/48 hs',
+      riesgo:'Bajo'
+    };
+  }
+
+  if(action.includes('reducir') || action.includes('proteger')){
+    return {
+      eligible:false,
+      accion:'NO COMPRAR',
+      motivo:'Ya hay riesgo de concentración, debilidad o necesidad de proteger capital.',
+      plazo:'No aplica',
+      riesgo:'Alto'
+    };
+  }
+
+  if(Number.isFinite(ch) && ch >= 5){
+    return {
+      eligible:false,
+      accion:'NO PERSEGUIR',
+      motivo:'Subió demasiado en el día. Esperar retroceso o nueva zona de entrada.',
+      plazo:'Esperar',
+      riesgo:'Alto'
+    };
+  }
+
+  if(Number.isFinite(ch) && ch <= -3){
+    return {
+      eligible:false,
+      accion:'NO PROMEDIAR',
+      motivo:'Está cayendo fuerte. No comprar hasta estabilización.',
+      plazo:'Esperar',
+      riesgo:'Alto'
+    };
+  }
+
+  if(score >= 80){
+    return {
+      eligible:true,
+      accion:'COMPRAR MEDIDO',
+      motivo:'Buena relación táctica, siempre con confirmación y pérdida máxima definida.',
+      plazo: type === 'Bono' ? '30 a 90 días' : '3 a 15 ruedas',
+      riesgo: type === 'Bono' ? 'Moderado/alto' : 'Alto'
+    };
+  }
+
+  if(score >= 72){
+    return {
+      eligible:true,
+      accion:'COMPRAR SOLO SI CONFIRMA',
+      motivo:'Señal interesante, pero no entrar si se escapa el precio.',
+      plazo: type === 'Bono' ? '15 a 45 días' : '3 a 10 ruedas',
+      riesgo: type === 'CEDEAR/ETF' ? 'Moderado/alto' : 'Alto'
+    };
+  }
+
+  if(score >= 58){
+    return {
+      eligible:true,
+      accion:'ENTRADA CHICA',
+      motivo:'Solo posición reducida; todavía falta confirmación fuerte.',
+      plazo: type === 'Bono' ? '15 a 30 días' : '1 a 5 ruedas',
+      riesgo:'Moderado/alto'
+    };
+  }
+
+  return {
+    eligible:false,
+    accion:'NO OPERAR',
+    motivo:'No hay ventaja suficiente frente a caución o liquidez.',
+    plazo:'Esperar',
+    riesgo:'Moderado/alto'
+  };
+}
+
+function buildDailyConcretePortfolio(a){
+  const cashInfo = detectAvailableCash(lastData, a.total);
+  const capital = cashInfo.amount || 0;
+  const universe = buildCandidateUniverse(a);
+
+  const risky = universe
+    .filter(x=>x.type !== 'Caución')
+    .map(x=>({...x, decision:dailyDecisionForCandidate(x)}))
+    .filter(x=>x.decision.eligible)
+    .sort((a,b)=>Number(b.score||0)-Number(a.score||0))
+    .slice(0,3);
+
+  const avoid = universe
+    .filter(x=>x.type !== 'Caución')
+    .map(x=>({...x, decision:dailyDecisionForCandidate(x)}))
+    .filter(x=>!x.decision.eligible)
+    .sort((a,b)=>Number(b.score||0)-Number(a.score||0))
+    .slice(0,8);
+
+  let allocations = [];
+  let usedPct = 0;
+
+  risky.forEach((x, idx)=>{
+    let pct = 0;
+    if(Number(x.score) >= 80) pct = idx === 0 ? 25 : 15;
+    else if(Number(x.score) >= 72) pct = idx === 0 ? 18 : 12;
+    else pct = 7;
+
+    if(x.type === 'Bono') pct = Math.min(pct, 15);
+    if(x.type === 'Acción AR') pct = Math.min(pct, 15);
+    if(x.type === 'CEDEAR/ETF') pct = Math.min(pct, 18);
+
+    usedPct += pct;
+    allocations.push({
+      ...x,
+      accion:x.decision.accion,
+      pct,
+      monto:capital * pct / 100,
+      plazo:x.decision.plazo,
+      motivo:x.decision.motivo,
+      riesgo:x.decision.riesgo,
+      entrada:x.entry,
+      salida:x.exit
+    });
+  });
+
+  const caucionPct = Math.max(0, Math.min(100, 100 - usedPct));
+  allocations.unshift({
+    sym:'CAUCIÓN',
+    type:'Caución',
+    accion:'COLOCAR',
+    pct:caucionPct,
+    monto:capital * caucionPct / 100,
+    plazo: risky.length ? '24/48 hs' : '1 a 3 días',
+    motivo: risky.length
+      ? 'Mantener saldo libre rindiendo mientras se ejecutan compras solo si confirman.'
+      : 'No hay compras suficientemente claras. Priorizar tasa, liquidez y preservación de capital.',
+    riesgo:'Bajo',
+    entrada:'Colocar solo dinero que no necesites usar hoy para una entrada inmediata.',
+    salida:'Salir al vencimiento o antes si aparece oportunidad clara.',
+    score: risky.length ? 65 : 82
+  });
+
+  allocations = allocations.filter(x=>x.pct > 0.1);
+
+  const totalAllocated = allocations.reduce((s,x)=>s+x.monto,0);
+
+  return {
+    capital,
+    cashSource:cashInfo.source,
+    allocations,
+    avoid,
+    totalAllocated
+  };
+}
+
+
+function renderDailyConcretePortfolio(a){
+  const p = buildDailyConcretePortfolio(a);
+  const rows = p.allocations || [];
+  const avoid = p.avoid || [];
+
+  if(!rows.length){
+    return `
+      <div class="card">
+        <div class="eyebrow">Recomendación operativa de hoy</div>
+        <h2>Cartera sugerida para hoy</h2>
+        <div class="warning">No hay datos suficientes para armar una asignación concreta. Usar caución corta o esperar.</div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="card hero">
+      <div class="eyebrow">Recomendación operativa de hoy</div>
+      <h2>Cartera sugerida para hoy</h2>
+      <p class="muted small">
+        Capital base para operar: <b>${money(p.capital)}</b><br>
+        ${escapeHtml(p.cashSource)}
+      </p>
+
+      ${rows.map((x, idx)=>`
+        <div class="asset">
+          <div class="row">
+            <div>
+              <h3>${idx+1}) ${escapeHtml(x.sym)}</h3>
+              <div class="tiny">${escapeHtml(x.type)} · Puntaje ${x.score || '—'}</div>
+            </div>
+            <span class="${pillClass(x.type === 'Caución' ? 'ok' : Number(x.score||0) >= 72 ? 'ok' : 'blue')}">${escapeHtml(x.accion)}</span>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="grid">
+            <div>
+              <div class="label">Monto</div>
+              <div class="value mono">${money(x.monto)}</div>
+            </div>
+            <div>
+              <div class="label">Porcentaje</div>
+              <div class="value mono">${Number(x.pct).toFixed(0)}%</div>
+            </div>
+            <div>
+              <div class="label">Plazo</div>
+              <div class="value small">${escapeHtml(x.plazo)}</div>
+            </div>
+            <div>
+              <div class="label">Riesgo</div>
+              <div class="value small">${escapeHtml(x.riesgo)}</div>
+            </div>
+          </div>
+
+          <div class="analysisbox">
+            <div class="mini-title">Orden concreta</div>
+            <p class="muted small"><b>Motivo:</b> ${escapeHtml(x.motivo)}</p>
+            <p class="muted small"><b>Entrada:</b> ${escapeHtml(x.entrada)}</p>
+            <p class="muted small"><b>Salida / invalidación:</b> ${escapeHtml(x.salida)}</p>
+          </div>
+        </div>
+      `).join('')}
+
+      <div class="notice">
+        <b>Total asignado:</b> ${money(p.totalAllocated)}. No ejecutar de golpe si el precio se escapa; priorizar confirmación y preservación de capital.
+      </div>
+
+      ${avoid.length ? `
+        <div class="section">No operar hoy</div>
+        ${avoid.map(x=>`
+          <div class="asset">
+            <div class="row">
+              <div>
+                <h3>${escapeHtml(x.sym)}</h3>
+                <div class="tiny">${escapeHtml(x.type)} · Puntaje ${x.score || '—'}</div>
+              </div>
+              <span class="pill warn">${escapeHtml(x.decision.accion)}</span>
+            </div>
+            <p class="muted small">${escapeHtml(x.decision.motivo)}</p>
+          </div>
+        `).join('')}
+      ` : ''}
+    </div>
+  `;
+}
+
+function renderSpecificInstruments(a){
+  const list = a.instrumentDetails || [];
+  if(!list.length) return '';
+
+  return '<div class="section">Detalle específico por instrumento</div>' + list.map(x=>`
+    <div class="rec">
+      <div class="row">
+        <div>
+          <h3>${escapeHtml(x.sym)}</h3>
+          <div class="tiny">${escapeHtml(x.type)} · ${escapeHtml(x.source)} · Puntaje ${x.score || '—'}</div>
+        </div>
+        <span class="${pillClass(x.score >= 72 ? 'ok' : x.score >= 58 ? 'blue' : x.type === 'Caución' ? 'ok' : 'warn')}">${escapeHtml(x.action)}</span>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="grid">
+        <div>
+          <div class="label">Comprar / colocar</div>
+          <div class="value mono">${x.pctSuggested}%</div>
+        </div>
+        <div>
+          <div class="label">Monto sugerido</div>
+          <div class="value mono">${escapeHtml(x.amountSuggested)}</div>
+        </div>
+        <div>
+          <div class="label">Plazo</div>
+          <div class="value small">${escapeHtml(x.horizonSpecific)}</div>
+        </div>
+        <div>
+          <div class="label">Precio actual</div>
+          <div class="value mono">${Number.isFinite(x.px)?money(x.px):'—'}</div>
+        </div>
+      </div>
+
+      <div class="analysisbox">
+        <div class="mini-title">Plan específico</div>
+        <p class="muted small"><b>Entrada:</b> ${escapeHtml(x.entryCondition)}</p>
+        <p class="muted small"><b>Salida / invalidación:</b> ${escapeHtml(x.exitCondition)}</p>
+        <p class="tiny"><b>Riesgo:</b> ${escapeHtml(x.riskSpecific)}</p>
+      </div>
+
+      <div class="scorebar"><span style="width:${Math.max(10,Math.min(100,x.score || 10))}%"></span></div>
+    </div>
+  `).join('');
+}
+
 function renderAllTypes(a){
   const list = a.allTypes || [];
   if(!list.length) return '';
@@ -802,6 +1503,35 @@ function renderAllTypes(a){
         <div><div class="label">Precio</div><div class="value mono">${Number.isFinite(x.px)?money(x.px):'—'}</div></div>
         <div><div class="label">Horizonte</div><div class="value small">${escapeHtml(x.horizon)}</div></div>
       </div>
+
+      ${(() => {
+        const alloc = allocationForType(x, a.total, list);
+        return `
+          <div class="analysisbox">
+            <div class="mini-title">Tamaño sugerido de operación</div>
+            <div class="grid">
+              <div>
+                <div class="label">Porcentaje sugerido</div>
+                <div class="value mono">${alloc.pct}%</div>
+              </div>
+              <div>
+                <div class="label">Monto estimado</div>
+                <div class="value mono">${alloc.amount}</div>
+              </div>
+              <div>
+                <div class="label">Plazo sugerido</div>
+                <div class="value small">${escapeHtml(alloc.days)}</div>
+              </div>
+              <div>
+                <div class="label">Base de cálculo</div>
+                <div class="value small">Cartera IOL</div>
+              </div>
+            </div>
+            <p class="tiny"><b>Criterio:</b> ${escapeHtml(alloc.note)}</p>
+          </div>
+        `;
+      })()}
+
       <p class="muted small"><b>Lectura:</b> ${escapeHtml(x.text)}</p>
       <p class="muted small"><b>Condición:</b> ${escapeHtml(x.condition)}</p>
       <p class="tiny"><b>Riesgo:</b> ${escapeHtml(x.risk)}</p>
@@ -850,12 +1580,27 @@ function renderRecommendations(a){
           <div><div class="label">Pérdida máxima sugerida</div><div class="value mono">${Number.isFinite(r.stop)?money(r.stop):'—'}</div></div>
           <div><div class="label">Objetivo parcial</div><div class="value mono">${Number.isFinite(r.target)?money(r.target):'—'}</div></div>
         </div>
+
+        ${(() => {
+          const alloc = allocationForType({type:r.type, score:r.score, action:r.action}, a.total, a.allTypes || []);
+          return `
+            <div class="analysisbox">
+              <div class="mini-title">Compra sugerida</div>
+              <div class="grid">
+                <div><div class="label">Porcentaje</div><div class="value mono">${alloc.pct}%</div></div>
+                <div><div class="label">Monto</div><div class="value mono">${alloc.amount}</div></div>
+              </div>
+              <p class="tiny"><b>Criterio:</b> ${escapeHtml(alloc.note)}</p>
+            </div>
+          `;
+        })()}
+
         <div class="scorebar"><span style="width:${Math.max(10,Math.min(100,r.score))}%"></span></div>
         <p class="tiny">Base: ${escapeHtml(r.reasons.join(', ') || 'lectura neutral')}</p>
       </div>`).join('')
     : '<div class="notice">Todavía no hay activos reconocidos para recomendar.</div>';
 
-  $('recommendationsList').innerHTML = top + renderAllTypes(a) + porActivo;
+  $('recommendationsList').innerHTML = renderDailyConcretePortfolio(a) + top + renderSpecificInstruments(a) + renderAllTypes(a) + porActivo;
 }
 function renderIdeas(a){
   if(!a.ideas.length){
