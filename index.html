@@ -97,6 +97,16 @@
     }
     .scorebar{height:5px;background:var(--line);border-radius:99px;overflow:hidden;margin-top:10px}
     .scorebar span{display:block;height:100%;background:var(--accent);border-radius:99px}
+    .analysisbox{
+      background:var(--card3);border:1px solid var(--line);border-radius:14px;
+      padding:12px;margin-top:10px
+    }
+    .analysisbox .mini-title{
+      font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--accent);
+      font-weight:950;margin-bottom:6px
+    }
+    .analysisgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media(max-width:560px){.analysisgrid{grid-template-columns:1fr}}
     nav{
       position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(13,17,23,.96);
       backdrop-filter:blur(16px);border-top:1px solid var(--line);
@@ -177,7 +187,7 @@
     <div class="card">
       <div class="eyebrow">Recomendaciones</div>
       <h2>Qué haría hoy</h2>
-      <p class="muted small">Motor táctico basado en tus tenencias reales, concentración, variación diaria, precio y cotizaciones disponibles desde IOL. No ejecuta órdenes.</p>
+      <p class="muted small">Motor táctico basado en tus tenencias reales, cotizaciones disponibles desde IOL y método combinado: análisis técnico + análisis fundamental. Evalúa acciones argentinas, CEDEARs/ETF, bonos y caución. No ejecuta órdenes.</p>
     </div>
     <div id="recommendationsList"><div class="notice">Actualizá la app para ver recomendaciones.</div></div>
 
@@ -410,6 +420,160 @@ function inferType(sym){
   return 'Activo';
 }
 
+
+function scoreOpportunity(item){
+  let score = 50;
+  const ch = toNumber(item.ch);
+  const type = String(item.type || '');
+
+  if(Number.isFinite(ch)){
+    if(ch > 0 && ch < 5) score += Math.min(24, ch * 7);
+    if(ch >= 5) score += 8; // subió mucho: no perseguir
+    if(ch < 0 && ch > -2) score -= 4;
+    if(ch <= -2) score -= 18;
+  } else {
+    score -= 8;
+  }
+
+  if(type === 'Acción AR') score += 4;
+  if(type === 'CEDEAR/ETF') score += 3;
+  if(type === 'Bono') score -= 2;
+
+  if(Number.isFinite(item.weight) && item.weight > 35) score -= 18;
+  if(Number.isFinite(item.weight) && item.weight > 0 && item.weight <= 20) score += 4;
+
+  return Math.max(5, Math.min(95, Math.round(score)));
+}
+
+function horizonByType(type, ch){
+  if(type === 'Bono') return 'Mediano plazo / táctico si hay rebote';
+  if(type === 'CEDEAR/ETF') return Math.abs(toNumber(ch)) >= 2 ? 'Corto plazo' : 'Corto a mediano plazo';
+  if(type === 'Acción AR') return Math.abs(toNumber(ch)) >= 2 ? 'Corto plazo' : 'Corto a mediano plazo';
+  if(type === 'Caución') return 'Muy corto plazo';
+  return 'Corto plazo';
+}
+
+function decisionByScore(item){
+  const score = scoreOpportunity(item);
+  const ch = toNumber(item.ch);
+  if(Number.isFinite(item.weight) && item.weight > 38){
+    return { action:'Reducir exposición', kind:'bad', score, condition:'Vender parcial en rebotes o si pierde fuerza.' };
+  }
+  if(Number.isFinite(ch) && ch <= -2){
+    return { action:'Esperar / no promediar', kind:'warn', score, condition:'No entrar hasta que estabilice y recupere volumen.' };
+  }
+  if(score >= 72){
+    return { action:'Seguir para entrada', kind:'ok', score, condition:'Entrar solo si confirma precio, volumen y pérdida máxima definida.' };
+  }
+  if(score >= 58){
+    return { action:'Observar', kind:'blue', score, condition:'Esperar confirmación. No perseguir el precio.' };
+  }
+  return { action:'Evitar por ahora', kind:'warn', score, condition:'Sin ventaja clara frente a caución o liquidez.' };
+}
+
+function buildAllInvestmentTypes(positions, quotes, recs){
+  const held = new Set(positions.map(p=>p.sym));
+  const items = [];
+
+  positions.forEach(p => items.push({
+    sym:p.sym,
+    type:p.type,
+    px:p.px,
+    ch:p.ch,
+    weight:p.weight,
+    source:'Tenencia actual',
+    text:'Activo presente en tu cartera real de IOL.'
+  }));
+
+  (quotes || []).forEach(q => {
+    const sym = (q.symbol || '').toUpperCase();
+    if(!sym || held.has(sym) || !q.ok) return;
+    items.push({
+      sym,
+      type:inferType(sym),
+      px:priceFromQuote(q),
+      ch:pctFromQuote(q),
+      weight:NaN,
+      source:'Lista de seguimiento',
+      text:'Activo disponible para seguimiento táctico.'
+    });
+  });
+
+  const wanted = [
+    { type:'Acción AR', title:'Acciones argentinas' },
+    { type:'CEDEAR/ETF', title:'CEDEARs / ETF' },
+    { type:'Bono', title:'Bonos' }
+  ];
+
+  const result = wanted.map(group => {
+    const groupItems = items.filter(x => x.type === group.type);
+    if(!groupItems.length){
+      return {
+        title: group.title,
+        sym: 'Sin dato',
+        type: group.type,
+        action: 'Sin datos suficientes',
+        kind: 'warn',
+        score: 0,
+        horizon: group.type === 'Bono' ? 'Mediano plazo' : 'Corto a mediano plazo',
+        condition: 'La app no recibió cotizaciones suficientes de este tipo desde IOL.',
+        risk: 'No evaluado',
+        text: 'Agregar este tipo a la lista de seguimiento del backend para analizarlo mejor.',
+        px: NaN,
+        ch: NaN
+      };
+    }
+
+    const ranked = groupItems
+      .map(x => ({...x, score:scoreOpportunity(x)}))
+      .sort((a,b)=>b.score-a.score);
+    const best = ranked[0];
+    const d = decisionByScore(best);
+
+    let risk = 'Moderado';
+    if(group.type === 'Bono') risk = 'Moderado / alto por riesgo país, paridad y dólar.';
+    if(group.type === 'CEDEAR/ETF') risk = 'Moderado / alto por acción original, Nasdaq/S&P y dólar CCL.';
+    if(group.type === 'Acción AR') risk = 'Alto por Merval, volumen local, dólar y riesgo político.';
+
+    return {
+      title: group.title,
+      sym: best.sym,
+      type: group.type,
+      action: d.action,
+      kind: d.kind,
+      score: d.score,
+      horizon: horizonByType(group.type, best.ch),
+      condition: d.condition,
+      risk,
+      text: best.text,
+      px: best.px,
+      ch: best.ch
+    };
+  });
+
+  const hasStrong = result.some(x => x.score >= 72 && x.kind === 'ok');
+  const defensive = recs.some(r => r.kind === 'bad' || r.kind === 'warn');
+
+  result.push({
+    title:'Caución bursátil',
+    sym:'CAUCIÓN',
+    type:'Caución',
+    action: hasStrong && !defensive ? 'Usar solo para saldo libre' : 'Usar como refugio táctico',
+    kind: hasStrong && !defensive ? 'blue' : 'ok',
+    score: hasStrong && !defensive ? 62 : 82,
+    horizon:'Muy corto plazo',
+    condition: hasStrong && !defensive
+      ? 'Mantener solo el dinero que no se use en oportunidades claras.'
+      : 'Usar cuando no haya entrada clara, cuando el mercado esté débil o mientras esperás mejor precio.',
+    risk:'Bajo frente a renta variable, pero revisar tasa, plazo y disponibilidad antes de colocar.',
+    text:'Alternativa para no dejar pesos inmóviles cuando la relación riesgo/beneficio de acciones, CEDEARs o bonos no es clara.',
+    px:NaN,
+    ch:NaN
+  });
+
+  return result;
+}
+
 function buildAnalysis(data){
   const arr = extractPortfolioArray(data.portfolio).map(it=>({
     raw:it,
@@ -439,7 +603,8 @@ function buildAnalysis(data){
       plan:['Revisar pestaña Técnico para confirmar estructura del portafolio.'],
       signal:'Revisar',
       actionable:[],
-      ideas:buildIdeas(quotes, [])
+      ideas:buildIdeas(quotes, []),
+      allTypes:buildAllInvestmentTypes([], quotes, [])
     };
   }
 
@@ -459,7 +624,7 @@ function buildAnalysis(data){
   const winners = positions.filter(p=>Number.isFinite(p.ch) && p.ch>=2).sort((a,b)=>b.ch-a.ch);
   if(winners.length){
     const w=winners[0];
-    recs.push({title:`Tomar parcial si ${w.sym} acelera`,tag:'Momentum',kind:'ok',text:`Sube ${pct(w.ch)}. Mantener si conserva fuerza; tomar parcial si llega a objetivo intradiario.`});
+    recs.push({title:`Tomar parcial si ${w.sym} acelera`,tag:'Impulso',kind:'ok',text:`Sube ${pct(w.ch)}. Mantener si conserva fuerza; tomar parcial si llega a objetivo intradiario.`});
     plan.push(`En ${w.sym}, no perseguir: mantener con pérdida máxima dinámica o tomar parcial si estira.`);
   }
 
@@ -476,7 +641,8 @@ function buildAnalysis(data){
 
   const actionable = positions.map(p=>assetRecommendation(p,total)).sort((a,b)=>b.score-a.score);
   const ideas = buildIdeas(quotes, positions);
-  return {positions,total,recs,plan,signal:generalSignal(recs),actionable,ideas};
+  const allTypes = buildAllInvestmentTypes(positions, quotes, recs);
+  return {positions,total,recs,plan,signal:generalSignal(recs),actionable,ideas,allTypes};
 }
 function generalSignal(recs){
   if(recs.some(r=>r.kind==='bad')) return 'Defensivo';
@@ -486,8 +652,8 @@ function generalSignal(recs){
 function assetRecommendation(p,total){
   let action='Mantener'; let kind='blue'; let score=55; let reasons=[];
   if(p.weight>38){ action='Reducir parcial'; kind='bad'; score=85; reasons.push(`peso alto ${pct(p.weight)}`); }
-  if(Number.isFinite(p.ch) && p.ch<=-3){ action='Proteger / stop'; kind='bad'; score=Math.max(score,82); reasons.push(`caída diaria ${pct(p.ch)}`); }
-  if(Number.isFinite(p.ch) && p.ch>=2 && p.weight<35){ action='Mantener momentum'; kind='ok'; score=Math.max(score,72); reasons.push(`momentum ${pct(p.ch)}`); }
+  if(Number.isFinite(p.ch) && p.ch<=-3){ action='Proteger / invalidar'; kind='bad'; score=Math.max(score,82); reasons.push(`caída diaria ${pct(p.ch)}`); }
+  if(Number.isFinite(p.ch) && p.ch>=2 && p.weight<35){ action='Mantener impulso'; kind='ok'; score=Math.max(score,72); reasons.push(`impulso ${pct(p.ch)}`); }
   if(!Number.isFinite(p.ch)) reasons.push('sin variación disponible');
   if(!Number.isFinite(p.px)) reasons.push('sin precio disponible');
   const multStop = p.type==='Bono'?0.965:0.97;
@@ -521,7 +687,7 @@ function render(data,cached=false){
 
   $('setupCard').classList.add('hide');
   $('statusText').textContent = cached ? 'Mostrando último dato guardado' : 'Datos reales desde IOL';
-  $('connState').innerHTML = cached ? '<span class="warnc">Cache</span>' : '<span class="ok">Conectado</span>';
+  $('connState').innerHTML = cached ? '<span class="warnc">Guardado</span>' : '<span class="ok">Conectado</span>';
   $('updatedAt').textContent = fmtDate(data.updatedAt);
   $('modePill').className = data.security?.ordersEnabled ? 'pill bad' : 'pill';
   $('modePill').textContent = data.security?.ordersEnabled ? 'Órdenes activas' : 'Solo lectura';
@@ -547,6 +713,119 @@ function render(data,cached=false){
 function pillClass(kind){
   return kind==='bad'?'pill bad':kind==='warn'?'pill warn':kind==='ok'?'pill':'pill blue';
 }
+
+
+function technicalReading(x){
+  const ch = toNumber(x.ch);
+  const weight = toNumber(x.weight);
+  const parts = [];
+
+  if(Number.isFinite(ch)){
+    if(ch >= 3) parts.push('impulso fuerte del día; no perseguir si ya se escapó');
+    else if(ch >= 1) parts.push('impulso positivo; requiere confirmar volumen');
+    else if(ch > -1) parts.push('movimiento neutro; esperar ruptura o retroceso claro');
+    else if(ch > -3) parts.push('debilidad moderada; no apurar entrada');
+    else parts.push('caída fuerte; priorizar protección e invalidación');
+  } else {
+    parts.push('faltan datos de variación diaria');
+  }
+
+  if(Number.isFinite(weight)){
+    if(weight > 38) parts.push('peso alto en cartera; riesgo de concentración');
+    else if(weight > 20) parts.push('peso relevante; controlar exposición');
+    else if(weight > 0) parts.push('peso controlado en cartera');
+  } else {
+    parts.push('no forma parte de la cartera actual o no hay peso disponible');
+  }
+
+  return parts.join('. ') + '.';
+}
+
+function fundamentalReading(x){
+  const type = String(x.type || '');
+
+  if(type === 'Acción AR'){
+    return 'Para una acción argentina hay que validar balance, sector, liquidez local, Merval, dólar, tasas, regulación y noticias políticas/económicas. Si esos datos no están confirmados, la señal no debe tomarse como compra fuerte.';
+  }
+
+  if(type === 'CEDEAR/ETF'){
+    return 'Para CEDEARs o ETF hay que mirar la acción original en EE.UU., resultados de la empresa, sector, Nasdaq/S&P, tasa de la FED, dólar CCL y volumen local. Sin esos datos, la señal queda preliminar.';
+  }
+
+  if(type === 'Bono'){
+    return 'Para bonos hay que analizar paridad, rendimiento, flujo de pagos, riesgo país, licitaciones, dólar, tasa local y probabilidad de compresión de riesgo. No conviene comprar solo porque “parece barato”.';
+  }
+
+  if(type === 'Caución'){
+    return 'La caución se analiza por tasa, plazo, disponibilidad de efectivo y comparación contra oportunidades reales. Sirve como refugio cuando no hay ventaja clara en renta variable o bonos.';
+  }
+
+  return 'Faltan datos fundamentales específicos para este instrumento.';
+}
+
+function combinedConclusion(x){
+  const score = Number(x.score || 0);
+  const type = String(x.type || '');
+
+  if(type === 'Caución'){
+    return 'Conclusión combinada: usar como alternativa defensiva para pesos libres cuando no haya oportunidad clara o cuando el riesgo de mercado sea alto.';
+  }
+
+  if(score >= 72){
+    return 'Conclusión combinada: técnicamente puede ser interesante, pero solo se habilita entrada si el análisis fundamental/contexto acompaña y existe pérdida máxima definida.';
+  }
+
+  if(score >= 58){
+    return 'Conclusión combinada: activo para observar. Falta confirmación técnica o fundamental antes de comprar.';
+  }
+
+  return 'Conclusión combinada: no hay ventaja suficiente. Mejor esperar, usar caución o mantener liquidez.';
+}
+
+function renderAllTypes(a){
+  const list = a.allTypes || [];
+  if(!list.length) return '';
+
+  return '<div class="section">Análisis por tipo de inversión</div>' + list.map(x=>`
+    <div class="rec">
+      <div class="row">
+        <div>
+          <h3>${escapeHtml(x.title)}</h3>
+          <div class="tiny">${escapeHtml(x.sym)} · ${escapeHtml(x.type)} · ${escapeHtml(x.horizon)}</div>
+        </div>
+        <span class="${pillClass(x.kind)}">${escapeHtml(x.action)}</span>
+      </div>
+      <div class="divider"></div>
+      <div class="grid">
+        <div><div class="label">Puntaje</div><div class="value mono">${x.score || '—'}</div></div>
+        <div><div class="label">Día</div><div class="value mono ${x.ch<0?'bad':x.ch>0?'ok':''}">${pct(x.ch)}</div></div>
+        <div><div class="label">Precio</div><div class="value mono">${Number.isFinite(x.px)?money(x.px):'—'}</div></div>
+        <div><div class="label">Horizonte</div><div class="value small">${escapeHtml(x.horizon)}</div></div>
+      </div>
+      <p class="muted small"><b>Lectura:</b> ${escapeHtml(x.text)}</p>
+      <p class="muted small"><b>Condición:</b> ${escapeHtml(x.condition)}</p>
+      <p class="tiny"><b>Riesgo:</b> ${escapeHtml(x.risk)}</p>
+
+      <div class="analysisbox">
+        <div class="mini-title">Método combinado</div>
+        <div class="analysisgrid">
+          <div>
+            <div class="label">Análisis técnico</div>
+            <p class="tiny">${escapeHtml(technicalReading(x))}</p>
+          </div>
+          <div>
+            <div class="label">Análisis fundamental</div>
+            <p class="tiny">${escapeHtml(fundamentalReading(x))}</p>
+          </div>
+        </div>
+        <p class="muted small"><b>${escapeHtml(combinedConclusion(x))}</b></p>
+      </div>
+
+      <div class="scorebar"><span style="width:${Math.max(10,Math.min(100,x.score || 10))}%"></span></div>
+    </div>
+  `).join('');
+}
+
 function renderRecommendations(a){
   const top = a.recs.map(r=>`
     <div class="rec">
@@ -576,7 +855,7 @@ function renderRecommendations(a){
       </div>`).join('')
     : '<div class="notice">Todavía no hay activos reconocidos para recomendar.</div>';
 
-  $('recommendationsList').innerHTML = top + porActivo;
+  $('recommendationsList').innerHTML = top + renderAllTypes(a) + porActivo;
 }
 function renderIdeas(a){
   if(!a.ideas.length){
