@@ -97,6 +97,18 @@
     }
     .scorebar{height:5px;background:var(--line);border-radius:99px;overflow:hidden;margin-top:10px}
     .scorebar span{display:block;height:100%;background:var(--accent);border-radius:99px}
+    .sourcebox{
+      background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px
+    }
+    .sourcegrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+    .sourceitem{
+      background:var(--card3);border:1px solid var(--line);border-radius:12px;padding:10px
+    }
+    .horizon{
+      display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 9px;
+      background:rgba(245,201,123,.12);color:var(--accent);border:1px solid rgba(245,201,123,.24);
+      font-size:12px;font-weight:900
+    }
     nav{
       position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(13,17,23,.96);
       backdrop-filter:blur(16px);border-top:1px solid var(--line);
@@ -173,7 +185,7 @@
     <div class="card">
       <div class="eyebrow">Recomendaciones</div>
       <h2>Qué haría hoy</h2>
-      <p class="muted small">Motor táctico basado en tus tenencias reales, concentración, variación diaria, precio y cotizaciones disponibles desde IOL. No ejecuta órdenes.</p>
+      <p class="muted small">Motor táctico basado en tus tenencias reales de IOL, concentración, variación diaria, precio, contexto económico local e internacional cuando está disponible. No ejecuta órdenes.</p>
     </div>
     <div id="recommendationsList"><div class="notice">Actualizá la app para ver recomendaciones.</div></div>
 
@@ -225,6 +237,7 @@
 
 <script>
 const API = './.netlify/functions/iol-dashboard'.replace('./.netlify','/.netlify');
+const CONTEXT_API = './.netlify/functions/iol-context'.replace('./.netlify','/.netlify');
 let lastData = null;
 let timer = null;
 
@@ -278,6 +291,13 @@ function showTab(name, btn){
   if(name==='config') $('pinInput2').value=getPin();
 }
 
+async function fetchExternalContext(pin){
+  const res = await fetch(CONTEXT_API,{headers:{'x-app-pin':pin},cache:'no-store'});
+  const ctx = await res.json().catch(()=>({ok:false,error:'Respuesta de contexto no JSON'}));
+  if(!res.ok || !ctx.ok) throw new Error(ctx.error || ('Contexto económico no disponible HTTP '+res.status));
+  return ctx;
+}
+
 async function refreshNow(test=false){
   const pin=getPin() || $('pinInput').value.trim();
   if(!pin){ $('setupCard').classList.remove('hide'); return; }
@@ -289,8 +309,22 @@ async function refreshNow(test=false){
   try{
     const res = await fetch(API,{headers:{'x-app-pin':pin},cache:'no-store'});
     const data = await res.json().catch(()=>({ok:false,error:'Respuesta no JSON'}));
-    $('rawJson').textContent = JSON.stringify(data,null,2);
     if(!res.ok || !data.ok){ throw new Error(data.error || ('Error HTTP '+res.status)); }
+
+    try{
+      data.externalContext = await fetchExternalContext(pin);
+    }catch(ctxError){
+      data.externalContext = {
+        ok:false,
+        error:ctxError.message,
+        verifiedSources:[],
+        missingSources:[],
+        sources:[],
+        updatedAt:new Date().toISOString()
+      };
+    }
+
+    $('rawJson').textContent = JSON.stringify(data,null,2);
     localStorage.setItem('LAST_IOL_DATA', JSON.stringify(data));
     render(data,false);
     if(test) $('setupMsg').innerHTML='<div class="success">Conexión correcta.</div>';
@@ -361,7 +395,57 @@ function inferType(sym){
   return 'Activo';
 }
 
+function normalizeContext(ctx){
+  const baseSources = [
+    {name:'BCRA', reason:'tasas, dólar oficial, reservas e inflación'},
+    {name:'BYMA', reason:'precios, volúmenes e instrumentos locales'},
+    {name:'CNV', reason:'hechos relevantes y regulación del mercado'},
+    {name:'Tesoro argentino', reason:'licitaciones, vencimientos y deuda en pesos'},
+    {name:'INDEC', reason:'inflación y actividad económica'},
+    {name:'Reserva Federal', reason:'tasas de EE.UU. y FOMC'},
+    {name:'BLS EE.UU.', reason:'inflación y empleo de EE.UU.'},
+    {name:'Tesoro EE.UU.', reason:'tasas de bonos norteamericanos'}
+  ];
+  if(!ctx) return {ok:false, verifiedSources:[], missingSources:baseSources, sources:baseSources, updatedAt:null};
+  return {
+    ok:!!ctx.ok,
+    verifiedSources:Array.isArray(ctx.verifiedSources)?ctx.verifiedSources:[],
+    missingSources:Array.isArray(ctx.missingSources)?ctx.missingSources:[],
+    sources:Array.isArray(ctx.sources)&&ctx.sources.length?ctx.sources:baseSources,
+    updatedAt:ctx.updatedAt || null,
+    error:ctx.error || ''
+  };
+}
+
+function contextIsStrong(ctx){
+  const c = normalizeContext(ctx);
+  const names = new Set(c.verifiedSources.map(s=>String(s.name||'').toLowerCase()));
+  const local = ['bcra','byma','tesoro argentino'].some(x=>names.has(x));
+  const externo = ['reserva federal','bls ee.uu.','tesoro ee.uu.'].some(x=>names.has(x));
+  return c.ok && c.verifiedSources.length >= 4 && local && externo;
+}
+
+function horizonForPosition(p){
+  const tipo = String(p.type || '').toLowerCase();
+  const cambio = toNumber(p.ch);
+  const peso = toNumber(p.weight);
+
+  if(tipo.includes('bono')){
+    if(Number.isFinite(cambio) && Math.abs(cambio) >= 2.5) return 'Corto plazo defensivo';
+    return 'Mediano plazo';
+  }
+  if(tipo.includes('cedear') || tipo.includes('acción')){
+    if(Number.isFinite(cambio) && Math.abs(cambio) >= 2) return 'Corto plazo';
+    if(Number.isFinite(peso) && peso > 35) return 'Corto plazo para reducir riesgo';
+    return 'Corto a mediano plazo';
+  }
+  if(tipo.includes('caución')) return 'Intradiario / muy corto plazo';
+  return 'Corto plazo';
+}
+
 function buildAnalysis(data){
+  const externalContext = normalizeContext(data.externalContext);
+  const contextoFuerte = contextIsStrong(data.externalContext);
   const arr = extractPortfolioArray(data.portfolio).map(it=>({
     raw:it,
     sym:symbolFromItem(it),
@@ -383,9 +467,21 @@ function buildAnalysis(data){
   });
 
   const recs=[]; const plan=[];
+
+  if(!contextoFuerte){
+    recs.push({
+      title:'Contexto económico externo incompleto',
+      tag:'Señal preliminar',
+      kind:'warn',
+      text:'La app leyó tus tenencias de IOL, pero no pudo confirmar suficientes fuentes confiables externas. Por seguridad, las recomendaciones quedan como análisis preliminar: no comprar fuerte sin revisar BCRA, BYMA, Tesoro, INDEC/FED/BLS y noticias relevantes del día.'
+    });
+    plan.push('Antes de comprar, confirmar contexto externo: dólar, tasas, riesgo país, licitaciones, FED, inflación de EE.UU. y tendencia de Wall Street.');
+  }
   if(!positions.length){
     return {
       positions,total,
+      context:externalContext,
+      contextOk:contextoFuerte,
       recs:[{title:'No pude leer tenencias',tag:'Revisar',kind:'warn',text:'IOL respondió, pero la app no reconoció la estructura del portafolio. Mirá la pestaña Técnico y me pasás esa respuesta.'}],
       plan:['Revisar pestaña Técnico para confirmar estructura del portafolio.'],
       signal:'Revisar',
@@ -410,7 +506,7 @@ function buildAnalysis(data){
   const winners = positions.filter(p=>Number.isFinite(p.ch) && p.ch>=2).sort((a,b)=>b.ch-a.ch);
   if(winners.length){
     const w=winners[0];
-    recs.push({title:`Tomar parcial si ${w.sym} acelera`,tag:'Momentum',kind:'ok',text:`Sube ${pct(w.ch)}. Mantener si conserva fuerza; tomar parcial si llega a objetivo intradiario.`});
+    recs.push({title:`Tomar parcial si ${w.sym} acelera`,tag:'Impulso',kind:'ok',text:`Sube ${pct(w.ch)}. Mantener si conserva fuerza; tomar parcial si llega a objetivo intradiario.`});
     plan.push(`En ${w.sym}, no perseguir: mantener con stop dinámico o tomar parcial si estira.`);
   }
 
@@ -425,26 +521,55 @@ function buildAnalysis(data){
     plan.push('Mantener caja disponible para oportunidades; no entrar por ansiedad.');
   }
 
-  const actionable = positions.map(p=>assetRecommendation(p,total)).sort((a,b)=>b.score-a.score);
+  const actionable = positions.map(p=>assetRecommendation(p,total,contextoFuerte)).sort((a,b)=>b.score-a.score);
   const ideas = buildIdeas(quotes, positions);
-  return {positions,total,recs,plan,signal:generalSignal(recs),actionable,ideas};
+  return {positions,total,context:externalContext,contextOk:contextoFuerte,recs,plan,signal:generalSignal(recs),actionable,ideas};
 }
 function generalSignal(recs){
   if(recs.some(r=>r.kind==='bad')) return 'Defensivo';
   if(recs.some(r=>r.kind==='ok')) return 'Selectivo';
   return 'Esperar';
 }
-function assetRecommendation(p,total){
+function assetRecommendation(p,total,contextOk){
   let action='Mantener'; let kind='blue'; let score=55; let reasons=[];
-  if(p.weight>38){ action='Reducir parcial'; kind='bad'; score=85; reasons.push(`peso alto ${pct(p.weight)}`); }
-  if(Number.isFinite(p.ch) && p.ch<=-3){ action='Proteger / stop'; kind='bad'; score=Math.max(score,82); reasons.push(`caída diaria ${pct(p.ch)}`); }
-  if(Number.isFinite(p.ch) && p.ch>=2 && p.weight<35){ action='Mantener momentum'; kind='ok'; score=Math.max(score,72); reasons.push(`momentum ${pct(p.ch)}`); }
-  if(!Number.isFinite(p.ch)) reasons.push('sin variación disponible');
+  const horizonte = horizonForPosition(p);
+
+  if(p.weight>38){
+    action='Reducir parcial';
+    kind='bad';
+    score=85;
+    reasons.push(`peso alto ${pct(p.weight)}`);
+  }
+
+  if(Number.isFinite(p.ch) && p.ch<=-3){
+    action='Proteger / respetar invalidación';
+    kind='bad';
+    score=Math.max(score,82);
+    reasons.push(`caída diaria ${pct(p.ch)}`);
+  }
+
+  if(Number.isFinite(p.ch) && p.ch>=2 && p.weight<35){
+    action='Mantener impulso, no perseguir';
+    kind='ok';
+    score=Math.max(score,72);
+    reasons.push(`impulso diario ${pct(p.ch)}`);
+  }
+
+  if(!contextOk && action !== 'Reducir parcial' && action !== 'Proteger / respetar invalidación'){
+    action='Esperar confirmación externa';
+    kind='warn';
+    score=Math.min(score,64);
+    reasons.push('contexto externo no confirmado');
+  }
+
+  if(!Number.isFinite(p.ch)) reasons.push('sin variación diaria disponible');
   if(!Number.isFinite(p.px)) reasons.push('sin precio disponible');
+
   const multStop = p.type==='Bono'?0.965:0.97;
   const multTarget=p.type==='Bono'?1.035:1.045;
+
   return {
-    sym:p.sym,type:p.type,action,kind,score,weight:p.weight,px:p.px,ch:p.ch,value:p.value,
+    sym:p.sym,type:p.type,action,kind,score,horizonte,weight:p.weight,px:p.px,ch:p.ch,value:p.value,
     stop:Number.isFinite(p.px)?p.px*multStop:NaN,
     target:Number.isFinite(p.px)?p.px*multTarget:NaN,
     reasons
@@ -458,10 +583,10 @@ function buildIdeas(quotes, positions){
       const sym=(q.symbol||'').toUpperCase();
       const ch=pctFromQuote(q);
       const px=priceFromQuote(q);
-      let tag='Watch'; let kind='blue'; let text='Seguir sin entrar apurado. Esperar volumen y confirmación.';
-      if(Number.isFinite(ch)&&ch>1&&ch<5){tag='Momentum';kind='ok';text='Tiene fuerza relativa. Entrada solo si confirma y con stop corto.'}
+      let tag='Seguimiento'; let kind='blue'; let text='Seguir sin entrar apurado. Esperar volumen, contexto externo y confirmación.';
+      if(Number.isFinite(ch)&&ch>1&&ch<5){tag='Impulso';kind='ok';text='Tiene fuerza relativa. Entrada solo si confirma, con pérdida máxima definida y contexto externo a favor.'}
       if(Number.isFinite(ch)&&ch<=-2){tag='Esperar';kind='warn';text='Está débil. No agarrar cuchillo cayendo; esperar estabilización.'}
-      if(Number.isFinite(ch)&&ch>=5){tag='No perseguir';kind='warn';text='Subió demasiado para entrada tardía. Esperar retroceso.'}
+      if(Number.isFinite(ch)&&ch>=5){tag='No perseguir';kind='warn';text='Subió demasiado para entrada tardía. Esperar retroceso o nueva zona de entrada.'}
       return {sym,kind,tag,text,px,ch,type:inferType(sym)};
     }).slice(0,12);
 }
@@ -472,7 +597,7 @@ function render(data,cached=false){
 
   $('setupCard').classList.add('hide');
   $('statusText').textContent = cached ? 'Mostrando último dato guardado' : 'Datos reales desde IOL';
-  $('connState').innerHTML = cached ? '<span class="warnc">Cache</span>' : '<span class="ok">Conectado</span>';
+  $('connState').innerHTML = cached ? '<span class="warnc">Guardado</span>' : '<span class="ok">Conectado</span>';
   $('updatedAt').textContent = fmtDate(data.updatedAt);
   $('modePill').className = data.security?.ordersEnabled ? 'pill bad' : 'pill';
   $('modePill').textContent = data.security?.ordersEnabled ? 'Órdenes activas' : 'Solo lectura';
@@ -498,6 +623,39 @@ function render(data,cached=false){
 function pillClass(kind){
   return kind==='bad'?'pill bad':kind==='warn'?'pill warn':kind==='ok'?'pill':'pill blue';
 }
+function renderContextBlock(a){
+  const ctx = a.context || normalizeContext(null);
+  const verified = ctx.verifiedSources || [];
+  const missing = ctx.missingSources || [];
+  const ok = a.contextOk;
+
+  const verifiedHtml = verified.length
+    ? verified.slice(0,8).map(s=>`<div class="sourceitem"><b>${escapeHtml(s.name)}</b><br><span class="tiny">${escapeHtml(s.reason || 'Fuente verificada')}</span></div>`).join('')
+    : '<div class="sourceitem"><b>No verificado</b><br><span class="tiny">No se pudo confirmar contexto externo desde la app.</span></div>';
+
+  const missingHtml = missing.length
+    ? `<p class="tiny">Pendiente o no disponible: ${missing.slice(0,6).map(s=>escapeHtml(s.name)).join(', ')}.</p>`
+    : '<p class="tiny">Fuentes mínimas verificadas.</p>';
+
+  return `
+    <div class="card">
+      <div class="eyebrow">Contexto antes de recomendar</div>
+      <h2>${ok ? 'Fuentes confiables consultadas' : 'Recomendación preliminar'}</h2>
+      <p class="muted small">
+        ${ok
+          ? 'La lectura combina tus tenencias de IOL con chequeo de contexto local e internacional.'
+          : 'La app mantiene la conexión con IOL, pero si no confirma suficientes fuentes externas, no marca compras fuertes.'}
+      </p>
+      <div class="sourcebox">
+        <span class="${ok ? 'pill' : 'pill warn'}">${ok ? 'Contexto suficiente' : 'Contexto incompleto'}</span>
+        <span class="horizon">Corto / mediano / largo plazo diferenciado</span>
+        ${missingHtml}
+        <div class="sourcegrid">${verifiedHtml}</div>
+      </div>
+    </div>
+  `;
+}
+
 function renderRecommendations(a){
   const top = a.recs.map(r=>`
     <div class="rec">
@@ -512,6 +670,7 @@ function renderRecommendations(a){
           <div>
             <h3>${escapeHtml(r.sym)}</h3>
             <div class="tiny">${escapeHtml(r.type)} · ${Number.isFinite(r.weight)?'Peso '+pct(r.weight):'Peso —'}</div>
+            <div style="margin-top:6px"><span class="horizon">${escapeHtml(r.horizonte || 'Corto plazo')}</span></div>
           </div>
           <span class="${pillClass(r.kind)}">${escapeHtml(r.action)}</span>
         </div>
@@ -519,15 +678,15 @@ function renderRecommendations(a){
         <div class="grid">
           <div><div class="label">Precio</div><div class="value mono">${Number.isFinite(r.px)?money(r.px):'—'}</div></div>
           <div><div class="label">Día</div><div class="value mono ${r.ch<0?'bad':r.ch>0?'ok':''}">${pct(r.ch)}</div></div>
-          <div><div class="label">Stop sugerido</div><div class="value mono">${Number.isFinite(r.stop)?money(r.stop):'—'}</div></div>
+          <div><div class="label">Pérdida máxima</div><div class="value mono">${Number.isFinite(r.stop)?money(r.stop):'—'}</div></div>
           <div><div class="label">Objetivo parcial</div><div class="value mono">${Number.isFinite(r.target)?money(r.target):'—'}</div></div>
         </div>
         <div class="scorebar"><span style="width:${Math.max(10,Math.min(100,r.score))}%"></span></div>
-        <p class="tiny">Base: ${escapeHtml(r.reasons.join(', ') || 'lectura neutral')}</p>
+        <p class="tiny">Base del análisis: ${escapeHtml(r.reasons.join(', ') || 'lectura neutral')}</p>
       </div>`).join('')
     : '<div class="notice">Todavía no hay activos reconocidos para recomendar.</div>';
 
-  $('recommendationsList').innerHTML = top + porActivo;
+  $('recommendationsList').innerHTML = renderContextBlock(a) + top + porActivo;
 }
 function renderIdeas(a){
   if(!a.ideas.length){
