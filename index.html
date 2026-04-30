@@ -6,71 +6,85 @@
   <meta name="theme-color" content="#0d1117" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <title>IOL Cartera Segura</title>
+  <title>IOL Cartera Pro v7</title>
   <link rel="manifest" href="/manifest.json" />
   <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='42' fill='%230d1117'/><text x='96' y='118' font-family='Georgia,serif' font-size='86' font-weight='700' fill='%23f5c97b' text-anchor='middle'>IOL</text><circle cx='146' cy='50' r='10' fill='%2356d364'/></svg>" />
-  <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='42' fill='%230d1117'/><text x='96' y='118' font-family='Georgia,serif' font-size='86' font-weight='700' fill='%23f5c97b' text-anchor='middle'>IOL</text><circle cx='146' cy='50' r='10' fill='%2356d364'/></svg>" />
   <style>
-    :root{--bg:#0d1117;--card:#161b22;--card2:#1c232c;--line:#30363d;--txt:#f0f3f5;--muted:#9aa4af;--muted2:#6b7785;--accent:#f5c97b;--green:#56d364;--red:#ff7b72;--yellow:#ffd33d;--blue:#79c0ff;--shadow:0 14px 40px rgba(0,0,0,.25)}
-    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.45;padding-bottom:92px} 
+    :root{--bg:#0d1117;--card:#161b22;--card2:#1c232c;--card3:#101722;--line:#30363d;--line2:#39424f;--txt:#f0f3f5;--muted:#a8b2bc;--muted2:#6b7785;--accent:#f5c97b;--green:#56d364;--red:#ff7b72;--yellow:#ffd33d;--blue:#79c0ff;--violet:#c297ff;--shadow:0 12px 32px rgba(0,0,0,.24)}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.45;padding-bottom:92px;-webkit-font-smoothing:antialiased} 
     header{position:sticky;top:0;z-index:5;background:rgba(13,17,23,.94);backdrop-filter:blur(16px);padding:calc(env(safe-area-inset-top) + 16px) 18px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}
     .brand{display:flex;align-items:center;gap:10px}.logo{width:42px;height:42px;border-radius:13px;background:#10151d;display:grid;place-items:center;color:var(--accent);font-weight:900;font-family:Georgia,serif;position:relative}.logo:after{content:"";position:absolute;right:7px;top:7px;width:7px;height:7px;border-radius:50%;background:var(--green)}
     h1{font-size:18px;margin:0}.sub{font-size:12px;color:var(--muted);margin-top:2px}.wrap{max-width:760px;margin:0 auto;padding:18px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
-    .hero{background:linear-gradient(145deg,#1d2634,#111722);border-color:#39424f}.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.16em;color:var(--accent);font-weight:800}.total{font-size:34px;font-weight:900;letter-spacing:-.04em;margin:8px 0 2px}.muted{color:var(--muted)}.small{font-size:13px}.tiny{font-size:12px;color:var(--muted2)}
-    button,input{font:inherit}.btn{border:0;border-radius:13px;padding:13px 15px;font-weight:800;cursor:pointer}.btn-primary{background:var(--accent);color:#111}.btn-secondary{background:var(--card2);color:var(--txt);border:1px solid var(--line)}.btn-danger{background:rgba(255,123,114,.15);color:var(--red);border:1px solid rgba(255,123,114,.28)}.btn:active{transform:scale(.99)}
-    .topbtn{white-space:nowrap}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px}.label{font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted2);font-weight:800}.value{font-size:17px;font-weight:850;margin-top:5px;word-break:break-word}.ok{color:var(--green)}.bad{color:var(--red)}.warn{color:var(--yellow)}.blue{color:var(--blue)}
-    .pill{display:inline-flex;gap:6px;align-items:center;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:800;background:rgba(86,211,100,.12);color:var(--green);border:1px solid rgba(86,211,100,.22)}.pill.warn{background:rgba(255,211,61,.12);color:var(--yellow);border-color:rgba(255,211,61,.24)}.pill.bad{background:rgba(255,123,114,.12);color:var(--red);border-color:rgba(255,123,114,.24)}
-    .section{font-size:18px;font-weight:900;margin:22px 0 10px;border-left:4px solid var(--accent);padding-left:10px}.row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.divider{height:1px;background:var(--line);margin:12px 0}.asset{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px}.asset h3{margin:0;font-size:18px}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.input{width:100%;padding:14px;border-radius:13px;background:var(--card2);border:1px solid var(--line);color:var(--txt);outline:0}.input:focus{border-color:var(--accent)}.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.error{background:rgba(255,123,114,.1);border:1px solid rgba(255,123,114,.28);color:#ffd8d6;border-radius:14px;padding:12px}.notice{background:rgba(121,192,255,.1);border:1px solid rgba(121,192,255,.25);border-radius:14px;padding:12px;color:#d8ecff}.success{background:rgba(86,211,100,.1);border:1px solid rgba(86,211,100,.23);border-radius:14px;padding:12px;color:#d8ffdc}.hide{display:none!important}
-    nav{position:fixed;left:0;right:0;bottom:0;z-index:10;background:rgba(13,17,23,.96);backdrop-filter:blur(16px);border-top:1px solid var(--line);display:flex;padding:8px 6px calc(8px + env(safe-area-inset-bottom))}.tab{flex:1;background:transparent;border:0;color:var(--muted2);font-size:12px;font-weight:800;padding:8px}.tab.active{color:var(--accent)}
+    .hero{background:linear-gradient(145deg,#1d2634,#111722);border-color:#39424f}.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.16em;color:var(--accent);font-weight:850}.total{font-size:34px;font-weight:950;letter-spacing:-.04em;margin:8px 0 2px}.muted{color:var(--muted)}.small{font-size:13px}.tiny{font-size:12px;color:var(--muted2)}
+    button,input{font:inherit}.btn{border:0;border-radius:13px;padding:13px 15px;font-weight:850;cursor:pointer}.btn-primary{background:var(--accent);color:#111}.btn-secondary{background:var(--card2);color:var(--txt);border:1px solid var(--line)}.btn-danger{background:rgba(255,123,114,.15);color:var(--red);border:1px solid rgba(255,123,114,.28)}.btn:active{transform:scale(.99)}.topbtn{white-space:nowrap}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px}.label{font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted2);font-weight:850}.value{font-size:17px;font-weight:850;margin-top:5px;word-break:break-word}.ok{color:var(--green)}.bad{color:var(--red)}.warnc{color:var(--yellow)}.blue{color:var(--blue)}.violet{color:var(--violet)}
+    .pill{display:inline-flex;gap:6px;align-items:center;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:850;background:rgba(86,211,100,.12);color:var(--green);border:1px solid rgba(86,211,100,.22);white-space:nowrap}.pill.warn{background:rgba(255,211,61,.12);color:var(--yellow);border-color:rgba(255,211,61,.24)}.pill.bad{background:rgba(255,123,114,.12);color:var(--red);border-color:rgba(255,123,114,.24)}.pill.blue{background:rgba(121,192,255,.12);color:var(--blue);border-color:rgba(121,192,255,.24)}.pill.violet{background:rgba(194,151,255,.12);color:var(--violet);border-color:rgba(194,151,255,.24)}
+    .section{font-size:18px;font-weight:950;margin:22px 0 10px;border-left:4px solid var(--accent);padding-left:10px}.row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.divider{height:1px;background:var(--line);margin:12px 0}.asset,.rec{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px}.asset h3,.rec h3{margin:0;font-size:18px}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.input{width:100%;padding:14px;border-radius:13px;background:var(--card2);border:1px solid var(--line);color:var(--txt);outline:0}.input:focus{border-color:var(--accent)}.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.error{background:rgba(255,123,114,.1);border:1px solid rgba(255,123,114,.28);color:#ffd8d6;border-radius:14px;padding:12px}.notice{background:rgba(121,192,255,.1);border:1px solid rgba(121,192,255,.25);border-radius:14px;padding:12px;color:#d8ecff}.success{background:rgba(86,211,100,.1);border:1px solid rgba(86,211,100,.23);border-radius:14px;padding:12px;color:#d8ffdc}.warning{background:rgba(255,211,61,.1);border:1px solid rgba(255,211,61,.25);border-radius:14px;padding:12px;color:#fff0ad}.hide{display:none!important}
+    .plan{list-style:none;counter-reset:s;padding:0;margin:0}.plan li{counter-increment:s;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:13px 13px 13px 52px;margin-bottom:9px;position:relative}.plan li:before{content:counter(s);position:absolute;left:13px;top:12px;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#111;display:grid;place-items:center;font-weight:950}.scorebar{height:5px;background:var(--line);border-radius:99px;overflow:hidden;margin-top:10px}.scorebar span{display:block;height:100%;background:var(--accent);border-radius:99px}.badge{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted2);font-weight:900}
+    nav{position:fixed;left:0;right:0;bottom:0;z-index:10;background:rgba(13,17,23,.96);backdrop-filter:blur(16px);border-top:1px solid var(--line);display:flex;padding:8px 6px calc(8px + env(safe-area-inset-bottom))}.tab{flex:1;background:transparent;border:0;color:var(--muted2);font-size:11px;font-weight:850;padding:8px 2px}.tab.active{color:var(--accent)}
     pre{white-space:pre-wrap;word-break:break-word;background:#090c10;border:1px solid var(--line);padding:12px;border-radius:12px;color:#c9d1d9;max-height:340px;overflow:auto}.loader{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.22);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
   </style>
 </head>
 <body>
 <header>
-  <div class="brand"><div class="logo">IOL</div><div><h1>Cartera Segura</h1><div class="sub" id="statusText">Sin conectar</div></div></div>
+  <div class="brand"><div class="logo">IOL</div><div><h1>Cartera Pro</h1><small style='display:block;color:#8b949e;font-size:11px;margin-top:2px'>v7 · recomendaciones</small><div class="sub" id="statusText">Sin conectar</div></div></div>
   <button class="btn btn-primary topbtn" onclick="refreshNow()">Actualizar</button>
 </header>
 
 <main class="wrap">
-  <section id="screen-dashboard">
+  <section id="screen-hoy">
     <div id="setupCard" class="card">
       <div class="eyebrow">Primer uso</div>
       <h2 style="margin:8px 0 6px">Conectar app con PIN privado</h2>
-      <p class="muted small">El PIN no es tu clave de IOL. Es una llave privada para que solo tu teléfono pueda pedir datos al servidor. No la compartas.</p>
+      <p class="muted small">El PIN no es tu clave de IOL. Es la llave privada que cargaste como APP_PIN en Netlify.</p>
       <input id="pinInput" class="input mono" placeholder="Pegá tu APP_PIN privado" autocomplete="off" />
       <div class="actions"><button class="btn btn-primary" onclick="savePin()">Guardar PIN</button><button class="btn btn-secondary" onclick="testConnection()">Probar</button></div>
       <div id="setupMsg" style="margin-top:12px"></div>
     </div>
 
     <div class="card hero">
-      <div class="row"><div><div class="eyebrow">Actualización real</div><div class="total" id="mainTotal">—</div><div class="muted small" id="mainSub">Esperando datos desde IOL</div></div><span id="modePill" class="pill warn">Solo lectura</span></div>
+      <div class="row"><div><div class="eyebrow">Snapshot real</div><div class="total" id="mainTotal">—</div><div class="muted small" id="mainSub">Esperando datos desde IOL</div></div><span id="modePill" class="pill warn">Solo lectura</span></div>
     </div>
     <div class="grid">
       <div class="stat"><div class="label">Estado</div><div class="value" id="connState">No conectado</div></div>
       <div class="stat"><div class="label">Última lectura</div><div class="value small" id="updatedAt">—</div></div>
       <div class="stat"><div class="label">Activos</div><div class="value" id="assetCount">—</div></div>
-      <div class="stat"><div class="label">Cotizaciones</div><div class="value" id="quoteCount">—</div></div>
+      <div class="stat"><div class="label">Señal general</div><div class="value" id="generalSignal">—</div></div>
     </div>
-
     <div id="messageArea" style="margin-top:14px"></div>
+    <div class="section">Plan operativo</div>
+    <ol id="dailyPlan" class="plan"><li>Conectá la app para generar plan con datos reales.</li></ol>
+  </section>
 
+  <section id="screen-recs" class="hide">
+    <div class="card">
+      <div class="eyebrow">Recomendaciones</div>
+      <h2 style="margin:8px 0">Qué haría hoy</h2>
+      <p class="muted small">Motor táctico automático basado en tu cartera, concentración, variación diaria y cotizaciones disponibles desde IOL. No ejecuta órdenes.</p>
+    </div>
+    <div id="recommendationsList"><div class="notice">Actualizá la app para ver recomendaciones.</div></div>
+    <div class="section">Ideas / watchlist</div>
+    <div id="ideasList"><div class="notice">Se carga con los tickers de tu cartera y la watchlist configurada en el backend.</div></div>
+  </section>
+
+  <section id="screen-cartera" class="hide">
     <div class="section">Tenencias</div>
-    <div id="portfolioList"><div class="notice">Cuando configures las variables privadas en Netlify y guardes el PIN, acá se cargará tu cartera real.</div></div>
+    <div id="portfolioList"><div class="notice">Cuando guardes el PIN y actualices, acá se cargará tu cartera real.</div></div>
   </section>
 
   <section id="screen-config" class="hide">
     <div class="card">
       <div class="eyebrow">Seguridad</div>
       <h2 style="margin:8px 0">Configuración local</h2>
-      <p class="muted small">La app guarda en este teléfono solo el APP_PIN. Tu usuario y contraseña de IOL deben quedar únicamente en Netlify Environment Variables.</p>
+      <p class="muted small">La app guarda en este teléfono solo el APP_PIN. Tu usuario y contraseña de IOL quedan en Netlify Environment Variables.</p>
       <input id="pinInput2" class="input mono" placeholder="APP_PIN" autocomplete="off" />
       <div class="actions"><button class="btn btn-primary" onclick="savePin2()">Guardar</button><button class="btn btn-danger" onclick="clearLocal()">Borrar del teléfono</button></div>
     </div>
     <div class="card">
       <div class="eyebrow">Automático</div>
       <h2 style="margin:8px 0">Cómo actualiza</h2>
-      <p class="muted small">Actualiza al abrir, al tocar Actualizar y cada 5 minutos mientras la app esté abierta. No ejecuta compras ni ventas.</p>
-      <div id="autoState" class="success">Modo seguro: lectura solamente.</div>
+      <p class="muted small">Actualiza al abrir, al tocar Actualizar y cada 5 minutos mientras la app esté abierta.</p>
+      <div class="success">Modo seguro: lectura solamente. Las recomendaciones son automáticas, no órdenes.</div>
     </div>
   </section>
 
@@ -78,14 +92,16 @@
     <div class="card">
       <div class="eyebrow">Diagnóstico</div>
       <h2 style="margin:8px 0">Respuesta técnica</h2>
-      <p class="muted small">Esto sirve para revisar errores sin exponer tus claves. No compartas capturas si ves datos sensibles de cartera.</p>
+      <p class="muted small">Sirve para revisar errores. No compartas capturas si ves datos sensibles de cartera.</p>
       <pre id="rawJson">Sin datos todavía.</pre>
     </div>
   </section>
 </main>
 
 <nav>
-  <button class="tab active" onclick="showTab('dashboard', this)">Cartera</button>
+  <button class="tab active" onclick="showTab('hoy', this)">Hoy</button>
+  <button class="tab" onclick="showTab('recs', this)">Recom.</button>
+  <button class="tab" onclick="showTab('cartera', this)">Cartera</button>
   <button class="tab" onclick="showTab('config', this)">Config</button>
   <button class="tab" onclick="showTab('raw', this)">Técnico</button>
 </nav>
@@ -96,102 +112,171 @@ let lastData = null;
 let timer = null;
 
 function $(id){return document.getElementById(id)}
-function money(n){
-  const num = Number(n);
-  if(!Number.isFinite(num)) return '—';
-  return num.toLocaleString('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0});
-}
-function fmtDate(iso){
-  if(!iso) return '—';
-  try { return new Date(iso).toLocaleString('es-AR'); } catch { return iso; }
-}
-function getPin(){return localStorage.getItem('iol_app_pin') || ''}
-function savePin(){ const v=$('pinInput').value.trim(); if(v.length<10){$('setupMsg').innerHTML='<div class="error">El PIN debe tener mínimo 10 caracteres.</div>';return;} localStorage.setItem('iol_app_pin',v); $('setupMsg').innerHTML='<div class="success">PIN guardado en este teléfono.</div>'; $('setupCard').classList.add('hide'); refreshNow(); }
-function savePin2(){ const v=$('pinInput2').value.trim(); if(v.length<10){alert('PIN demasiado corto');return;} localStorage.setItem('iol_app_pin',v); alert('PIN guardado'); refreshNow(); }
-function clearLocal(){ localStorage.removeItem('iol_app_pin'); localStorage.removeItem('iol_last_snapshot'); location.reload(); }
-function showTab(name, btn){ ['dashboard','config','raw'].forEach(x=>$('screen-'+x).classList.toggle('hide',x!==name)); document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); if(name==='config') $('pinInput2').value=getPin(); }
+function money(n){ const num=toNumber(n); if(!Number.isFinite(num)) return '—'; return num.toLocaleString('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}); }
+function pct(n){ const num=toNumber(n); if(!Number.isFinite(num)) return '—'; return (num>0?'+':'') + num.toLocaleString('es-AR',{maximumFractionDigits:2}) + '%'; }
+function fmtDate(iso){ if(!iso) return '—'; try { return new Date(iso).toLocaleString('es-AR',{dateStyle:'short', timeStyle:'short'}); } catch { return iso; } }
+function toNumber(v){ if(v===null||v===undefined||v==='') return NaN; if(typeof v==='number') return v; let s=String(v).replace(/\$/g,'').replace(/\s/g,''); if(s.includes(',') && s.includes('.')) s=s.replace(/\./g,'').replace(',', '.'); else if(s.includes(',')) s=s.replace(',', '.'); const n=Number(s); return Number.isFinite(n)?n:NaN; }
+function escapeHtml(s){return String(s).replace(/[&<>'"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
 
-async function testConnection(){ await refreshNow(); }
-async function refreshNow(){
-  const pin = getPin();
-  if(!pin){ $('setupCard').classList.remove('hide'); $('messageArea').innerHTML='<div class="notice">Primero guardá tu APP_PIN.</div>'; return; }
-  $('setupCard').classList.add('hide');
-  $('statusText').innerHTML='<span class="loader"></span> Consultando IOL...';
-  $('connState').innerHTML='<span class="loader"></span> Actualizando';
-  $('messageArea').innerHTML='';
+function getPin(){return localStorage.getItem('APP_PIN') || ''}
+function savePin(){ const v=$('pinInput').value.trim(); if(v.length<8){$('setupMsg').innerHTML='<div class="error">PIN demasiado corto.</div>';return;} localStorage.setItem('APP_PIN',v); $('setupCard').classList.add('hide'); $('setupMsg').innerHTML=''; refreshNow(); }
+function savePin2(){ const v=$('pinInput2').value.trim(); if(v.length<8) return alert('PIN demasiado corto'); localStorage.setItem('APP_PIN',v); alert('PIN guardado'); refreshNow(); }
+function clearLocal(){ localStorage.removeItem('APP_PIN'); localStorage.removeItem('LAST_IOL_DATA'); location.reload(); }
+function testConnection(){ const v=$('pinInput').value.trim(); if(v) localStorage.setItem('APP_PIN',v); refreshNow(true); }
+function showTab(name, btn){ ['hoy','recs','cartera','config','raw'].forEach(x=>$('screen-'+x).classList.add('hide')); $('screen-'+name).classList.remove('hide'); document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); btn.classList.add('active'); window.scrollTo(0,0); if(name==='config') $('pinInput2').value=getPin(); }
+
+async function refreshNow(test=false){
+  const pin=getPin() || $('pinInput').value.trim();
+  if(!pin){ $('setupCard').classList.remove('hide'); return; }
+  $('statusText').innerHTML = '<span class="loader"></span> Actualizando...';
   try{
-    const res = await fetch(API, { headers: { 'x-app-pin': pin }, cache: 'no-store' });
-    const data = await res.json();
-    $('rawJson').textContent = JSON.stringify(data, null, 2);
-    if(!res.ok || !data.ok){ throw new Error(data.error || 'No se pudo actualizar'); }
-    lastData = data;
-    localStorage.setItem('iol_last_snapshot', JSON.stringify(data));
-    render(data);
+    const res = await fetch(API,{headers:{'x-app-pin':pin},cache:'no-store'});
+    const data = await res.json().catch(()=>({ok:false,error:'Respuesta no JSON'}));
+    $('rawJson').textContent = JSON.stringify(data,null,2);
+    if(!res.ok || !data.ok){ throw new Error(data.error || ('Error HTTP '+res.status)); }
+    localStorage.setItem('LAST_IOL_DATA', JSON.stringify(data));
+    render(data,false);
+    if(test) $('setupMsg').innerHTML='<div class="success">Conexión correcta.</div>';
   }catch(e){
     $('statusText').textContent='Error de conexión';
     $('connState').innerHTML='<span class="bad">Error</span>';
-    $('messageArea').innerHTML=`<div class="error"><b>No actualizó.</b><br>${e.message}<br><span class="tiny">Revisá variables privadas en Netlify: IOL_USERNAME, IOL_PASSWORD y APP_PIN.</span></div>`;
-    const cached = localStorage.getItem('iol_last_snapshot');
-    if(cached){ try{ render(JSON.parse(cached), true); }catch{} }
+    $('messageArea').innerHTML='<div class="error"><b>No pude actualizar.</b><br>'+escapeHtml(e.message)+'<br><span class="tiny">Revisá APP_PIN, variables de Netlify y habilitación API.</span></div>';
+    const cached = localStorage.getItem('LAST_IOL_DATA');
+    if(cached){ try{ render(JSON.parse(cached),true); }catch{} }
+    $('rawJson').textContent = String(e.stack || e.message || e);
+    if(test) $('setupMsg').innerHTML='<div class="error">'+escapeHtml(e.message)+'</div>';
   }
 }
 
-function extractPortfolioArray(portfolio){
-  if(Array.isArray(portfolio)) return portfolio;
-  return portfolio?.activos || portfolio?.titulos || portfolio?.items || portfolio?.tenencias || [];
+function findArrayWithSymbols(obj, depth=0){
+  if(!obj || depth>5) return [];
+  if(Array.isArray(obj)){
+    const score = obj.filter(x=>x && typeof x==='object' && symbolFromItem(x)).length;
+    if(score>0) return obj;
+    for(const item of obj){ const r=findArrayWithSymbols(item, depth+1); if(r.length) return r; }
+  } else if(typeof obj==='object'){
+    const common = ['activos','titulos','tenencias','items','portafolio','portfolio','instrumentos','posiciones'];
+    for(const k of common){ const r=findArrayWithSymbols(obj[k], depth+1); if(r.length) return r; }
+    for(const k of Object.keys(obj)){ const r=findArrayWithSymbols(obj[k], depth+1); if(r.length) return r; }
+  }
+  return [];
 }
-function valueFromItem(item){
-  return item?.valuacion || item?.valorActual || item?.valorMercado || item?.importe || item?.monto || item?.total || item?.cantidadValuada;
-}
-function symbolFromItem(item){return item?.simbolo || item?.ticker || item?.titulo?.simbolo || item?.titulo?.ticker || item?.descripcion || 'Activo'}
-function qtyFromItem(item){return item?.cantidad || item?.nominales || item?.tenencia || item?.titulo?.cantidad || item?.disponible || ''}
-function priceFromQuote(q){ const d=q?.data||{}; return d.ultimoPrecio || d.precio || d.cotizacion || d.ultimo || d.ultimoOperado || null; }
+function extractPortfolioArray(portfolio){ return findArrayWithSymbols(portfolio); }
+function symbolFromItem(item){ return (item?.simbolo || item?.ticker || item?.symbol || item?.titulo?.simbolo || item?.titulo?.ticker || item?.instrumento?.simbolo || item?.descripcion?.split?.(' ')?.[0] || '').toString().toUpperCase(); }
+function qtyFromItem(item){ return firstNum(item, ['cantidad','nominales','tenencia','disponible','total','quantity']) || item?.titulo?.cantidad || ''; }
+function valueFromItem(item){ return firstNum(item, ['valuacion','valuado','valor','valorActual','valorizado','monto','importe','subtotal','tenenciaValuada','cantidadValorizada','totalValuado','valorMercado']); }
+function firstNum(obj, keys){ for(const k of keys){ if(obj && obj[k]!==undefined){ const n=toNumber(obj[k]); if(Number.isFinite(n)) return n; }} return NaN; }
+function priceFromQuote(q){ const d=q?.data||{}; return firstNum(d,['ultimoPrecio','ultimo','precio','cotizacion','cierre','ultimoOperado','lastPrice','price']) || firstNum(d?.puntas?.compra||{},['precio']) || NaN; }
+function pctFromQuote(q){ const d=q?.data||{}; return firstNum(d,['variacion','variacionPorcentual','variacionDiaria','varPorcentual','changePercent','percentageChange']) ; }
+function inferType(sym){ if(/^(AL|GD|AE|TX|T[0-9]|S[0-9]|DICP|PAR|BA37|BPY)/.test(sym)) return 'Bono'; if(['KO','NU','NVDA','AAPL','MSFT','GOOGL','AMZN','META','TSLA','V','MELI','SPY','QQQ'].includes(sym)) return 'CEDEAR/ETF'; if(['GGAL','YPFD','PAMP','VIST','COME','BMA','SUPV','LOMA','TXAR','ALUA'].includes(sym)) return 'Acción AR'; return 'Activo'; }
 
-function render(data, cached=false){
+function buildAnalysis(data){
+  const arr = extractPortfolioArray(data.portfolio).map(it=>({raw:it,sym:symbolFromItem(it),qty:qtyFromItem(it),value:valueFromItem(it)})).filter(x=>x.sym);
+  const quotes = data.quotes || [];
+  const qmap = new Map(quotes.map(q=>[(q.symbol||'').toUpperCase(), q]));
+  const total = arr.reduce((a,x)=>a+(Number.isFinite(x.value)?x.value:0),0);
+  const positions = arr.map(x=>{ const q=qmap.get(x.sym); const px=priceFromQuote(q); const ch=pctFromQuote(q); const weight=total&&Number.isFinite(x.value)?x.value/total*100:NaN; const type=inferType(x.sym); return {...x,q,px,ch,weight,type}; });
+  const maxPos = positions.slice().sort((a,b)=>(b.weight||0)-(a.weight||0))[0];
+  const recs=[]; const plan=[];
+  if(!positions.length){
+    return {positions,total,recs:[{title:'No pude leer tenencias',tag:'Revisar',kind:'warn',text:'IOL respondió, pero la app no reconoció la estructura del portafolio. Mirá la pestaña Técnico y ajustamos el parser.'}],plan:['Revisar pestaña Técnico para confirmar estructura del portafolio.'],signal:'Revisar'};
+  }
+  if(maxPos && maxPos.weight>38){
+    recs.push({title:`Reducir concentración en ${maxPos.sym}`,tag:'Prioridad',kind:'bad',text:`${maxPos.sym} pesa ${pct(maxPos.weight)} de la cartera. Para trading táctico conviene liberar caja o bajar exposición parcial en rebotes.`,sym:maxPos.sym});
+    plan.push(`Si ${maxPos.sym} rebota, vender parcial para bajar concentración debajo de 30–35%.`);
+  }
+  const losers = positions.filter(p=>Number.isFinite(p.ch) && p.ch<=-3).sort((a,b)=>a.ch-b.ch);
+  if(losers.length){
+    const l=losers[0]; recs.push({title:`Proteger ${l.sym}`,tag:'Riesgo',kind:'bad',text:`Cae ${pct(l.ch)}. No promediar abajo sin señal. Definir stop y esperar estabilización.`,sym:l.sym});
+    plan.push(`No comprar más ${l.sym} mientras siga débil; revisar stop.`);
+  }
+  const winners = positions.filter(p=>Number.isFinite(p.ch) && p.ch>=2).sort((a,b)=>b.ch-a.ch);
+  if(winners.length){
+    const w=winners[0]; recs.push({title:`Tomar parcial si ${w.sym} acelera`,tag:'Momentum',kind:'ok',text:`Sube ${pct(w.ch)}. Mantener si conserva fuerza; tomar parcial si llega a objetivo intradiario.`,sym:w.sym});
+    plan.push(`En ${w.sym}, no perseguir: mantener con stop dinámico o tomar parcial si estira.`);
+  }
+  const bondsWeight = positions.filter(p=>p.type==='Bono').reduce((a,p)=>a+(p.weight||0),0);
+  if(bondsWeight>45){ recs.push({title:'Bonos con peso alto',tag:'Balance',kind:'warn',text:`Los bonos pesan ${pct(bondsWeight)}. Mantener si el riesgo país acompaña; si no hay mejora, no sumar más exposición.`}); plan.push('No aumentar bonos si ya pesan más de 45% de la cartera.'); }
+  if(recs.length<3){
+    recs.push({title:'Mantener liquidez operativa',tag:'Disciplina',kind:'blue',text:'Si liberás efectivo, usar caución corta mientras no haya una entrada clara. No quedar sin caja.'});
+    plan.push('Mantener caja disponible para oportunidades; no entrar por ansiedad.');
+  }
+  const actionable = positions.map(p=>assetRecommendation(p,total)).sort((a,b)=>b.score-a.score);
+  const ideas = buildIdeas(quotes, positions);
+  return {positions,total,recs,plan,signal:generalSignal(recs),actionable,ideas};
+}
+function generalSignal(recs){ if(recs.some(r=>r.kind==='bad')) return 'Defensivo'; if(recs.some(r=>r.kind==='ok')) return 'Selectivo'; return 'Esperar'; }
+function assetRecommendation(p,total){
+  let action='Mantener'; let kind='blue'; let score=55; let reasons=[];
+  if(p.weight>38){ action='Reducir parcial'; kind='bad'; score=85; reasons.push(`peso alto ${pct(p.weight)}`); }
+  if(Number.isFinite(p.ch) && p.ch<=-3){ action='Proteger / stop'; kind='bad'; score=Math.max(score,82); reasons.push(`caída diaria ${pct(p.ch)}`); }
+  if(Number.isFinite(p.ch) && p.ch>=2 && p.weight<35){ action='Mantener momentum'; kind='ok'; score=Math.max(score,72); reasons.push(`momentum ${pct(p.ch)}`); }
+  if(!Number.isFinite(p.ch)) reasons.push('sin variación disponible');
+  if(!Number.isFinite(p.px)) reasons.push('sin precio disponible');
+  const multStop = p.type==='Bono'?0.965:0.97; const multTarget=p.type==='Bono'?1.035:1.045;
+  return {sym:p.sym,type:p.type,action,kind,score,weight:p.weight,px:p.px,ch:p.ch,value:p.value,stop:Number.isFinite(p.px)?p.px*multStop:NaN,target:Number.isFinite(p.px)?p.px*multTarget:NaN,reasons};
+}
+function buildIdeas(quotes, positions){
+  const held = new Set(positions.map(p=>p.sym));
+  return quotes.filter(q=>q.ok && !held.has((q.symbol||'').toUpperCase())).map(q=>{ const sym=(q.symbol||'').toUpperCase(); const ch=pctFromQuote(q); const px=priceFromQuote(q); let tag='Watch'; let kind='blue'; let text='Seguir sin entrar apurado. Esperar volumen y confirmación.'; if(Number.isFinite(ch)&&ch>1&&ch<5){tag='Momentum';kind='ok';text='Tiene fuerza relativa. Entrada solo si confirma y con stop corto.'} if(Number.isFinite(ch)&&ch<=-2){tag='Esperar';kind='warn';text='Está débil. No agarrar cuchillo cayendo; esperar estabilización.'} if(Number.isFinite(ch)&&ch>=5){tag='No perseguir';kind='warn';text='Subió demasiado para entrada tardía. Esperar retroceso.'} return {sym,kind,tag,text,px,ch,type:inferType(sym)}; }).slice(0,12);
+}
+
+function render(data,cached=false){
+  lastData=data;
+  const a=buildAnalysis(data);
   $('statusText').textContent = cached ? 'Mostrando último dato guardado' : 'Datos reales desde IOL';
-  $('connState').innerHTML = cached ? '<span class="warn">Cache</span>' : '<span class="ok">Conectado</span>';
+  $('connState').innerHTML = cached ? '<span class="warnc">Cache</span>' : '<span class="ok">Conectado</span>';
   $('updatedAt').textContent = fmtDate(data.updatedAt);
   $('modePill').className = data.security?.ordersEnabled ? 'pill bad' : 'pill';
   $('modePill').textContent = data.security?.ordersEnabled ? 'Órdenes activas' : 'Solo lectura';
-
-  const arr = extractPortfolioArray(data.portfolio);
-  $('assetCount').textContent = arr.length || '—';
-  $('quoteCount').textContent = (data.quotes||[]).filter(q=>q.ok).length + '/' + (data.quotes||[]).length;
-
-  const estimated = arr.reduce((acc,it)=>acc+(Number(valueFromItem(it))||0),0);
-  $('mainTotal').textContent = estimated ? money(estimated) : 'Cartera IOL';
-  $('mainSub').textContent = data.source + (cached ? ' · guardado local' : '');
-
+  $('assetCount').textContent = a.positions.length || '—';
+  $('generalSignal').innerHTML = a.signal==='Defensivo' ? '<span class="bad">Defensivo</span>' : a.signal==='Selectivo' ? '<span class="ok">Selectivo</span>' : '<span class="warnc">Esperar</span>';
+  $('mainTotal').textContent = a.total ? money(a.total) : 'Cartera IOL';
+  $('mainSub').textContent = (data.source || 'IOL API') + (cached ? ' · guardado local' : '');
   const warnings = data.warnings || [];
-  $('messageArea').innerHTML = warnings.length ? `<div class="notice"><b>Advertencias:</b><br>${warnings.map(w=>'• '+w).join('<br>')}</div>` : '<div class="success">Actualización correcta. No se expusieron credenciales al navegador.</div>';
-
-  if(!arr.length){
-    $('portfolioList').innerHTML = '<div class="notice">IOL respondió, pero no pude reconocer la lista de activos. Abrí la pestaña Técnico para revisar la forma de la respuesta.</div>';
-    return;
-  }
-  const quotesBySymbol = new Map((data.quotes||[]).map(q=>[q.symbol,q]));
-  $('portfolioList').innerHTML = arr.map(it=>{
-    const sym = String(symbolFromItem(it));
-    const q = quotesBySymbol.get(sym.toUpperCase());
-    const px = priceFromQuote(q);
-    const value = valueFromItem(it);
-    const qty = qtyFromItem(it);
-    return `<div class="asset">
-      <div class="row"><div><h3>${escapeHtml(sym)}</h3><div class="tiny">Cantidad: <span class="mono">${escapeHtml(String(qty||'—'))}</span></div></div><span class="pill ${q?.ok?'':'warn'}">${q?.ok?'Cotiza':'Sin cotización'}</span></div>
-      <div class="divider"></div>
-      <div class="grid"><div><div class="label">Valuación</div><div class="value mono">${value?money(value):'—'}</div></div><div><div class="label">Precio</div><div class="value mono">${px?money(px):'—'}</div></div></div>
-    </div>`;
-  }).join('');
+  $('messageArea').innerHTML = warnings.length ? `<div class="notice"><b>Advertencias:</b><br>${warnings.map(w=>'• '+escapeHtml(w)).join('<br>')}</div>` : '<div class="success">Actualización correcta. Recomendaciones generadas con datos recibidos.</div>';
+  $('dailyPlan').innerHTML = a.plan.slice(0,5).map(x=>`<li>${escapeHtml(x)}</li>`).join('');
+  renderRecommendations(a); renderPortfolio(a); renderIdeas(a);
 }
-function escapeHtml(s){return String(s).replace(/[&<>'"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+function pillClass(kind){ return kind==='bad'?'pill bad':kind==='warn'?'pill warn':kind==='ok'?'pill':'pill blue'; }
+function renderRecommendations(a){
+  $('recommendationsList').innerHTML = a.recs.map(r=>`<div class="rec"><div class="row"><h3>${escapeHtml(r.title)}</h3><span class="${pillClass(r.kind)}">${escapeHtml(r.tag)}</span></div><p class="muted small">${escapeHtml(r.text)}</p></div>`).join('') +
+  '<div class="section">Por activo</div>' + a.actionable.map(r=>`<div class="rec"><div class="row"><div><h3>${escapeHtml(r.sym)}</h3><div class="tiny">${escapeHtml(r.type)} · ${Number.isFinite(r.weight)?'Peso '+pct(r.weight):'Peso —'}</div></div><span class="${pillClass(r.kind)}">${escapeHtml(r.action)}</span></div><div class="divider"></div><div class="grid"><div><div class="label">Precio</div><div class="value mono">${Number.isFinite(r.px)?money(r.px):'—'}</div></div><div><div class="label">Día</div><div class="value mono ${r.ch<0?'bad':r.ch>0?'ok':''}">${pct(r.ch)}</div></div><div><div class="label">Stop sugerido</div><div class="value mono">${Number.isFinite(r.stop)?money(r.stop):'—'}</div></div><div><div class="label">Objetivo parcial</div><div class="value mono">${Number.isFinite(r.target)?money(r.target):'—'}</div></div></div><div class="scorebar"><span style="width:${Math.max(10,Math.min(100,r.score))}%"></span></div><p class="tiny">Base: ${escapeHtml(r.reasons.join(', ') || 'lectura neutral')}</p></div>`).join('');
+}
+function renderIdeas(a){
+  if(!a.ideas.length){ $('ideasList').innerHTML = '<div class="notice">No llegaron cotizaciones de watchlist. Igual se muestran recomendaciones por tus tenencias.</div>'; return; }
+  $('ideasList').innerHTML = a.ideas.map(i=>`<div class="asset"><div class="row"><div><h3>${escapeHtml(i.sym)}</h3><div class="tiny">${escapeHtml(i.type)}</div></div><span class="${pillClass(i.kind)}">${escapeHtml(i.tag)}</span></div><div class="divider"></div><div class="grid"><div><div class="label">Precio</div><div class="value mono">${Number.isFinite(i.px)?money(i.px):'—'}</div></div><div><div class="label">Día</div><div class="value mono ${i.ch<0?'bad':i.ch>0?'ok':''}">${pct(i.ch)}</div></div></div><p class="muted small">${escapeHtml(i.text)}</p></div>`).join('');
+}
+function renderPortfolio(a){
+  if(!a.positions.length){ $('portfolioList').innerHTML='<div class="notice">IOL respondió, pero no pude reconocer la lista de activos. Abrí Técnico.</div>'; return; }
+  $('portfolioList').innerHTML = a.positions.map(p=>`<div class="asset"><div class="row"><div><h3>${escapeHtml(p.sym)}</h3><div class="tiny">${escapeHtml(p.type)} · Cantidad <span class="mono">${escapeHtml(String(p.qty||'—'))}</span></div></div><span class="pill ${p.q?.ok?'':'warn'}">${p.q?.ok?'Cotiza':'Sin cotización'}</span></div><div class="divider"></div><div class="grid"><div><div class="label">Valuación</div><div class="value mono">${Number.isFinite(p.value)?money(p.value):'—'}</div></div><div><div class="label">Peso</div><div class="value mono">${Number.isFinite(p.weight)?pct(p.weight):'—'}</div></div><div><div class="label">Precio</div><div class="value mono">${Number.isFinite(p.px)?money(p.px):'—'}</div></div><div><div class="label">Día</div><div class="value mono ${p.ch<0?'bad':p.ch>0?'ok':''}">${pct(p.ch)}</div></div></div></div>`).join('');
+}
 
 function boot(){
-  const pin = getPin();
-  if(pin){ $('setupCard').classList.add('hide'); refreshNow(); }
-  else { $('setupCard').classList.remove('hide'); }
-  timer = setInterval(()=>{ if(getPin() && document.visibilityState==='visible') refreshNow(); }, 5*60*1000);
+  const pin=getPin(); if(pin){ $('setupCard').classList.add('hide'); refreshNow(); } else { $('setupCard').classList.remove('hide'); }
+  timer=setInterval(()=>{ if(getPin() && document.visibilityState==='visible') refreshNow(); },5*60*1000);
 }
 boot();
 </script>
+
+<script>
+  // Limpieza suave para evitar que la PWA vieja quede sirviendo una pantalla anterior
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', async () => {
+      try {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const reg of regs) await reg.update();
+        if (window.location.search.includes('limpiar=1')) {
+          for (const reg of regs) await reg.unregister();
+          if (window.caches) {
+            const keys = await caches.keys();
+            await Promise.all(keys.map(k => caches.delete(k)));
+          }
+        }
+      } catch (e) {}
+    });
+  }
+</script>
+
 </body>
 </html>

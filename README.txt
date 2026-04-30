@@ -1,12 +1,10 @@
-SUBIR A GITHUB: subí solo estos archivos sueltos al repositorio:
+IOL Cartera Pro v7
+Subir estos archivos sueltos a GitHub:
 - index.html
 - manifest.json
 - netlify.toml
 - iol-dashboard.js
+- sw.js
+- README.txt
 
-No hace falta subir carpetas.
-Luego conectar el repositorio a Netlify.
-Variables privadas en Netlify:
-IOL_USERNAME
-IOL_PASSWORD
-APP_PIN
+Esta versión incluye recomendaciones y limpia caché vieja de PWA.
