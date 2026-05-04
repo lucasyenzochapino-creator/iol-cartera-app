@@ -235,6 +235,8 @@
       <div class="stat"><div class="label">Estado</div><div class="value" id="connState">No conectado</div></div>
       <div class="stat"><div class="label">Última lectura</div><div class="value small" id="updatedAt">—</div></div>
       <div class="stat"><div class="label">Activos</div><div class="value" id="assetCount">—</div></div>
+      <div class="stat"><div class="label">Gan./Pérd. actual</div><div class="value mono money-sensitive" id="portfolioPnLActual">—</div></div>
+      <div class="stat"><div class="label">Gan./Pérd. diaria</div><div class="value mono money-sensitive" id="portfolioPnLDaily">—</div></div>
       <div class="stat"><div class="label">Señal general</div><div class="value" id="generalSignal">—</div></div>
     </div>
 
@@ -248,7 +250,7 @@
     <div class="card">
       <div class="eyebrow">Recomendaciones</div>
       <h2>Qué haría hoy</h2>
-      <p class="muted small">Motor táctico basado en tus tenencias reales, cotizaciones disponibles desde IOL y método combinado: análisis técnico + análisis fundamental. Evalúa acciones argentinas, CEDEARs/ETF, bonos y caución. Primero muestra una cartera sugerida concreta para hoy usando únicamente dinero disponible para operar. Si no detecta disponible en IOL, no inventa montos. No ejecuta órdenes.</p>
+      <p class="muted small">Motor táctico basado en tus tenencias reales, cotizaciones disponibles desde IOL y método combinado: análisis técnico + análisis fundamental. Evalúa acciones argentinas, CEDEARs/ETF, bonos y caución. Primero muestra una cartera sugerida concreta para hoy usando únicamente dinero disponible para operar. Si no detecta disponible en IOL, no inventa montos. No ejecuta órdenes. Regla de coherencia activa: un activo no puede salir como compra y alerta al mismo tiempo.</p>
     </div>
     <div id="recommendationsList"><div class="notice">Actualizá la app para ver recomendaciones.</div></div>
 
@@ -963,6 +965,7 @@ function render(data,cached=false){
   lastData=data;
   const a=buildAnalysis(data);
   renderMainAvailableCash(data, a.total);
+  renderPortfolioResults(a);
 
   $('setupCard').classList.add('hide');
   $('statusText').textContent = cached ? 'Mostrando último dato guardado' : 'Datos reales desde IOL';
@@ -1520,6 +1523,7 @@ function dailyDecisionForCandidate(x){
   const score = Number(x.score || 0);
   const type = String(x.type || '');
   const ch = toNumber(x.ch);
+  const weight = toNumber(x.weight);
   const action = String(x.action || '').toLowerCase();
 
   if(type === 'Caución'){
@@ -1536,18 +1540,28 @@ function dailyDecisionForCandidate(x){
     return {
       eligible:false,
       accion:'NO COMPRAR',
-      motivo:'Ya hay riesgo de concentración, debilidad o necesidad de proteger capital.',
+      motivo:'Regla de coherencia: este activo ya tiene alerta de reducción/protección. No puede figurar como compra al mismo tiempo.',
       plazo:'No aplica',
       riesgo:'Alto'
     };
   }
 
-  if(Number.isFinite(ch) && ch >= 5){
+  if(Number.isFinite(weight) && weight > 30){
     return {
       eligible:false,
-      accion:'NO PERSEGUIR',
-      motivo:'Subió demasiado en el día. Esperar retroceso o nueva zona de entrada.',
-      plazo:'Esperar',
+      accion:'NO AUMENTAR',
+      motivo:'Regla de coherencia: ya tiene peso relevante en cartera. Evitar sumar más exposición hasta reducir concentración.',
+      plazo:'No aplica',
+      riesgo:'Alto'
+    };
+  }
+
+  if(Number.isFinite(ch) && ch >= 3.5){
+    return {
+      eligible:false,
+      accion:'NO PERSEGUIR / TOMAR PARCIAL',
+      motivo:'Subió fuerte en el día. No comprar tarde el mismo activo que puede requerir toma parcial.',
+      plazo:'Esperar retroceso',
       riesgo:'Alto'
     };
   }
@@ -1667,6 +1681,8 @@ function buildDailyConcretePortfolio(a){
   allocations = allocations.filter(x=>x.pct > 0.1);
 
   const totalAllocated = cashInfo.detected ? allocations.reduce((s,x)=>s+(Number.isFinite(x.monto) ? x.monto : 0),0) : NaN;
+  const allocatedSymbols = new Set(allocations.map(x => x.sym));
+  const cleanAvoid = avoid.filter(x => !allocatedSymbols.has(x.sym));
 
   return {
     capital,
@@ -1674,7 +1690,7 @@ function buildDailyConcretePortfolio(a){
     cashDetected:cashInfo.detected,
     cashPath:cashInfo.path || '',
     allocations,
-    avoid,
+    avoid: cleanAvoid,
     totalAllocated
   };
 }
@@ -1955,6 +1971,176 @@ function renderIdeas(a){
     </div>`).join('');
 }
 
+
+function normalizarClave(s){
+  return String(s || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]/g,'');
+}
+
+function buscarNumeroPorClave(obj, incluir, excluir=[], depth=0, path=''){
+  if(!obj || depth > 8) return null;
+
+  if(Array.isArray(obj)){
+    for(let i=0;i<obj.length;i++){
+      const r = buscarNumeroPorClave(obj[i], incluir, excluir, depth+1, path+'.'+i);
+      if(r) return r;
+    }
+    return null;
+  }
+
+  if(typeof obj === 'object'){
+    const entries = Object.entries(obj);
+    const ordered = entries.sort(([a],[b]) => {
+      const na = normalizarClave(a), nb = normalizarClave(b);
+      const aExact = incluir.some(k => na === normalizarClave(k));
+      const bExact = incluir.some(k => nb === normalizarClave(k));
+      return (bExact ? 1 : 0) - (aExact ? 1 : 0);
+    });
+
+    for(const [k,v] of ordered){
+      const nk = normalizarClave(k);
+      const match = incluir.some(term => nk.includes(normalizarClave(term)));
+      const blocked = excluir.some(term => nk.includes(normalizarClave(term)));
+      const n = toNumber(v);
+
+      if(match && !blocked && Number.isFinite(n)){
+        return {value:n, path:(path ? path+'.' : '') + k};
+      }
+
+      if(typeof v === 'object'){
+        const r = buscarNumeroPorClave(v, incluir, excluir, depth+1, (path ? path+'.' : '') + k);
+        if(r) return r;
+      }
+    }
+  }
+
+  return null;
+}
+
+function pnlClass(n){
+  if(!Number.isFinite(n)) return '';
+  if(n > 0) return 'ok';
+  if(n < 0) return 'bad';
+  return 'warnc';
+}
+
+function signedMoney(n){
+  if(!Number.isFinite(n)) return 'No disponible';
+  const sign = n > 0 ? '+' : '';
+  return sign + money(n);
+}
+
+function signedPct(n){
+  if(!Number.isFinite(n)) return '—';
+  const sign = n > 0 ? '+' : '';
+  return sign + n.toLocaleString('es-AR',{maximumFractionDigits:2}) + '%';
+}
+
+function getHoldingPnL(p){
+  const raw = p?.raw || {};
+
+  const moneyField = buscarNumeroPorClave(
+    raw,
+    [
+      'gananciaDinero','gananciaNeta','ganancia','perdida','perdidaDinero',
+      'resultado','resultadoTotal','resultadoNeto','rendimiento','utilidad',
+      'profit','loss','pnl','pl','plusvalia'
+    ],
+    [
+      'porcentaje','percent','precio','cantidad','nominal','tenencia',
+      'valuacion','valorizado','valorActual','cotizacion','ultimo','disponible'
+    ]
+  );
+
+  const pctField = buscarNumeroPorClave(
+    raw,
+    [
+      'gananciaPorcentaje','porcentajeGanancia','resultadoPorcentual',
+      'rendimientoPorcentual','rentabilidad','profitPercent','pnlPercent'
+    ],
+    [
+      'precio','cantidad','nominal','tenencia','valuacion','valorizado','ultimo'
+    ]
+  );
+
+  const dailyEstimated = Number.isFinite(p?.value) && Number.isFinite(p?.ch)
+    ? p.value * p.ch / 100
+    : NaN;
+
+  return {
+    actual: moneyField ? moneyField.value : NaN,
+    actualPct: pctField ? pctField.value : NaN,
+    actualPath: moneyField ? moneyField.path : '',
+    actualPctPath: pctField ? pctField.path : '',
+    daily: dailyEstimated,
+    dailyPct: Number.isFinite(p?.ch) ? p.ch : NaN,
+    actualFromIol: !!moneyField,
+    pctFromIol: !!pctField
+  };
+}
+
+function portfolioPnLSummary(a){
+  const items = a?.positions || [];
+  let actual = 0;
+  let actualCount = 0;
+  let daily = 0;
+  let dailyCount = 0;
+
+  items.forEach(p => {
+    const pnl = getHoldingPnL(p);
+    if(Number.isFinite(pnl.actual)){
+      actual += pnl.actual;
+      actualCount++;
+    }
+    if(Number.isFinite(pnl.daily)){
+      daily += pnl.daily;
+      dailyCount++;
+    }
+  });
+
+  return {
+    actual: actualCount ? actual : NaN,
+    actualCount,
+    daily: dailyCount ? daily : NaN,
+    dailyCount
+  };
+}
+
+function renderPortfolioResults(a){
+  const s = portfolioPnLSummary(a);
+  if($('portfolioPnLActual')){
+    $('portfolioPnLActual').textContent = Number.isFinite(s.actual)
+      ? signedMoney(s.actual)
+      : 'No disponible';
+    $('portfolioPnLActual').className = 'value mono money-sensitive ' + pnlClass(s.actual);
+  }
+  if($('portfolioPnLDaily')){
+    $('portfolioPnLDaily').textContent = Number.isFinite(s.daily)
+      ? signedMoney(s.daily)
+      : 'No disponible';
+    $('portfolioPnLDaily').className = 'value mono money-sensitive ' + pnlClass(s.daily);
+  }
+}
+
+function coherenciaBloqueaCompra(x){
+  const type = String(x.type || '');
+  if(type === 'Caución') return false;
+
+  const ch = toNumber(x.ch);
+  const weight = toNumber(x.weight);
+  const action = String(x.action || '').toLowerCase();
+
+  if(action.includes('reducir') || action.includes('proteger')) return true;
+  if(Number.isFinite(weight) && weight > 30) return true;
+  if(Number.isFinite(ch) && ch >= 3.5) return true;
+  if(Number.isFinite(ch) && ch <= -3) return true;
+
+  return false;
+}
+
+
 function recommendationForHolding(p, total){
   const score = scoreOpportunity({
     sym:p.sym,
@@ -1983,10 +2169,10 @@ function recommendationForHolding(p, total){
     motivo = 'Caída fuerte. No conviene aumentar posición sin estabilización.';
     entrada = 'No promediar a la baja.';
     salida = 'Respetar pérdida máxima o reducir si sigue débil.';
-  } else if(Number.isFinite(p.ch) && p.ch >= 4){
+  } else if(Number.isFinite(p.ch) && p.ch >= 3.5){
     accion = 'TOMAR GANANCIA PARCIAL';
     kind = 'ok';
-    motivo = 'Suba fuerte del día. Conviene asegurar parte si se estira.';
+    motivo = 'Suba fuerte del día. Regla de coherencia: no sumar tarde; conviene asegurar parte si se estira.';
     entrada = 'No perseguir precio.';
     salida = 'Tomar parcial si acelera o si pierde impulso.';
   } else if(score >= 80){
@@ -2035,6 +2221,21 @@ function renderPortfolio(a){
         <div><div class="label">Peso</div><div class="value mono">${Number.isFinite(p.weight)?pct(p.weight):'—'}</div></div>
         <div><div class="label">Precio</div><div class="value mono money-sensitive">${Number.isFinite(p.px)?money(p.px):'—'}</div></div>
         <div><div class="label">Día</div><div class="value mono ${p.ch<0?'bad':p.ch>0?'ok':''}">${pct(p.ch)}</div></div>
+        ${(() => {
+          const pnl = getHoldingPnL(p);
+          return `
+            <div>
+              <div class="label">Gan./Pérd. actual</div>
+              <div class="value mono money-sensitive ${pnlClass(pnl.actual)}">${signedMoney(pnl.actual)}</div>
+              <div class="tiny">${pnl.actualFromIol ? 'Dato leído de IOL' : 'No viene en la respuesta de IOL'}</div>
+            </div>
+            <div>
+              <div class="label">Gan./Pérd. diaria</div>
+              <div class="value mono money-sensitive ${pnlClass(pnl.daily)}">${signedMoney(pnl.daily)}</div>
+              <div class="tiny">${Number.isFinite(pnl.daily) ? 'Estimado por variación diaria IOL' : 'No disponible'}</div>
+            </div>
+          `;
+        })()}
       </div>
 
       <div class="analysisbox">
