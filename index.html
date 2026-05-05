@@ -242,6 +242,11 @@
 
     <div id="messageArea" style="margin-top:14px"></div>
 
+    <div class="section">Oportunidad del día</div>
+    <div id="dailyOpportunity">
+      <div class="notice">Actualizá la app para detectar si hay una oportunidad operable hoy.</div>
+    </div>
+
     <div class="section">Cauciones para mañana</div>
     <div id="pendingOperationsList">
       <div class="notice">Actualizá la app para revisar cauciones detectadas desde IOL.</div>
@@ -1226,11 +1231,234 @@ function renderNextDayPlan(data, a){
 }
 
 
+
+function oportunidadCategoria(x){
+  const score = Number(x.score || 0);
+  const ch = toNumber(x.ch);
+  const weight = toNumber(x.weight);
+
+  if(String(x.type || '') === 'Caución'){
+    return {accion:'COLOCAR', clase:'pill', razon:'Alternativa defensiva cuando no hay oportunidad clara en activos de riesgo.'};
+  }
+
+  if(Number.isFinite(weight) && weight > 30){
+    return {accion:'NO AUMENTAR', clase:'pill warn', razon:'Ya tiene peso alto en cartera. No conviene sumar más exposición.'};
+  }
+
+  if(Number.isFinite(ch) && ch >= 3.5){
+    return {accion:'NO PERSEGUIR', clase:'pill warn', razon:'Subió fuerte en el día. Puede ser tarde para entrar; mejor esperar retroceso o confirmación nueva.'};
+  }
+
+  if(Number.isFinite(ch) && ch <= -3){
+    return {accion:'ESPERAR', clase:'pill warn', razon:'Está débil. No promediar caída sin estabilización.'};
+  }
+
+  if(score >= 82){
+    return {accion:'OPORTUNIDAD FUERTE', clase:'pill', razon:'Buen puntaje táctico y sin bloqueo de coherencia.'};
+  }
+
+  if(score >= 72){
+    return {accion:'OPORTUNIDAD MODERADA', clase:'pill blue', razon:'Puede operar solo si confirma precio, volumen y contexto.'};
+  }
+
+  if(score >= 62){
+    return {accion:'OPORTUNIDAD CHICA', clase:'pill blue', razon:'Solo entrada reducida; falta confirmación fuerte.'};
+  }
+
+  return {accion:'NO OPERAR', clase:'pill warn', razon:'No hay ventaja suficiente frente a caución o liquidez.'};
+}
+
+function oportunidadMontoPct(x, disponibleARS){
+  const score = Number(x.score || 0);
+  const type = String(x.type || '');
+  let pct = 0;
+
+  if(type === 'Caución') pct = 100;
+  else if(score >= 82) pct = 12;
+  else if(score >= 72) pct = 8;
+  else if(score >= 62) pct = 5;
+
+  if(type === 'Acción AR') pct = Math.min(pct, 10);
+  if(type === 'CEDEAR/ETF') pct = Math.min(pct, 12);
+  if(type === 'Bono') pct = Math.min(pct, 10);
+
+  const monto = Number.isFinite(disponibleARS) && disponibleARS > 0 ? disponibleARS * pct / 100 : NaN;
+  return {pct, monto};
+}
+
+function buildOpportunities(data, a){
+  const balances = typeof detectAvailableBalances === 'function'
+    ? detectAvailableBalances(data, a.total)
+    : {ars:{detected:false,amount:0}, usd:{detected:false,amount:0}};
+
+  const universe = [];
+
+  if(Array.isArray(a.instrumentDetails)){
+    a.instrumentDetails.forEach(x => x && x.sym && universe.push({...x}));
+  }
+
+  if(Array.isArray(a.allTypes)){
+    a.allTypes.forEach(x => {
+      if(x && x.sym && x.sym !== 'Sin dato' && !universe.some(y => y.sym === x.sym)){
+        universe.push({...x, score:Number(x.score || scoreOpportunity(x))});
+      }
+    });
+  }
+
+  if(Array.isArray(a.positions)){
+    a.positions.forEach(p => {
+      if(p && p.sym && !universe.some(y => y.sym === p.sym)){
+        universe.push({
+          sym:p.sym,
+          type:p.type,
+          score:scoreOpportunity(p),
+          ch:p.ch,
+          px:p.px,
+          weight:p.weight,
+          value:p.value
+        });
+      }
+    });
+  }
+
+  const scored = universe
+    .map(x => {
+      const cat = oportunidadCategoria(x);
+      const alloc = oportunidadMontoPct(x, balances.ars.detected ? balances.ars.amount : NaN);
+      const operable = cat.accion.includes('OPORTUNIDAD') && alloc.pct > 0;
+      return {...x, cat, alloc, operable};
+    })
+    .sort((a,b) => {
+      const ao = a.operable ? 1 : 0;
+      const bo = b.operable ? 1 : 0;
+      if(ao !== bo) return bo - ao;
+      return Number(b.score || 0) - Number(a.score || 0);
+    });
+
+  const operables = scored.filter(x => x.operable).slice(0,3);
+  const blocked = scored.filter(x => !x.operable).slice(0,5);
+
+  return {balances, operables, blocked};
+}
+
+function renderDailyOpportunity(data, a){
+  const box = $('dailyOpportunity');
+  if(!box) return;
+
+  const opp = buildOpportunities(data, a);
+  const ars = opp.balances.ars;
+
+  if(!opp.operables.length){
+    box.innerHTML = `
+      <div class="card">
+        <div class="eyebrow">Decisión operativa</div>
+        <h2>No hay oportunidad clara</h2>
+        <p class="muted small">
+          No detecté una señal suficientemente limpia para comprar hoy. La decisión más prudente es esperar confirmación o usar caución corta si hay pesos disponibles.
+        </p>
+        <div class="grid">
+          <div class="stat">
+            <div class="label">Disponible ARS</div>
+            <div class="value mono money-sensitive">${ars.detected ? money(ars.amount) : 'No detectado'}</div>
+          </div>
+          <div class="stat">
+            <div class="label">Acción sugerida</div>
+            <div class="value small">Esperar / caución</div>
+          </div>
+        </div>
+        ${opp.blocked.length ? `
+          <div class="section">Por qué no comprar</div>
+          ${opp.blocked.slice(0,3).map(x=>`
+            <div class="asset">
+              <div class="row">
+                <div>
+                  <h3>${escapeHtml(x.sym)}</h3>
+                  <div class="tiny">${escapeHtml(x.type || '')} · Puntaje ${x.score || '—'}</div>
+                </div>
+                <span class="${x.cat.clase}">${escapeHtml(x.cat.accion)}</span>
+              </div>
+              <p class="muted small">${escapeHtml(x.cat.razon)}</p>
+            </div>
+          `).join('')}
+        ` : ''}
+      </div>
+    `;
+    applyMoneyVisibility();
+    return;
+  }
+
+  const top = opp.operables[0];
+
+  box.innerHTML = `
+    <div class="card hero">
+      <div class="eyebrow">Mejor oportunidad detectada</div>
+      <div class="row">
+        <div>
+          <h2>${escapeHtml(top.sym)}</h2>
+          <div class="muted small">${escapeHtml(top.type || '')} · Puntaje ${top.score || '—'}</div>
+        </div>
+        <span class="${top.cat.clase}">${escapeHtml(top.cat.accion)}</span>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="grid">
+        <div class="stat">
+          <div class="label">Monto sugerido</div>
+          <div class="value mono money-sensitive">${Number.isFinite(top.alloc.monto) ? money(top.alloc.monto) : 'No calculado'}</div>
+        </div>
+        <div class="stat">
+          <div class="label">Porcentaje</div>
+          <div class="value mono">${top.alloc.pct}%</div>
+        </div>
+        <div class="stat">
+          <div class="label">Precio</div>
+          <div class="value mono money-sensitive">${Number.isFinite(toNumber(top.px)) ? money(top.px) : '—'}</div>
+        </div>
+        <div class="stat">
+          <div class="label">Día</div>
+          <div class="value mono ${toNumber(top.ch)<0?'bad':toNumber(top.ch)>0?'ok':''}">${pct(top.ch)}</div>
+        </div>
+      </div>
+
+      <div class="analysisbox">
+        <div class="mini-title">Motivo</div>
+        <p class="muted small">${escapeHtml(top.cat.razon)}</p>
+        <p class="muted small"><b>Entrada:</b> no entrar de golpe; comprar solo si confirma y no se escapa el precio.</p>
+        <p class="muted small"><b>Invalidación:</b> si pierde fuerza o aparece alerta contradictoria, no operar.</p>
+      </div>
+
+      ${opp.operables.length > 1 ? `
+        <div class="section">Otras oportunidades</div>
+        ${opp.operables.slice(1).map(x=>`
+          <div class="asset">
+            <div class="row">
+              <div>
+                <h3>${escapeHtml(x.sym)}</h3>
+                <div class="tiny">${escapeHtml(x.type || '')} · Puntaje ${x.score || '—'}</div>
+              </div>
+              <span class="${x.cat.clase}">${escapeHtml(x.cat.accion)}</span>
+            </div>
+            <div class="grid">
+              <div><div class="label">Monto</div><div class="value mono money-sensitive">${Number.isFinite(x.alloc.monto) ? money(x.alloc.monto) : 'No calculado'}</div></div>
+              <div><div class="label">%</div><div class="value mono">${x.alloc.pct}%</div></div>
+            </div>
+          </div>
+        `).join('')}
+      ` : ''}
+    </div>
+  `;
+
+  applyMoneyVisibility();
+}
+
+
 function render(data,cached=false){
   lastData=data;
   const a=buildAnalysis(data);
   renderMainAvailableCash(data, a.total);
   renderPortfolioResults(a);
+  renderDailyOpportunity(data, a);
   renderPendingOperations(data);
   renderNextDayPlan(data, a);
 
@@ -2629,6 +2857,8 @@ function armarRespuestaGeneral(texto){
 
   const señal = generalSignal(analysis.recs || []);
   const activos = analysis.positions || [];
+  const opp = buildOpportunities(lastData, analysis);
+  const topOpp = opp.operables && opp.operables.length ? opp.operables[0] : null;
 
   let respuestaDirecta = 'Con los datos actuales, conviene operar de forma selectiva y priorizar preservación de capital.';
   const consulta = String(texto || '').toLowerCase();
@@ -2746,6 +2976,16 @@ function armarRespuestaInstrumento(inst){
           <div class="value mono">${alloc.pct}%</div>
         </div>
       </div>
+
+      ${topOpp ? `
+        <div class="analysisbox">
+          <div class="mini-title">Oportunidad del día</div>
+          <p class="muted small"><b>${escapeHtml(topOpp.sym)}:</b> ${escapeHtml(topOpp.cat.accion)} · ${Number.isFinite(topOpp.alloc.monto) ? money(topOpp.alloc.monto) : 'Monto no calculado'} · ${topOpp.alloc.pct}%</p>
+          <p class="muted small">${escapeHtml(topOpp.cat.razon)}</p>
+        </div>
+      ` : `
+        <div class="warning" style="margin-top:12px">No detecté oportunidad clara. Priorizar caución corta o esperar confirmación.</div>
+      `}
 
       <div class="analysisbox">
         <div class="mini-title">Respuesta directa</div>
