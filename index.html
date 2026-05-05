@@ -242,6 +242,16 @@
 
     <div id="messageArea" style="margin-top:14px"></div>
 
+    <div class="section">Cauciones / operaciones para mañana</div>
+    <div id="pendingOperationsList">
+      <div class="notice">Actualizá la app para revisar cauciones y operaciones pendientes.</div>
+    </div>
+
+    <div class="section">Recomendación para el próximo día</div>
+    <div id="nextDayPlan">
+      <div class="notice">Al final de la jornada, la app resume qué hacer mañana con tu disponible, cauciones y tenencias.</div>
+    </div>
+
     <div class="section">Plan operativo</div>
     <ol id="dailyPlan" class="plan"><li>Conectá la app para generar plan con datos reales.</li></ol>
   </section>
@@ -961,11 +971,224 @@ function renderMainAvailableCash(data, total){
   return balances;
 }
 
+
+function fechaAR(d){
+  if(!d) return '';
+  try{return new Date(d).toLocaleDateString('es-AR');}catch{return String(d || '');}
+}
+function tomorrowDateString(){
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().slice(0,10);
+}
+function isProbablyTomorrow(value){
+  if(!value) return false;
+  const raw = String(value);
+  const tomorrow = tomorrowDateString();
+  if(raw.includes(tomorrow)) return true;
+  try{
+    const d = new Date(raw);
+    if(!isNaN(d.getTime())) return d.toISOString().slice(0,10) === tomorrow;
+  }catch{}
+  return false;
+}
+function recursiveFindOperations(obj, depth=0, path=''){
+  const out = [];
+  if(!obj || depth > 8) return out;
+
+  if(Array.isArray(obj)){
+    obj.forEach((item, i) => {
+      if(item && typeof item === 'object'){
+        const text = JSON.stringify(item).toLowerCase();
+        const looksLikeOperation =
+          text.includes('cauc') ||
+          text.includes('operacion') ||
+          text.includes('operación') ||
+          text.includes('pendiente') ||
+          text.includes('vencimiento') ||
+          text.includes('liquidacion') ||
+          text.includes('liquidación');
+
+        if(looksLikeOperation) out.push({path:path+'.'+i, raw:item});
+      }
+      out.push(...recursiveFindOperations(item, depth+1, path+'.'+i));
+    });
+    return out;
+  }
+
+  if(typeof obj === 'object'){
+    Object.entries(obj).forEach(([k,v])=>{
+      const nk = String(k).toLowerCase();
+      if(Array.isArray(v) && (
+        nk.includes('operac') || nk.includes('cauc') || nk.includes('pend') ||
+        nk.includes('movim') || nk.includes('liquid')
+      )){
+        v.forEach((item,i)=>{
+          if(item && typeof item === 'object') out.push({path:(path?path+'.':'')+k+'.'+i, raw:item});
+        });
+      }
+      if(typeof v === 'object') out.push(...recursiveFindOperations(v, depth+1, (path?path+'.':'')+k));
+    });
+  }
+  return out;
+}
+function opText(op){
+  try { return JSON.stringify(op.raw || op).toLowerCase(); } catch { return String(op.raw || op).toLowerCase(); }
+}
+function opField(op, names){
+  const raw = op.raw || op;
+  if(!raw || typeof raw !== 'object') return '';
+  const wanted = names.map(x=>String(x).toLowerCase());
+  const found = Object.entries(raw).find(([k]) => wanted.some(w => String(k).toLowerCase().includes(w)));
+  if(found) return found[1];
+  for(const v of Object.values(raw)){
+    if(v && typeof v === 'object'){
+      const nested = opField({raw:v}, names);
+      if(nested) return nested;
+    }
+  }
+  return '';
+}
+function extractPendingOperations(data){
+  const candidates = [
+    ...(Array.isArray(data?.operations) ? data.operations.map((x,i)=>({path:'operations.'+i, raw:x})) : []),
+    ...(Array.isArray(data?.pendingOperations) ? data.pendingOperations.map((x,i)=>({path:'pendingOperations.'+i, raw:x})) : []),
+    ...(Array.isArray(data?.caucionesPendientes) ? data.caucionesPendientes.map((x,i)=>({path:'caucionesPendientes.'+i, raw:x})) : []),
+    ...recursiveFindOperations(data?.account || {}),
+    ...recursiveFindOperations(data?.estadoCuenta || {}),
+    ...recursiveFindOperations(data?.rawOperations || {}),
+    ...recursiveFindOperations(data || {})
+  ];
+
+  const seen = new Set();
+  return candidates.filter(op => {
+    const text = opText(op);
+    if(!text || text.length < 8) return false;
+    const relevant = text.includes('cauc') || text.includes('pendiente') ||
+      text.includes('vencimiento') || text.includes('liquidacion') || text.includes('liquidación');
+    if(!relevant) return false;
+    const key = JSON.stringify(op.raw).slice(0,500);
+    if(seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).slice(0,20);
+}
+function summarizeOperation(op){
+  const text = opText(op);
+  const tipo = text.includes('cauc') ? 'Caución' : 'Operación pendiente';
+  const monto = toNumber(opField(op, ['monto','importe','valor','capital','total']));
+  const tasa = toNumber(opField(op, ['tasa','tna','rendimiento']));
+  const fecha = opField(op, ['vencimiento','fechaVencimiento','liquidacion','liquidación','fechaLiquidacion','fecha']) || '';
+  const estado = opField(op, ['estado','status','situacion','situación']) || (text.includes('pendiente') ? 'Pendiente' : '');
+  const plazo = opField(op, ['plazo','dias','días']) || '';
+  return {tipo,monto,tasa,fecha,estado,plazo,path:op.path || ''};
+}
+function renderPendingOperations(data){
+  const ops = extractPendingOperations(data);
+  const box = $('pendingOperationsList');
+  if(!box) return;
+
+  if(!ops.length){
+    box.innerHTML = '<div class="notice">No detecté cauciones u operaciones pendientes en la respuesta actual de IOL. Si pusiste caución y no aparece, IOL puede no estar devolviéndola por este endpoint todavía.</div>';
+    return;
+  }
+
+  box.innerHTML = ops.map(op=>{
+    const s = summarizeOperation(op);
+    const tomorrow = isProbablyTomorrow(s.fecha);
+    return `
+      <div class="asset">
+        <div class="row">
+          <div>
+            <h3>${escapeHtml(s.tipo)}</h3>
+            <div class="tiny">${escapeHtml(s.estado || 'Estado no informado')} ${tomorrow ? '· vence/liquida mañana' : ''}</div>
+          </div>
+          <span class="${tomorrow ? 'pill' : 'pill blue'}">${tomorrow ? 'Para mañana' : 'Pendiente'}</span>
+        </div>
+        <div class="divider"></div>
+        <div class="grid">
+          <div><div class="label">Monto</div><div class="value mono money-sensitive">${Number.isFinite(s.monto) ? money(s.monto) : 'No informado'}</div></div>
+          <div><div class="label">Tasa</div><div class="value mono">${Number.isFinite(s.tasa) ? signedPct(s.tasa) : 'No informada'}</div></div>
+          <div><div class="label">Fecha</div><div class="value small">${escapeHtml(fechaAR(s.fecha) || 'No informada')}</div></div>
+          <div><div class="label">Plazo</div><div class="value small">${escapeHtml(String(s.plazo || 'No informado'))}</div></div>
+        </div>
+        <p class="tiny">Origen: ${escapeHtml(shortPath(s.path))}</p>
+      </div>
+    `;
+  }).join('');
+  applyMoneyVisibility();
+}
+function buildNextDayRecommendation(data, a){
+  const ops = extractPendingOperations(data).map(summarizeOperation);
+  const tomorrowOps = ops.filter(op => isProbablyTomorrow(op.fecha) || String(op.tipo).toLowerCase().includes('cauc'));
+  const balances = typeof detectAvailableBalances === 'function'
+    ? detectAvailableBalances(data, a.total)
+    : {ars:{detected:false,amount:0}, usd:{detected:false,amount:0}};
+
+  const pnl = typeof portfolioPnLSummary === 'function' ? portfolioPnLSummary(a) : {daily:NaN, actual:NaN};
+  const weakPositions = (a.positions || []).filter(p => Number.isFinite(p.ch) && p.ch <= -3);
+  const strongPositions = (a.positions || []).filter(p => Number.isFinite(p.ch) && p.ch >= 3.5);
+  const concentrated = (a.positions || []).filter(p => Number.isFinite(p.weight) && p.weight > 30);
+
+  let decision = 'Esperar apertura y no operar de entrada sin confirmación.';
+  let caucion = 'Si no hay oportunidad clara, usar caución corta con pesos disponibles.';
+  let risk = 'Moderado';
+
+  if(tomorrowOps.length){
+    decision = 'Mañana primero controlar el vencimiento/liquidación de caución u operación pendiente antes de asumir nuevo riesgo.';
+    caucion = 'Si libera pesos, no reinvertir automáticamente: revisar tasa, liquidez y oportunidades reales.';
+    risk = 'Bajo a moderado si se mantiene liquidez.';
+  }
+  if(weakPositions.length){
+    decision = 'Mañana evitar promediar activos débiles. Priorizar protección y esperar estabilización.';
+    risk = 'Alto';
+  }
+  if(strongPositions.length){
+    decision = 'Mañana no perseguir activos que ya subieron fuerte. Revisar toma parcial si pierden impulso.';
+    risk = 'Moderado/alto';
+  }
+  if(concentrated.length){
+    decision = 'Mañana controlar concentración. No aumentar activos con peso excesivo en cartera.';
+    risk = 'Alto por concentración.';
+  }
+
+  return {decision,caucion,risk,ars:balances.ars,usd:balances.usd,pnl,tomorrowOps};
+}
+function renderNextDayPlan(data, a){
+  const box = $('nextDayPlan');
+  if(!box) return;
+  const plan = buildNextDayRecommendation(data, a);
+
+  box.innerHTML = `
+    <div class="card">
+      <div class="eyebrow">Cierre de jornada</div>
+      <h2>Plan para mañana</h2>
+      <div class="grid">
+        <div class="stat"><div class="label">Disponible ARS</div><div class="value mono money-sensitive">${plan.ars.detected ? money(plan.ars.amount) : 'No detectado'}</div></div>
+        <div class="stat"><div class="label">Disponible USD</div><div class="value mono money-sensitive">${plan.usd.detected ? usdMoney(plan.usd.amount) : 'No detectado'}</div></div>
+        <div class="stat"><div class="label">Gan./Pérd. diaria</div><div class="value mono money-sensitive ${pnlClass(plan.pnl.daily)}">${signedMoney(plan.pnl.daily)}</div></div>
+        <div class="stat"><div class="label">Riesgo mañana</div><div class="value small">${escapeHtml(plan.risk)}</div></div>
+      </div>
+      <div class="analysisbox">
+        <div class="mini-title">Recomendación para el próximo día</div>
+        <p class="muted small"><b>Decisión:</b> ${escapeHtml(plan.decision)}</p>
+        <p class="muted small"><b>Caución:</b> ${escapeHtml(plan.caucion)}</p>
+        <p class="muted small"><b>Regla:</b> mañana operar solo con saldo disponible real, no con posiciones ya invertidas.</p>
+      </div>
+      ${plan.tomorrowOps.length ? `<div class="notice">Detecté ${plan.tomorrowOps.length} caución/operación pendiente relacionada con mañana. Revisala antes de comprar otro activo.</div>` : ''}
+    </div>
+  `;
+  applyMoneyVisibility();
+}
+
+
 function render(data,cached=false){
   lastData=data;
   const a=buildAnalysis(data);
   renderMainAvailableCash(data, a.total);
   renderPortfolioResults(a);
+  renderPendingOperations(data);
+  renderNextDayPlan(data, a);
 
   $('setupCard').classList.add('hide');
   $('statusText').textContent = cached ? 'Mostrando último dato guardado' : 'Datos reales desde IOL';
