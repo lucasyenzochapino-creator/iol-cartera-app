@@ -242,9 +242,9 @@
 
     <div id="messageArea" style="margin-top:14px"></div>
 
-    <div class="section">Cauciones / operaciones para mañana</div>
+    <div class="section">Cauciones para mañana</div>
     <div id="pendingOperationsList">
-      <div class="notice">Actualizá la app para revisar cauciones y operaciones pendientes.</div>
+      <div class="notice">Actualizá la app para revisar cauciones detectadas desde IOL.</div>
     </div>
 
     <div class="section">Recomendación para el próximo día</div>
@@ -992,7 +992,7 @@ function isProbablyTomorrow(value){
   }catch{}
   return false;
 }
-function recursiveFindOperations(obj, depth=0, path=''){
+function recursiveFindCauciones(obj, depth=0, path=''){
   const out = [];
   if(!obj || depth > 8) return out;
 
@@ -1000,18 +1000,26 @@ function recursiveFindOperations(obj, depth=0, path=''){
     obj.forEach((item, i) => {
       if(item && typeof item === 'object'){
         const text = JSON.stringify(item).toLowerCase();
-        const looksLikeOperation =
-          text.includes('cauc') ||
-          text.includes('operacion') ||
-          text.includes('operación') ||
-          text.includes('pendiente') ||
-          text.includes('vencimiento') ||
-          text.includes('liquidacion') ||
-          text.includes('liquidación');
+        const source = String(path).toLowerCase();
 
-        if(looksLikeOperation) out.push({path:path+'.'+i, raw:item});
+        const isCaucion =
+          text.includes('cauc') ||
+          source.includes('cauc');
+
+        // Evita mostrar objetos de error, endpoints vacíos o respuestas técnicas.
+        const isErrorOrWrapper =
+          text.includes('"ok":false') ||
+          text.includes('error') ||
+          text.includes('no pude') ||
+          text.includes('http 404') ||
+          text.includes('http 500');
+
+        if(isCaucion && !isErrorOrWrapper){
+          out.push({path:path+'.'+i, raw:item});
+        }
       }
-      out.push(...recursiveFindOperations(item, depth+1, path+'.'+i));
+
+      out.push(...recursiveFindCauciones(item, depth+1, path+'.'+i));
     });
     return out;
   }
@@ -1019,91 +1027,125 @@ function recursiveFindOperations(obj, depth=0, path=''){
   if(typeof obj === 'object'){
     Object.entries(obj).forEach(([k,v])=>{
       const nk = String(k).toLowerCase();
-      if(Array.isArray(v) && (
-        nk.includes('operac') || nk.includes('cauc') || nk.includes('pend') ||
-        nk.includes('movim') || nk.includes('liquid')
-      )){
+
+      if(Array.isArray(v) && nk.includes('cauc')){
         v.forEach((item,i)=>{
-          if(item && typeof item === 'object') out.push({path:(path?path+'.':'')+k+'.'+i, raw:item});
+          if(item && typeof item === 'object'){
+            out.push({path:(path?path+'.':'')+k+'.'+i, raw:item});
+          }
         });
       }
-      if(typeof v === 'object') out.push(...recursiveFindOperations(v, depth+1, (path?path+'.':'')+k));
+
+      if(typeof v === 'object'){
+        out.push(...recursiveFindCauciones(v, depth+1, (path?path+'.':'')+k));
+      }
     });
   }
+
   return out;
 }
+
 function opText(op){
   try { return JSON.stringify(op.raw || op).toLowerCase(); } catch { return String(op.raw || op).toLowerCase(); }
 }
+
 function opField(op, names){
   const raw = op.raw || op;
   if(!raw || typeof raw !== 'object') return '';
   const wanted = names.map(x=>String(x).toLowerCase());
-  const found = Object.entries(raw).find(([k]) => wanted.some(w => String(k).toLowerCase().includes(w)));
+
+  const entries = Object.entries(raw);
+  const found = entries.find(([k]) => wanted.some(w => String(k).toLowerCase().includes(w)));
   if(found) return found[1];
+
   for(const v of Object.values(raw)){
     if(v && typeof v === 'object'){
       const nested = opField({raw:v}, names);
       if(nested) return nested;
     }
   }
+
   return '';
 }
-function extractPendingOperations(data){
+
+function extractCauciones(data){
   const candidates = [
+    ...(Array.isArray(data?.cauciones) ? data.cauciones.map((x,i)=>({path:'cauciones.'+i, raw:x})) : []),
+    ...(Array.isArray(data?.caucionesPendientes) ? data.caucionesPendientes.map((x,i)=>({path:'caucionesPendientes.'+i, raw:x})) : []),
     ...(Array.isArray(data?.operations) ? data.operations.map((x,i)=>({path:'operations.'+i, raw:x})) : []),
     ...(Array.isArray(data?.pendingOperations) ? data.pendingOperations.map((x,i)=>({path:'pendingOperations.'+i, raw:x})) : []),
-    ...(Array.isArray(data?.caucionesPendientes) ? data.caucionesPendientes.map((x,i)=>({path:'caucionesPendientes.'+i, raw:x})) : []),
-    ...recursiveFindOperations(data?.account || {}),
-    ...recursiveFindOperations(data?.estadoCuenta || {}),
-    ...recursiveFindOperations(data?.rawOperations || {}),
-    ...recursiveFindOperations(data || {})
+    ...recursiveFindCauciones(data?.account || {}, 0, 'account'),
+    ...recursiveFindCauciones(data?.estadoCuenta || {}, 0, 'estadoCuenta'),
+    ...recursiveFindCauciones(data?.rawOperations || {}, 0, 'rawOperations'),
+    ...recursiveFindCauciones(data || {}, 0, 'data')
   ];
 
   const seen = new Set();
-  return candidates.filter(op => {
+  const clean = candidates.filter(op => {
     const text = opText(op);
-    if(!text || text.length < 8) return false;
-    const relevant = text.includes('cauc') || text.includes('pendiente') ||
-      text.includes('vencimiento') || text.includes('liquidacion') || text.includes('liquidación');
-    if(!relevant) return false;
-    const key = JSON.stringify(op.raw).slice(0,500);
+    const source = String(op.path || '').toLowerCase();
+
+    const isCaucion = text.includes('cauc') || source.includes('cauc');
+    if(!isCaucion) return false;
+
+    // Evita respuestas de error o endpoints fallidos.
+    if(text.includes('"ok":false') || text.includes('error') || text.includes('http 404') || text.includes('http 500')){
+      return false;
+    }
+
+    // Evita objetos sin datos útiles.
+    const hasUsefulData =
+      Number.isFinite(toNumber(opField(op, ['monto','importe','capital','total','valor']))) ||
+      Number.isFinite(toNumber(opField(op, ['tasa','tna','rendimiento']))) ||
+      !!opField(op, ['vencimiento','fechaVencimiento','liquidacion','liquidación','fechaLiquidacion','fecha']);
+
+    if(!hasUsefulData) return false;
+
+    const key = JSON.stringify(op.raw).slice(0,700);
     if(seen.has(key)) return false;
     seen.add(key);
     return true;
-  }).slice(0,20);
+  });
+
+  return clean.slice(0,8);
 }
-function summarizeOperation(op){
-  const text = opText(op);
-  const tipo = text.includes('cauc') ? 'Caución' : 'Operación pendiente';
+
+function summarizeCaucion(op){
   const monto = toNumber(opField(op, ['monto','importe','valor','capital','total']));
   const tasa = toNumber(opField(op, ['tasa','tna','rendimiento']));
   const fecha = opField(op, ['vencimiento','fechaVencimiento','liquidacion','liquidación','fechaLiquidacion','fecha']) || '';
-  const estado = opField(op, ['estado','status','situacion','situación']) || (text.includes('pendiente') ? 'Pendiente' : '');
+  const estado = opField(op, ['estado','status','situacion','situación']) || 'Caución detectada';
   const plazo = opField(op, ['plazo','dias','días']) || '';
-  return {tipo,monto,tasa,fecha,estado,plazo,path:op.path || ''};
+  return {tipo:'Caución',monto,tasa,fecha,estado,plazo,path:op.path || ''};
 }
+
 function renderPendingOperations(data){
-  const ops = extractPendingOperations(data);
+  const ops = extractCauciones(data);
   const box = $('pendingOperationsList');
   if(!box) return;
 
   if(!ops.length){
-    box.innerHTML = '<div class="notice">No detecté cauciones u operaciones pendientes en la respuesta actual de IOL. Si pusiste caución y no aparece, IOL puede no estar devolviéndola por este endpoint todavía.</div>';
+    box.innerHTML = `
+      <div class="notice">
+        <b>No detecté cauciones en los datos que IOL devolvió por API.</b><br>
+        Esto no significa que la caución no exista. Puede estar visible en IOL pero no venir en el endpoint usado por la app.
+        Revisala manualmente en IOL en cauciones/operaciones hasta que confirmemos qué campo devuelve.
+      </div>
+    `;
     return;
   }
 
   box.innerHTML = ops.map(op=>{
-    const s = summarizeOperation(op);
+    const s = summarizeCaucion(op);
     const tomorrow = isProbablyTomorrow(s.fecha);
     return `
       <div class="asset">
         <div class="row">
           <div>
-            <h3>${escapeHtml(s.tipo)}</h3>
+            <h3>Caución detectada</h3>
             <div class="tiny">${escapeHtml(s.estado || 'Estado no informado')} ${tomorrow ? '· vence/liquida mañana' : ''}</div>
           </div>
-          <span class="${tomorrow ? 'pill' : 'pill blue'}">${tomorrow ? 'Para mañana' : 'Pendiente'}</span>
+          <span class="${tomorrow ? 'pill' : 'pill blue'}">${tomorrow ? 'Para mañana' : 'Caución'}</span>
         </div>
         <div class="divider"></div>
         <div class="grid">
@@ -1116,10 +1158,12 @@ function renderPendingOperations(data){
       </div>
     `;
   }).join('');
+
   applyMoneyVisibility();
 }
+
 function buildNextDayRecommendation(data, a){
-  const ops = extractPendingOperations(data).map(summarizeOperation);
+  const ops = extractCauciones(data).map(summarizeCaucion);
   const tomorrowOps = ops.filter(op => isProbablyTomorrow(op.fecha) || String(op.tipo).toLowerCase().includes('cauc'));
   const balances = typeof detectAvailableBalances === 'function'
     ? detectAvailableBalances(data, a.total)
@@ -1175,7 +1219,7 @@ function renderNextDayPlan(data, a){
         <p class="muted small"><b>Caución:</b> ${escapeHtml(plan.caucion)}</p>
         <p class="muted small"><b>Regla:</b> mañana operar solo con saldo disponible real, no con posiciones ya invertidas.</p>
       </div>
-      ${plan.tomorrowOps.length ? `<div class="notice">Detecté ${plan.tomorrowOps.length} caución/operación pendiente relacionada con mañana. Revisala antes de comprar otro activo.</div>` : ''}
+      ${plan.tomorrowOps.length ? `<div class="notice">Detecté ${plan.tomorrowOps.length} caución relacionada con mañana. Revisala antes de comprar otro activo.</div>` : ''}
     </div>
   `;
   applyMoneyVisibility();
