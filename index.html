@@ -143,6 +143,19 @@
     .consulta-box{
       background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:12px
     }
+    .risk-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+    .switch-line{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px
+    }
+    .switch-line input{width:22px;height:22px}
+    .assist-danger{border-color:rgba(255,123,114,.42);background:rgba(255,123,114,.08)}
+    .assist-ok{border-color:rgba(86,211,100,.35);background:rgba(86,211,100,.08)}
+    .bigopp{border:1px solid rgba(245,201,123,.42);background:linear-gradient(145deg,rgba(245,201,123,.12),rgba(121,192,255,.06))}
+    .trade-plan{background:var(--card3);border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px}
+    .trade-plan b{color:var(--txt)}
+    .no-trade{border:1px solid rgba(255,211,61,.28);background:rgba(255,211,61,.07)}
+
     pre{
       white-space:pre-wrap;word-break:break-word;background:#090c10;border:1px solid var(--line);
       padding:12px;border-radius:12px;color:#c9d1d9;max-height:360px;overflow:auto
@@ -242,9 +255,9 @@
 
     <div id="messageArea" style="margin-top:14px"></div>
 
-    <div class="section">Oportunidad del día</div>
+    <div class="section">Grandes oportunidades de mercado</div>
     <div id="dailyOpportunity">
-      <div class="notice">Actualizá la app para detectar si hay una oportunidad operable hoy.</div>
+      <div class="notice">Actualizá la app para detectar si existe una gran oportunidad operable hoy.</div>
     </div>
 
     <div class="section">Cauciones para mañana</div>
@@ -306,6 +319,93 @@
     <div id="portfolioList"><div class="notice">Cuando guardes el PIN y actualices, acá se cargará tu cartera real.</div></div>
   </section>
 
+  <section id="screen-asistido" class="hide">
+    <div class="card hero">
+      <div class="eyebrow">Modo asistido</div>
+      <h2>IA financiera en simulación</h2>
+      <p class="muted small">
+        Este modo NO compra, NO vende y NO envía órdenes. Solo simula qué haría la IA con el capital autorizado y deja registro para evaluar resultados antes de operar real.
+      </p>
+      <div id="assistStatusBox" class="notice">Cargá límites y tocá Guardar autorización.</div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Autorización del usuario</div>
+      <h2>Límites de capital y riesgo</h2>
+
+      <label class="label" for="assistCapital">Capital máximo autorizado ARS</label>
+      <input id="assistCapital" class="input mono" inputmode="numeric" placeholder="Ej: 300000" />
+
+      <div class="risk-row">
+        <div>
+          <label class="label" for="assistMaxDailyPct">Máximo diario sobre disponible</label>
+          <input id="assistMaxDailyPct" class="input mono" inputmode="decimal" placeholder="Ej: 30" />
+        </div>
+        <div>
+          <label class="label" for="assistMaxPerAssetPct">Máximo por activo</label>
+          <input id="assistMaxPerAssetPct" class="input mono" inputmode="decimal" placeholder="Ej: 10" />
+        </div>
+      </div>
+
+      <div class="risk-row">
+        <div>
+          <label class="label" for="assistMaxLossPct">Pérdida máxima diaria</label>
+          <input id="assistMaxLossPct" class="input mono" inputmode="decimal" placeholder="Ej: 2" />
+        </div>
+        <div>
+          <label class="label" for="assistMaxOps">Máx. operaciones por día</label>
+          <input id="assistMaxOps" class="input mono" inputmode="numeric" placeholder="Ej: 2" />
+        </div>
+      </div>
+
+      <label class="label" for="assistAllowed" style="margin-top:12px">Instrumentos permitidos</label>
+      <input id="assistAllowed" class="input mono" placeholder="Ej: CAUCIÓN, AL30, GD30, GGAL, PAMP, YPFD, NVDA, SPY" />
+
+      <div class="switch-line">
+        <div>
+          <b>Requiere confirmación humana</b>
+          <div class="tiny">Recomendado: activado. La IA solo prepara decisiones simuladas.</div>
+        </div>
+        <input id="assistRequireConfirm" type="checkbox" checked />
+      </div>
+
+      <div class="switch-line">
+        <div>
+          <b>Modo simulación</b>
+          <div class="tiny">Obligatorio por seguridad. No envía órdenes reales.</div>
+        </div>
+        <input id="assistSimulationOnly" type="checkbox" checked disabled />
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="saveAssistConfig()">Guardar autorización</button>
+        <button class="btn btn-secondary" onclick="runAssistSimulation()">Simular decisión de hoy</button>
+      </div>
+      <div class="actions">
+        <button class="btn btn-danger" onclick="stopAssistMode()">Detener IA asistida</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Decisión simulada</div>
+      <h2>Qué haría la IA hoy</h2>
+      <div id="assistDecision">
+        <div class="notice">Guardá la autorización y tocá “Simular decisión de hoy”.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Registro</div>
+      <h2>Historial de decisiones simuladas</h2>
+      <div id="assistLog">
+        <div class="notice">Todavía no hay decisiones registradas.</div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" onclick="clearAssistLog()">Borrar historial simulado</button>
+      </div>
+    </div>
+  </section>
+
   <section id="screen-config" class="hide">
     <div class="card">
       <div class="eyebrow">Seguridad</div>
@@ -347,6 +447,10 @@
   <button class="tab" onclick="showTab('cartera', this)" aria-label="Cartera">
     <svg viewBox="0 0 24 24"><path d="M6 7h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M8 13h8"/></svg>
     <span>Cartera</span>
+  </button>
+  <button class="tab" onclick="showTab('asistido', this)" aria-label="IA asistida">
+    <svg viewBox="0 0 24 24"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.9 4.9l2.8 2.8"/><path d="M16.3 16.3l2.8 2.8"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M4.9 19.1l2.8-2.8"/><path d="M16.3 7.7l2.8-2.8"/><circle cx="12" cy="12" r="4"/></svg>
+    <span>IA</span>
   </button>
   <button class="tab" onclick="showTab('consulta', this)" aria-label="Consulta">
     <svg viewBox="0 0 24 24"><path d="M21 12a8.5 8.5 0 0 1-9 8.5 9.5 9.5 0 0 1-4-.9L3 21l1.5-4.4A8.5 8.5 0 1 1 21 12Z"/><path d="M9.5 9a2.5 2.5 0 0 1 4.7 1.2c0 1.8-2.2 2.2-2.2 3.8"/><path d="M12 17h.01"/></svg>
@@ -472,7 +576,7 @@ function testConnection(){
   refreshNow(true);
 }
 function showTab(name, btn){
-  ['hoy','recs','cartera','consulta','config','raw'].forEach(x=>$('screen-'+x).classList.add('hide'));
+  ['hoy','recs','cartera','consulta','asistido','config','raw'].forEach(x=>$('screen-'+x).classList.add('hide'));
   $('screen-'+name).classList.remove('hide');
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
@@ -1342,116 +1446,8 @@ function buildOpportunities(data, a){
 }
 
 function renderDailyOpportunity(data, a){
-  const box = $('dailyOpportunity');
-  if(!box) return;
-
-  const opp = buildOpportunities(data, a);
-  const ars = opp.balances.ars;
-
-  if(!opp.operables.length){
-    box.innerHTML = `
-      <div class="card">
-        <div class="eyebrow">Decisión operativa</div>
-        <h2>No hay oportunidad clara</h2>
-        <p class="muted small">
-          No detecté una señal suficientemente limpia para comprar hoy. La decisión más prudente es esperar confirmación o usar caución corta si hay pesos disponibles.
-        </p>
-        <div class="grid">
-          <div class="stat">
-            <div class="label">Disponible ARS</div>
-            <div class="value mono money-sensitive">${ars.detected ? money(ars.amount) : 'No detectado'}</div>
-          </div>
-          <div class="stat">
-            <div class="label">Acción sugerida</div>
-            <div class="value small">Esperar / caución</div>
-          </div>
-        </div>
-        ${opp.blocked.length ? `
-          <div class="section">Por qué no comprar</div>
-          ${opp.blocked.slice(0,3).map(x=>`
-            <div class="asset">
-              <div class="row">
-                <div>
-                  <h3>${escapeHtml(x.sym)}</h3>
-                  <div class="tiny">${escapeHtml(x.type || '')} · Puntaje ${x.score || '—'}</div>
-                </div>
-                <span class="${x.cat.clase}">${escapeHtml(x.cat.accion)}</span>
-              </div>
-              <p class="muted small">${escapeHtml(x.cat.razon)}</p>
-            </div>
-          `).join('')}
-        ` : ''}
-      </div>
-    `;
-    applyMoneyVisibility();
-    return;
-  }
-
-  const top = opp.operables[0];
-
-  box.innerHTML = `
-    <div class="card hero">
-      <div class="eyebrow">Mejor oportunidad detectada</div>
-      <div class="row">
-        <div>
-          <h2>${escapeHtml(top.sym)}</h2>
-          <div class="muted small">${escapeHtml(top.type || '')} · Puntaje ${top.score || '—'}</div>
-        </div>
-        <span class="${top.cat.clase}">${escapeHtml(top.cat.accion)}</span>
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="grid">
-        <div class="stat">
-          <div class="label">Monto sugerido</div>
-          <div class="value mono money-sensitive">${Number.isFinite(top.alloc.monto) ? money(top.alloc.monto) : 'No calculado'}</div>
-        </div>
-        <div class="stat">
-          <div class="label">Porcentaje</div>
-          <div class="value mono">${top.alloc.pct}%</div>
-        </div>
-        <div class="stat">
-          <div class="label">Precio</div>
-          <div class="value mono money-sensitive">${Number.isFinite(toNumber(top.px)) ? money(top.px) : '—'}</div>
-        </div>
-        <div class="stat">
-          <div class="label">Día</div>
-          <div class="value mono ${toNumber(top.ch)<0?'bad':toNumber(top.ch)>0?'ok':''}">${pct(top.ch)}</div>
-        </div>
-      </div>
-
-      <div class="analysisbox">
-        <div class="mini-title">Motivo</div>
-        <p class="muted small">${escapeHtml(top.cat.razon)}</p>
-        <p class="muted small"><b>Entrada:</b> no entrar de golpe; comprar solo si confirma y no se escapa el precio.</p>
-        <p class="muted small"><b>Invalidación:</b> si pierde fuerza o aparece alerta contradictoria, no operar.</p>
-      </div>
-
-      ${opp.operables.length > 1 ? `
-        <div class="section">Otras oportunidades</div>
-        ${opp.operables.slice(1).map(x=>`
-          <div class="asset">
-            <div class="row">
-              <div>
-                <h3>${escapeHtml(x.sym)}</h3>
-                <div class="tiny">${escapeHtml(x.type || '')} · Puntaje ${x.score || '—'}</div>
-              </div>
-              <span class="${x.cat.clase}">${escapeHtml(x.cat.accion)}</span>
-            </div>
-            <div class="grid">
-              <div><div class="label">Monto</div><div class="value mono money-sensitive">${Number.isFinite(x.alloc.monto) ? money(x.alloc.monto) : 'No calculado'}</div></div>
-              <div><div class="label">%</div><div class="value mono">${x.alloc.pct}%</div></div>
-            </div>
-          </div>
-        `).join('')}
-      ` : ''}
-    </div>
-  `;
-
-  applyMoneyVisibility();
+  renderBigOpportunityBlock(data, a);
 }
-
 
 function render(data,cached=false){
   lastData=data;
@@ -2979,7 +2975,7 @@ function armarRespuestaInstrumento(inst){
 
       ${topOpp ? `
         <div class="analysisbox">
-          <div class="mini-title">Oportunidad del día</div>
+          <div class="mini-title">Grandes oportunidades de mercado</div>
           <p class="muted small"><b>${escapeHtml(topOpp.sym)}:</b> ${escapeHtml(topOpp.cat.accion)} · ${Number.isFinite(topOpp.alloc.monto) ? money(topOpp.alloc.monto) : 'Monto no calculado'} · ${topOpp.alloc.pct}%</p>
           <p class="muted small">${escapeHtml(topOpp.cat.razon)}</p>
         </div>
@@ -3026,8 +3022,302 @@ function limpiarConsulta(){
   $('consultaRespuesta').innerHTML = '<div class="notice">Podés preguntar por la cartera completa o por un activo puntual.</div>';
 }
 
+
+function defaultAssistConfig(){
+  return {
+    enabled:false,
+    capital:300000,
+    maxDailyPct:30,
+    maxPerAssetPct:10,
+    maxLossPct:2,
+    maxOps:2,
+    allowed:['CAUCIÓN','AL30','GD30','GGAL','PAMP','YPFD','NVDA','SPY'],
+    requireConfirm:true,
+    simulationOnly:true,
+    stopped:true
+  };
+}
+
+function getAssistConfig(){
+  try{
+    const saved = JSON.parse(localStorage.getItem('ASSIST_CONFIG') || '{}');
+    return {...defaultAssistConfig(), ...saved};
+  }catch{
+    return defaultAssistConfig();
+  }
+}
+
+function setAssistConfig(c){
+  localStorage.setItem('ASSIST_CONFIG', JSON.stringify(c));
+}
+
+function loadAssistConfigToUI(){
+  const c = getAssistConfig();
+  if($('assistCapital')) $('assistCapital').value = c.capital || '';
+  if($('assistMaxDailyPct')) $('assistMaxDailyPct').value = c.maxDailyPct || '';
+  if($('assistMaxPerAssetPct')) $('assistMaxPerAssetPct').value = c.maxPerAssetPct || '';
+  if($('assistMaxLossPct')) $('assistMaxLossPct').value = c.maxLossPct || '';
+  if($('assistMaxOps')) $('assistMaxOps').value = c.maxOps || '';
+  if($('assistAllowed')) $('assistAllowed').value = (c.allowed || []).join(', ');
+  if($('assistRequireConfirm')) $('assistRequireConfirm').checked = !!c.requireConfirm;
+  renderAssistStatus();
+  renderAssistLog();
+}
+
+function saveAssistConfig(){
+  const allowed = String($('assistAllowed')?.value || '')
+    .split(',')
+    .map(x=>x.trim().toUpperCase())
+    .filter(Boolean);
+
+  const c = {
+    enabled:true,
+    stopped:false,
+    simulationOnly:true,
+    requireConfirm: $('assistRequireConfirm') ? $('assistRequireConfirm').checked : true,
+    capital: Math.max(0, toNumber($('assistCapital')?.value)),
+    maxDailyPct: Math.max(0, Math.min(100, toNumber($('assistMaxDailyPct')?.value))),
+    maxPerAssetPct: Math.max(0, Math.min(100, toNumber($('assistMaxPerAssetPct')?.value))),
+    maxLossPct: Math.max(0, Math.min(100, toNumber($('assistMaxLossPct')?.value))),
+    maxOps: Math.max(1, Math.floor(toNumber($('assistMaxOps')?.value) || 1)),
+    allowed: allowed.length ? allowed : defaultAssistConfig().allowed
+  };
+
+  if(!Number.isFinite(c.capital) || c.capital <= 0){
+    $('assistStatusBox').innerHTML = '<div class="error">Cargá un capital autorizado válido.</div>';
+    return;
+  }
+
+  setAssistConfig(c);
+  renderAssistStatus();
+  $('assistDecision').innerHTML = '<div class="success">Autorización guardada. Modo simulación activo. La IA no puede operar real.</div>';
+}
+
+function stopAssistMode(){
+  const c = getAssistConfig();
+  c.enabled = false;
+  c.stopped = true;
+  setAssistConfig(c);
+  renderAssistStatus();
+  if($('assistDecision')) $('assistDecision').innerHTML = '<div class="warning">IA asistida detenida. No se simulan nuevas decisiones hasta volver a autorizar.</div>';
+}
+
+function renderAssistStatus(){
+  const c = getAssistConfig();
+  const box = $('assistStatusBox');
+  if(!box) return;
+
+  if(!c.enabled || c.stopped){
+    box.className = 'notice assist-danger';
+    box.innerHTML = '<b>IA asistida detenida.</b><br>La app solo muestra recomendaciones. No hay autorización activa.';
+    return;
+  }
+
+  box.className = 'notice assist-ok';
+  box.innerHTML = `
+    <b>Autorización activa en simulación.</b><br>
+    Capital máximo: <span class="money-sensitive">${money(c.capital)}</span> · Máx. diario: ${c.maxDailyPct}% · Máx. por activo: ${c.maxPerAssetPct}% · Pérdida máx.: ${c.maxLossPct}%<br>
+    Instrumentos permitidos: ${escapeHtml((c.allowed || []).join(', '))}<br>
+    <b>No envía órdenes reales.</b>
+  `;
+  applyMoneyVisibility();
+}
+
+function getAssistLog(){
+  try{return JSON.parse(localStorage.getItem('ASSIST_LOG') || '[]');}catch{return [];}
+}
+
+function setAssistLog(log){
+  localStorage.setItem('ASSIST_LOG', JSON.stringify((log || []).slice(0,50)));
+}
+
+function addAssistLog(item){
+  const log = getAssistLog();
+  log.unshift(item);
+  setAssistLog(log);
+  renderAssistLog();
+}
+
+function clearAssistLog(){
+  localStorage.removeItem('ASSIST_LOG');
+  renderAssistLog();
+}
+
+function renderAssistLog(){
+  const box = $('assistLog');
+  if(!box) return;
+  const log = getAssistLog();
+  if(!log.length){
+    box.innerHTML = '<div class="notice">Todavía no hay decisiones registradas.</div>';
+    return;
+  }
+
+  box.innerHTML = log.slice(0,12).map(item=>`
+    <div class="asset">
+      <div class="row">
+        <div>
+          <h3>${escapeHtml(item.symbol || item.action || 'Simulación')}</h3>
+          <div class="tiny">${escapeHtml(item.date || '')}</div>
+        </div>
+        <span class="pill blue">Simulado</span>
+      </div>
+      <p class="muted small"><b>Decisión:</b> ${escapeHtml(item.decision || '')}</p>
+      <p class="muted small"><b>Monto:</b> <span class="money-sensitive">${escapeHtml(item.amountText || '—')}</span> · <b>Motivo:</b> ${escapeHtml(item.reason || '')}</p>
+    </div>
+  `).join('');
+  applyMoneyVisibility();
+}
+
+function allowedByAssist(symbol, allowed){
+  const s = String(symbol || '').toUpperCase();
+  return (allowed || []).some(x => s === String(x).trim().toUpperCase());
+}
+
+function buildAssistCandidates(a, config){
+  const list = [];
+
+  if(Array.isArray(a.instrumentDetails)){
+    a.instrumentDetails.forEach(x => x && x.sym && list.push({...x}));
+  }
+  if(Array.isArray(a.allTypes)){
+    a.allTypes.forEach(x => {
+      if(x && x.sym && x.sym !== 'Sin dato' && !list.some(y=>y.sym === x.sym)){
+        list.push({...x, score:Number(x.score || scoreOpportunity(x))});
+      }
+    });
+  }
+  if(Array.isArray(a.positions)){
+    a.positions.forEach(p => {
+      if(p && p.sym && !list.some(y=>y.sym === p.sym)){
+        list.push({sym:p.sym,type:p.type,score:scoreOpportunity(p),ch:p.ch,px:p.px,weight:p.weight,value:p.value});
+      }
+    });
+  }
+
+  return list
+    .filter(x => allowedByAssist(x.sym, config.allowed))
+    .map(x => {
+      const decision = dailyDecisionForCandidate(x);
+      return {...x, decision};
+    })
+    .filter(x => x.decision && x.decision.eligible && !String(x.decision.accion || '').includes('NO'))
+    .sort((a,b)=>Number(b.score||0)-Number(a.score||0));
+}
+
+function runAssistSimulation(){
+  if(!lastData){
+    $('assistDecision').innerHTML = '<div class="error">Primero tocá Actualizar para cargar datos reales desde IOL.</div>';
+    return;
+  }
+
+  const c = getAssistConfig();
+  if(!c.enabled || c.stopped){
+    $('assistDecision').innerHTML = '<div class="warning">Primero guardá una autorización activa.</div>';
+    return;
+  }
+
+  const a = buildAnalysis(lastData);
+  const balances = typeof detectAvailableBalances === 'function'
+    ? detectAvailableBalances(lastData, a.total)
+    : {ars:{detected:false, amount:0}};
+
+  if(!balances.ars.detected || !Number.isFinite(balances.ars.amount) || balances.ars.amount <= 0){
+    $('assistDecision').innerHTML = '<div class="warning">No detecté disponible ARS real. La IA asistida no simula compras con dinero no confirmado.</div>';
+    return;
+  }
+
+  const opp = buildBigMarketOpportunities(lastData, a, c);
+  const big = opp.big.slice(0, c.maxOps);
+
+  if(!big.length){
+    const baseCapital = Math.min(c.capital, balances.ars.amount, balances.ars.amount * c.maxDailyPct / 100);
+    $('assistDecision').innerHTML = `
+      <div class="warning">
+        <b>No hay gran oportunidad para simular compra.</b><br>
+        La IA no fuerza operaciones. Decisión simulada: caución corta o esperar.
+      </div>
+      <div class="asset">
+        <div class="row">
+          <div>
+            <h3>CAUCIÓN / ESPERAR</h3>
+            <div class="tiny">Filtro estricto de oportunidad</div>
+          </div>
+          <span class="pill">Simulado</span>
+        </div>
+        <div class="grid">
+          <div><div class="label">Monto máximo simulado</div><div class="value mono money-sensitive">${money(baseCapital)}</div></div>
+          <div><div class="label">Plazo</div><div class="value small">24/48 hs</div></div>
+        </div>
+        <p class="muted small"><b>Motivo:</b> No apareció una oportunidad de mercado fuerte dentro de tus límites.</p>
+      </div>
+    `;
+    addAssistLog({
+      date:new Date().toLocaleString('es-AR'),
+      symbol:'CAUCIÓN/ESPERAR',
+      decision:'No comprar activos de riesgo',
+      amountText:money(baseCapital),
+      reason:'Sin gran oportunidad de mercado'
+    });
+    applyMoneyVisibility();
+    return;
+  }
+
+  const baseCapital = Math.min(c.capital, balances.ars.amount, balances.ars.amount * c.maxDailyPct / 100);
+  const amountPerOpMax = Math.min(baseCapital / big.length, balances.ars.amount * c.maxPerAssetPct / 100);
+  const maxLossMoney = c.capital * c.maxLossPct / 100;
+
+  const html = big.map(x => {
+    const p = tradePlanForOpportunity(x, balances.ars.amount, c);
+    const monto = Math.min(p.monto, amountPerOpMax);
+    return `
+      <div class="asset bigopp">
+        <div class="row">
+          <div>
+            <h3>${escapeHtml(x.sym)}</h3>
+            <div class="tiny">${escapeHtml(x.type || '')} · Puntaje ${x.score || '—'} · ${escapeHtml(p.plazo)}</div>
+          </div>
+          <span class="pill">Simulado</span>
+        </div>
+        <div class="grid">
+          <div><div class="label">Monto simulado</div><div class="value mono money-sensitive">${money(monto)}</div></div>
+          <div><div class="label">Comprar hasta</div><div class="value mono money-sensitive">${Number.isFinite(p.entryMax) ? money(p.entryMax) : '—'}</div></div>
+          <div><div class="label">Vender parcial</div><div class="value mono money-sensitive">${Number.isFinite(p.target1) ? money(p.target1) : '—'}</div></div>
+          <div><div class="label">Invalidación</div><div class="value mono money-sensitive">${Number.isFinite(p.stop) ? money(p.stop) : '—'}</div></div>
+        </div>
+        <div class="trade-plan">
+          <p class="muted small"><b>Comprar:</b> ${escapeHtml(p.buyInstruction)}</p>
+          <p class="muted small"><b>Vender:</b> ${escapeHtml(p.sellInstruction)}</p>
+          <p class="muted small"><b>Pérdida máxima diaria autorizada:</b> <span class="money-sensitive">${money(maxLossMoney)}</span></p>
+          <p class="tiny"><b>Riesgo:</b> ${escapeHtml(p.risk)}</p>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  $('assistDecision').innerHTML = `
+    <div class="warning">
+      <b>Simulación solamente.</b> Esta app no envió órdenes a IOL. Para operar real, debés entrar a IOL y confirmar manualmente.
+    </div>
+    ${html}
+  `;
+
+  const now = new Date().toLocaleString('es-AR');
+  big.forEach(x => {
+    const p = tradePlanForOpportunity(x, balances.ars.amount, c);
+    addAssistLog({
+      date:now,
+      symbol:x.sym,
+      decision:'Gran oportunidad simulada',
+      amountText:Number.isFinite(p.monto) ? money(p.monto) : 'No calculado',
+      reason:p.buyInstruction
+    });
+  });
+  applyMoneyVisibility();
+}
+
 function boot(){
   applyMoneyVisibility();
+  loadAssistConfigToUI();
   const pin=getPin();
   if(pin){
     $('setupCard').classList.add('hide');
