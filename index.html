@@ -156,6 +156,16 @@
     .trade-plan b{color:var(--txt)}
     .no-trade{border:1px solid rgba(255,211,61,.28);background:rgba(255,211,61,.07)}
 
+
+    .mc-card{border:1px solid rgba(245,201,123,.42);background:linear-gradient(145deg,rgba(245,201,123,.13),rgba(121,192,255,.05))}
+    .mc-no{border:1px solid rgba(255,211,61,.30);background:rgba(255,211,61,.07)}
+    .mc-danger{border:1px solid rgba(255,123,114,.35);background:rgba(255,123,114,.08)}
+    .mc-plan{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px}
+    .mc-plan p{margin:7px 0}
+    .mc-tag{display:inline-block;margin-top:6px;font-size:11px;font-weight:900;letter-spacing:.05em;text-transform:uppercase}
+    .mc-mini-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+    @media(max-width:560px){.mc-mini-grid{grid-template-columns:1fr}}
+
     pre{
       white-space:pre-wrap;word-break:break-word;background:#090c10;border:1px solid var(--line);
       padding:12px;border-radius:12px;color:#c9d1d9;max-height:360px;overflow:auto
@@ -254,6 +264,11 @@
     </div>
 
     <div id="messageArea" style="margin-top:14px"></div>
+
+    <div class="section">Motor agresivo controlado</div>
+    <div id="shortTermAggressiveEngine">
+      <div class="notice">Actualizá la app para buscar oportunidades fuertes de corto plazo con reglas de compra, venta e invalidación.</div>
+    </div>
 
     <div class="section">Grandes oportunidades de mercado</div>
     <div id="dailyOpportunity">
@@ -1580,11 +1595,312 @@ function renderDailyOpportunity(data, a){
   renderBigOpportunityBlock(data, a);
 }
 
+
+function mcUniqueCandidates(a){
+  const map = new Map();
+
+  function add(x){
+    if(!x || !x.sym) return;
+    const sym = String(x.sym).toUpperCase();
+    if(!sym || sym === 'SIN DATO') return;
+    const prev = map.get(sym) || {};
+    map.set(sym, {
+      ...prev,
+      ...x,
+      sym,
+      type:x.type || prev.type || inferType(sym),
+      score:Number.isFinite(Number(x.score)) ? Number(x.score) : Number(prev.score || scoreOpportunity(x))
+    });
+  }
+
+  if(Array.isArray(a.instrumentDetails)) a.instrumentDetails.forEach(add);
+  if(Array.isArray(a.allTypes)) a.allTypes.forEach(add);
+  if(Array.isArray(a.actionable)) a.actionable.forEach(add);
+  if(Array.isArray(a.positions)){
+    a.positions.forEach(p => add({
+      sym:p.sym,
+      type:p.type,
+      score:scoreOpportunity(p),
+      ch:p.ch,
+      px:p.px,
+      weight:p.weight,
+      value:p.value
+    }));
+  }
+
+  return Array.from(map.values());
+}
+
+function mcLiquidityPenalty(x){
+  // La app no tiene volumen real completo. Por seguridad no premia liquidez no verificada.
+  // Penaliza activos sin precio o con ticker raro.
+  const sym = String(x.sym || '');
+  if(!Number.isFinite(toNumber(x.px))) return 14;
+  if(sym.length < 2 || sym.length > 8) return 8;
+  return 0;
+}
+
+function mcAggressiveScore(x){
+  let s = Number(x.score || scoreOpportunity(x));
+  const ch = toNumber(x.ch);
+  const weight = toNumber(x.weight);
+  const type = String(x.type || '');
+
+  if(Number.isFinite(ch)){
+    if(ch > 0.4 && ch <= 2.8) s += 13;      // momentum temprano
+    if(ch > 2.8 && ch <= 4.2) s -= 4;       // puede estar avanzado
+    if(ch > 4.2) s -= 18;                   // no perseguir
+    if(ch < -0.5 && ch > -2.0) s -= 6;
+    if(ch <= -2.0) s -= 22;                 // no promediar caída
+  } else {
+    s -= 10;
+  }
+
+  if(Number.isFinite(weight)){
+    if(weight > 35) s -= 30;
+    else if(weight > 20) s -= 16;
+    else if(weight > 12) s -= 6;
+  }
+
+  if(type === 'Acción AR') s += 3;
+  if(type === 'CEDEAR/ETF') s += 3;
+  if(type === 'Bono') s -= 1;
+  if(type === 'Caución') s = 72;
+
+  s -= mcLiquidityPenalty(x);
+  return Math.max(0, Math.min(100, Math.round(s)));
+}
+
+function mcRejectReason(x){
+  const aggressive = Number(x.mcScore || 0);
+  const ch = toNumber(x.ch);
+  const weight = toNumber(x.weight);
+
+  if(String(x.type || '') === 'Caución') return 'Caución es defensiva; no es trade agresivo de corto plazo.';
+  if(!Number.isFinite(toNumber(x.px))) return 'Sin precio válido para definir entrada, objetivo y stop.';
+  if(Number.isFinite(weight) && weight > 20) return 'Ya hay exposición relevante; aumentar puede concentrar demasiado la cartera.';
+  if(Number.isFinite(ch) && ch > 4.2) return 'Subió demasiado; entrar ahora sería perseguir precio.';
+  if(Number.isFinite(ch) && ch <= -2.0) return 'Está débil; no se promedia una caída sin estabilización.';
+  if(aggressive < 88) return 'El puntaje no alcanza para clasificar como gran oportunidad agresiva.';
+  return 'Falta confirmación suficiente.';
+}
+
+function mcIsTradableBig(x){
+  const s = Number(x.mcScore || 0);
+  const ch = toNumber(x.ch);
+  const weight = toNumber(x.weight);
+
+  if(String(x.type || '') === 'Caución') return false;
+  if(s < 88) return false;
+  if(!Number.isFinite(toNumber(x.px))) return false;
+  if(Number.isFinite(weight) && weight > 20) return false;
+  if(Number.isFinite(ch) && ch > 4.2) return false;
+  if(Number.isFinite(ch) && ch <= -2.0) return false;
+
+  return true;
+}
+
+function mcStopPct(type, score){
+  if(type === 'Bono') return score >= 93 ? 1.6 : 2.1;
+  if(type === 'CEDEAR/ETF') return score >= 93 ? 2.4 : 3.0;
+  if(type === 'Acción AR') return score >= 93 ? 2.8 : 3.5;
+  return 3.0;
+}
+
+function mcTargetPct(type, score){
+  if(type === 'Bono') return score >= 93 ? 4.8 : 3.8;
+  if(type === 'CEDEAR/ETF') return score >= 93 ? 7.5 : 5.8;
+  if(type === 'Acción AR') return score >= 93 ? 8.5 : 6.5;
+  return 6.0;
+}
+
+function mcPlan(x, availableARS){
+  const type = String(x.type || '');
+  const score = Number(x.mcScore || 0);
+  const px = toNumber(x.px);
+  const stopPct = mcStopPct(type, score);
+  const targetPct = mcTargetPct(type, score);
+
+  const buyLow = Number.isFinite(px) ? px * 0.995 : NaN;
+  const buyHigh = Number.isFinite(px) ? px * 1.008 : NaN;
+  const stop = Number.isFinite(px) ? px * (1 - stopPct/100) : NaN;
+  const target1 = Number.isFinite(px) ? px * (1 + targetPct/100) : NaN;
+  const target2 = Number.isFinite(px) ? px * (1 + targetPct*1.65/100) : NaN;
+
+  let pct = 0;
+  if(score >= 94) pct = 15;
+  else if(score >= 91) pct = 12;
+  else if(score >= 88) pct = 8;
+
+  if(type === 'Bono') pct = Math.min(pct, 9);
+  if(type === 'Acción AR') pct = Math.min(pct, 12);
+  if(type === 'CEDEAR/ETF') pct = Math.min(pct, 14);
+
+  const monto = Number.isFinite(availableARS) && availableARS > 0 ? availableARS * pct / 100 : NaN;
+
+  return {
+    pct,monto,buyLow,buyHigh,stop,target1,target2,stopPct,targetPct,
+    plazo: type === 'Bono' ? '15 a 45 días' : '1 a 7 ruedas',
+    riesgo: type === 'Bono'
+      ? 'Moderado/alto: tasa, dólar y riesgo país.'
+      : type === 'CEDEAR/ETF'
+        ? 'Alto controlado: Wall Street, CCL y volatilidad.'
+        : 'Alto: volatilidad local y liquidez.',
+    comprar: Number.isFinite(px)
+      ? `Comprar solo entre ${money(buyLow)} y ${money(buyHigh)}. Si abre arriba de esa zona, no perseguir.`
+      : 'No comprar hasta tener precio válido.',
+    vender: Number.isFinite(px)
+      ? `Vender 50% cerca de ${money(target1)}. Mantener el resto solo si sigue con fuerza. Salida total cerca de ${money(target2)} o si pierde ${money(stop)}.`
+      : 'Vender parcial en objetivo y salir si aparece invalidación.',
+    invalidar: Number.isFinite(px)
+      ? `Invalidar si pierde ${money(stop)}, si baja con volumen, o si aparece una alerta contradictoria.`
+      : 'Invalidar si no hay precio, volumen o confirmación.'
+  };
+}
+
+function mcBuildAggressiveEngine(data, a){
+  const balances = typeof detectAvailableBalances === 'function'
+    ? detectAvailableBalances(data, a.total)
+    : {ars:{detected:false,amount:0}, usd:{detected:false,amount:0}};
+
+  const availableARS = balances.ars.detected ? balances.ars.amount : NaN;
+
+  const analyzed = mcUniqueCandidates(a)
+    .map(x => {
+      const mcScore = mcAggressiveScore(x);
+      const y = {...x, mcScore};
+      return {
+        ...y,
+        tradable: mcIsTradableBig(y),
+        rejectReason: mcRejectReason(y),
+        plan: mcPlan(y, availableARS)
+      };
+    })
+    .sort((a,b)=>{
+      if(a.tradable !== b.tradable) return a.tradable ? -1 : 1;
+      return Number(b.mcScore || 0) - Number(a.mcScore || 0);
+    });
+
+  return {
+    balances,
+    strong: analyzed.filter(x=>x.tradable).slice(0,3),
+    rejected: analyzed.filter(x=>!x.tradable).slice(0,6),
+    all: analyzed
+  };
+}
+
+function renderMaxGainEngine(data, a){
+  const box = $('shortTermAggressiveEngine');
+  if(!box) return;
+
+  const engine = mcBuildAggressiveEngine(data, a);
+  const ars = engine.balances.ars;
+
+  if(!engine.strong.length){
+    box.innerHTML = `
+      <div class="card mc-no">
+        <div class="eyebrow">Máxima ganancia / corto plazo</div>
+        <h2>No operar agresivo ahora</h2>
+        <p class="muted small">
+          El motor agresivo no encontró una oportunidad suficientemente fuerte. Para buscar máximas ganancias también hay que evitar operaciones malas.
+        </p>
+        <div class="mc-mini-grid">
+          <div class="stat">
+            <div class="label">Disponible ARS</div>
+            <div class="value mono money-sensitive">${ars.detected ? money(ars.amount) : 'No detectado'}</div>
+          </div>
+          <div class="stat">
+            <div class="label">Decisión</div>
+            <div class="value small">Caución / esperar</div>
+          </div>
+        </div>
+        <div class="mc-plan">
+          <p class="muted small"><b>Instrucción:</b> No comprar activos de riesgo. Usar caución 24/48 hs o esperar una señal limpia.</p>
+          <p class="muted small"><b>Regla:</b> si no hay precio válido, stop claro y objetivo claro, no se opera.</p>
+        </div>
+        ${engine.rejected.length ? `
+          <div class="section">Por qué se rechazaron activos</div>
+          ${engine.rejected.slice(0,4).map(x=>`
+            <div class="asset">
+              <div class="row">
+                <div>
+                  <h3>${escapeHtml(x.sym)}</h3>
+                  <div class="tiny">${escapeHtml(x.type || '')} · Score agresivo ${x.mcScore}</div>
+                </div>
+                <span class="pill warn">Bloqueado</span>
+              </div>
+              <p class="muted small">${escapeHtml(x.rejectReason)}</p>
+            </div>
+          `).join('')}
+        ` : ''}
+      </div>
+    `;
+    applyMoneyVisibility();
+    return;
+  }
+
+  const main = engine.strong[0];
+  const p = main.plan;
+
+  box.innerHTML = `
+    <div class="card mc-card">
+      <div class="eyebrow">Máxima ganancia / corto plazo</div>
+      <div class="row">
+        <div>
+          <h2>${escapeHtml(main.sym)}</h2>
+          <div class="muted small">${escapeHtml(main.type || '')} · Score agresivo ${main.mcScore} · ${escapeHtml(p.plazo)}</div>
+        </div>
+        <span class="pill">Ataque</span>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="grid">
+        <div class="stat"><div class="label">Monto sugerido</div><div class="value mono money-sensitive">${Number.isFinite(p.monto) ? money(p.monto) : 'No calculado'}</div></div>
+        <div class="stat"><div class="label">Porcentaje</div><div class="value mono">${p.pct}%</div></div>
+        <div class="stat"><div class="label">Comprar desde</div><div class="value mono money-sensitive">${Number.isFinite(p.buyLow) ? money(p.buyLow) : '—'}</div></div>
+        <div class="stat"><div class="label">Comprar hasta</div><div class="value mono money-sensitive">${Number.isFinite(p.buyHigh) ? money(p.buyHigh) : '—'}</div></div>
+        <div class="stat"><div class="label">Objetivo 1</div><div class="value mono money-sensitive">${Number.isFinite(p.target1) ? money(p.target1) : '—'}</div></div>
+        <div class="stat"><div class="label">Objetivo 2</div><div class="value mono money-sensitive">${Number.isFinite(p.target2) ? money(p.target2) : '—'}</div></div>
+        <div class="stat"><div class="label">Stop / invalidación</div><div class="value mono money-sensitive">${Number.isFinite(p.stop) ? money(p.stop) : '—'}</div></div>
+        <div class="stat"><div class="label">Riesgo</div><div class="value small">${escapeHtml(p.riesgo)}</div></div>
+      </div>
+
+      <div class="mc-plan">
+        <p class="muted small"><b>Cuándo comprar:</b> ${escapeHtml(p.comprar)}</p>
+        <p class="muted small"><b>Cuándo vender:</b> ${escapeHtml(p.vender)}</p>
+        <p class="muted small"><b>Cuándo salir sin discutir:</b> ${escapeHtml(p.invalidar)}</p>
+        <p class="muted small"><b>Prohibido:</b> aumentar si se escapa el precio, promediar una caída o comprar si aparece alerta de cartera.</p>
+      </div>
+
+      ${engine.strong.length > 1 ? `
+        <div class="section">Oportunidades secundarias</div>
+        ${engine.strong.slice(1).map(x=>`
+          <div class="asset">
+            <div class="row">
+              <div>
+                <h3>${escapeHtml(x.sym)}</h3>
+                <div class="tiny">${escapeHtml(x.type || '')} · Score agresivo ${x.mcScore}</div>
+              </div>
+              <span class="pill blue">${x.plan.pct}%</span>
+            </div>
+            <p class="muted small"><b>Compra:</b> ${escapeHtml(x.plan.comprar)}</p>
+            <p class="muted small"><b>Venta:</b> ${escapeHtml(x.plan.vender)}</p>
+          </div>
+        `).join('')}
+      ` : ''}
+    </div>
+  `;
+  applyMoneyVisibility();
+}
+
+
 function render(data,cached=false){
   lastData=data;
   const a=buildAnalysis(data);
   renderMainAvailableCash(data, a.total);
   renderPortfolioResults(a);
+  renderMaxGainEngine(data, a);
   renderDailyOpportunity(data, a);
   renderPendingOperations(data);
   renderNextDayPlan(data, a);
@@ -3348,30 +3664,30 @@ function runAssistSimulation(){
   }
 
   const a = buildAnalysis(lastData);
-  const balances = typeof detectAvailableBalances === 'function'
-    ? detectAvailableBalances(lastData, a.total)
-    : {ars:{detected:false, amount:0}};
+  const engine = mcBuildAggressiveEngine(lastData, a);
+  const balances = engine.balances;
 
   if(!balances.ars.detected || !Number.isFinite(balances.ars.amount) || balances.ars.amount <= 0){
     $('assistDecision').innerHTML = '<div class="warning">No detecté disponible ARS real. La IA asistida no simula compras con dinero no confirmado.</div>';
     return;
   }
 
-  const opp = buildBigMarketOpportunities(lastData, a, c);
-  const big = opp.big.slice(0, c.maxOps);
+  const baseCapital = Math.min(c.capital, balances.ars.amount, balances.ars.amount * c.maxDailyPct / 100);
+  const maxPerAsset = Math.min(baseCapital, balances.ars.amount * c.maxPerAssetPct / 100);
+  const maxLossMoney = c.capital * c.maxLossPct / 100;
+  const strong = engine.strong.filter(x => allowedByAssist(x.sym, c.allowed)).slice(0, c.maxOps);
 
-  if(!big.length){
-    const baseCapital = Math.min(c.capital, balances.ars.amount, balances.ars.amount * c.maxDailyPct / 100);
+  if(!strong.length){
     $('assistDecision').innerHTML = `
       <div class="warning">
-        <b>No hay gran oportunidad para simular compra.</b><br>
+        <b>No hay oportunidad agresiva autorizada.</b><br>
         La IA no fuerza operaciones. Decisión simulada: caución corta o esperar.
       </div>
       <div class="asset">
         <div class="row">
           <div>
             <h3>CAUCIÓN / ESPERAR</h3>
-            <div class="tiny">Filtro estricto de oportunidad</div>
+            <div class="tiny">Filtro agresivo controlado</div>
           </div>
           <span class="pill">Simulado</span>
         </div>
@@ -3379,7 +3695,7 @@ function runAssistSimulation(){
           <div><div class="label">Monto máximo simulado</div><div class="value mono money-sensitive">${money(baseCapital)}</div></div>
           <div><div class="label">Plazo</div><div class="value small">24/48 hs</div></div>
         </div>
-        <p class="muted small"><b>Motivo:</b> No apareció una oportunidad de mercado fuerte dentro de tus límites.</p>
+        <p class="muted small"><b>Motivo:</b> No apareció una oportunidad fuerte dentro de tus instrumentos permitidos y límites de riesgo.</p>
       </div>
     `;
     addAssistLog({
@@ -3387,39 +3703,37 @@ function runAssistSimulation(){
       symbol:'CAUCIÓN/ESPERAR',
       decision:'No comprar activos de riesgo',
       amountText:money(baseCapital),
-      reason:'Sin gran oportunidad de mercado'
+      reason:'Sin oportunidad agresiva autorizada'
     });
     applyMoneyVisibility();
     return;
   }
 
-  const baseCapital = Math.min(c.capital, balances.ars.amount, balances.ars.amount * c.maxDailyPct / 100);
-  const amountPerOpMax = Math.min(baseCapital / big.length, balances.ars.amount * c.maxPerAssetPct / 100);
-  const maxLossMoney = c.capital * c.maxLossPct / 100;
+  const amountPerOp = Math.min(maxPerAsset, baseCapital / strong.length);
 
-  const html = big.map(x => {
-    const p = tradePlanForOpportunity(x, balances.ars.amount, c);
-    const monto = Math.min(p.monto, amountPerOpMax);
+  const html = strong.map(x => {
+    const p = x.plan;
+    const monto = Math.min(Number.isFinite(p.monto) ? p.monto : amountPerOp, amountPerOp);
     return `
-      <div class="asset bigopp">
+      <div class="asset mc-card">
         <div class="row">
           <div>
             <h3>${escapeHtml(x.sym)}</h3>
-            <div class="tiny">${escapeHtml(x.type || '')} · Puntaje ${x.score || '—'} · ${escapeHtml(p.plazo)}</div>
+            <div class="tiny">${escapeHtml(x.type || '')} · Score agresivo ${x.mcScore} · ${escapeHtml(p.plazo)}</div>
           </div>
           <span class="pill">Simulado</span>
         </div>
         <div class="grid">
           <div><div class="label">Monto simulado</div><div class="value mono money-sensitive">${money(monto)}</div></div>
-          <div><div class="label">Comprar hasta</div><div class="value mono money-sensitive">${Number.isFinite(p.entryMax) ? money(p.entryMax) : '—'}</div></div>
+          <div><div class="label">Comprar hasta</div><div class="value mono money-sensitive">${Number.isFinite(p.buyHigh) ? money(p.buyHigh) : '—'}</div></div>
           <div><div class="label">Vender parcial</div><div class="value mono money-sensitive">${Number.isFinite(p.target1) ? money(p.target1) : '—'}</div></div>
-          <div><div class="label">Invalidación</div><div class="value mono money-sensitive">${Number.isFinite(p.stop) ? money(p.stop) : '—'}</div></div>
+          <div><div class="label">Stop</div><div class="value mono money-sensitive">${Number.isFinite(p.stop) ? money(p.stop) : '—'}</div></div>
         </div>
-        <div class="trade-plan">
-          <p class="muted small"><b>Comprar:</b> ${escapeHtml(p.buyInstruction)}</p>
-          <p class="muted small"><b>Vender:</b> ${escapeHtml(p.sellInstruction)}</p>
+        <div class="mc-plan">
+          <p class="muted small"><b>Comprar:</b> ${escapeHtml(p.comprar)}</p>
+          <p class="muted small"><b>Vender:</b> ${escapeHtml(p.vender)}</p>
           <p class="muted small"><b>Pérdida máxima diaria autorizada:</b> <span class="money-sensitive">${money(maxLossMoney)}</span></p>
-          <p class="tiny"><b>Riesgo:</b> ${escapeHtml(p.risk)}</p>
+          <p class="tiny"><b>Riesgo:</b> ${escapeHtml(p.riesgo)}</p>
         </div>
       </div>
     `;
@@ -3433,14 +3747,14 @@ function runAssistSimulation(){
   `;
 
   const now = new Date().toLocaleString('es-AR');
-  big.forEach(x => {
-    const p = tradePlanForOpportunity(x, balances.ars.amount, c);
+  strong.forEach(x => {
+    const p = x.plan;
     addAssistLog({
       date:now,
       symbol:x.sym,
-      decision:'Gran oportunidad simulada',
-      amountText:Number.isFinite(p.monto) ? money(p.monto) : 'No calculado',
-      reason:p.buyInstruction
+      decision:'Oportunidad agresiva simulada',
+      amountText:Number.isFinite(p.monto) ? money(Math.min(p.monto, amountPerOp)) : 'No calculado',
+      reason:p.comprar
     });
   });
   applyMoneyVisibility();
