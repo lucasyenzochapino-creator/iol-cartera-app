@@ -1445,6 +1445,137 @@ function buildOpportunities(data, a){
   return {balances, operables, blocked};
 }
 
+
+function renderBigOpportunityBlock(data, a){
+  const box = $('dailyOpportunity');
+  if(!box) return;
+
+  const opp = buildOpportunities(data, a);
+  const ars = opp.balances && opp.balances.ars ? opp.balances.ars : {detected:false, amount:0};
+
+  const strong = (opp.operables || []).filter(x => Number(x.score || 0) >= 85).slice(0,3);
+
+  function planFor(x){
+    const px = toNumber(x.px);
+    const type = String(x.type || '');
+    const score = Number(x.score || 0);
+
+    const stopPct = type === 'Bono' ? 2 : type === 'CEDEAR/ETF' ? 3 : 3.5;
+    const targetPct = type === 'Bono' ? 4 : type === 'CEDEAR/ETF' ? 6 : 7;
+    const entryMax = Number.isFinite(px) ? px * 1.01 : NaN;
+    const stop = Number.isFinite(px) ? px * (1 - stopPct/100) : NaN;
+    const target1 = Number.isFinite(px) ? px * (1 + targetPct/100) : NaN;
+    const target2 = Number.isFinite(px) ? px * (1 + targetPct*1.55/100) : NaN;
+
+    let pct = 0;
+    if(score >= 92) pct = 12;
+    else if(score >= 88) pct = 10;
+    else if(score >= 85) pct = 7;
+
+    if(type === 'Bono') pct = Math.min(pct, 8);
+    if(type === 'Acción AR') pct = Math.min(pct, 10);
+    if(type === 'CEDEAR/ETF') pct = Math.min(pct, 12);
+
+    const monto = ars.detected && Number.isFinite(ars.amount) ? ars.amount * pct / 100 : NaN;
+
+    return {
+      pct, monto, entryMax, stop, target1, target2,
+      plazo: type === 'Bono' ? '15 a 45 días' : '2 a 10 ruedas',
+      riesgo: type === 'Bono' ? 'Moderado/alto por tasa y riesgo país.' :
+              type === 'CEDEAR/ETF' ? 'Moderado/alto por Wall Street, CCL y volatilidad.' :
+              'Alto por volatilidad local.',
+      comprar: Number.isFinite(px)
+        ? `Comprar solo entre ${money(px)} y ${money(entryMax)}. No perseguir si supera esa zona.`
+        : 'Comprar solo si hay precio válido y confirmación.',
+      vender: Number.isFinite(px)
+        ? `Vender parcial en ${money(target1)}. Salida total si pierde ${money(stop)}.`
+        : 'Vender parcial al primer objetivo y salir si aparece invalidación.',
+      invalidar: Number.isFinite(px)
+        ? `Invalidar si pierde ${money(stop)} o si aparece alerta contradictoria.`
+        : 'Invalidar si pierde fuerza, volumen o contexto.'
+    };
+  }
+
+  if(!strong.length){
+    const rejected = (opp.blocked || []).slice(0,4);
+    box.innerHTML = `
+      <div class="card no-trade">
+        <div class="eyebrow">Filtro estricto activo</div>
+        <h2>No hay gran oportunidad</h2>
+        <p class="muted small">
+          La app no detectó una oportunidad de mercado lo suficientemente fuerte. No se fuerza una compra.
+        </p>
+        <div class="grid">
+          <div class="stat">
+            <div class="label">Disponible ARS</div>
+            <div class="value mono money-sensitive">${ars.detected ? money(ars.amount) : 'No detectado'}</div>
+          </div>
+          <div class="stat">
+            <div class="label">Acción</div>
+            <div class="value small">Esperar / caución corta</div>
+          </div>
+        </div>
+        <div class="trade-plan">
+          <b>Instrucción:</b> No comprar activos de riesgo hoy. Usar caución 24/48 hs o mantener liquidez hasta que aparezca una oportunidad limpia.
+        </div>
+        ${rejected.length ? `
+          <div class="section">Activos rechazados por el filtro</div>
+          ${rejected.map(x=>`
+            <div class="asset">
+              <div class="row">
+                <div>
+                  <h3>${escapeHtml(x.sym)}</h3>
+                  <div class="tiny">${escapeHtml(x.type || '')} · Puntaje ${x.score || '—'}</div>
+                </div>
+                <span class="pill warn">No operar</span>
+              </div>
+              <p class="muted small">${escapeHtml(x.cat?.razon || 'No cumple filtro estricto de oportunidad.')}</p>
+            </div>
+          `).join('')}
+        ` : ''}
+      </div>
+    `;
+    applyMoneyVisibility();
+    return;
+  }
+
+  const top = strong[0];
+  const p = planFor(top);
+
+  box.innerHTML = `
+    <div class="card hero bigopp">
+      <div class="eyebrow">Gran oportunidad detectada</div>
+      <div class="row">
+        <div>
+          <h2>${escapeHtml(top.sym)}</h2>
+          <div class="muted small">${escapeHtml(top.type || '')} · Puntaje ${top.score || '—'} · ${escapeHtml(p.plazo)}</div>
+        </div>
+        <span class="pill">Oportunidad</span>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="grid">
+        <div class="stat"><div class="label">Monto sugerido</div><div class="value mono money-sensitive">${Number.isFinite(p.monto) ? money(p.monto) : 'No calculado'}</div></div>
+        <div class="stat"><div class="label">Porcentaje</div><div class="value mono">${p.pct}%</div></div>
+        <div class="stat"><div class="label">Comprar hasta</div><div class="value mono money-sensitive">${Number.isFinite(p.entryMax) ? money(p.entryMax) : '—'}</div></div>
+        <div class="stat"><div class="label">Invalidación</div><div class="value mono money-sensitive">${Number.isFinite(p.stop) ? money(p.stop) : '—'}</div></div>
+        <div class="stat"><div class="label">Objetivo parcial</div><div class="value mono money-sensitive">${Number.isFinite(p.target1) ? money(p.target1) : '—'}</div></div>
+        <div class="stat"><div class="label">Objetivo extendido</div><div class="value mono money-sensitive">${Number.isFinite(p.target2) ? money(p.target2) : '—'}</div></div>
+      </div>
+
+      <div class="trade-plan">
+        <p class="muted small"><b>Cuándo comprar:</b> ${escapeHtml(p.comprar)}</p>
+        <p class="muted small"><b>Cuándo vender:</b> ${escapeHtml(p.vender)}</p>
+        <p class="muted small"><b>Invalidación:</b> ${escapeHtml(p.invalidar)}</p>
+        <p class="tiny"><b>Riesgo:</b> ${escapeHtml(p.riesgo)}</p>
+      </div>
+    </div>
+  `;
+  applyMoneyVisibility();
+}
+
+
 function renderDailyOpportunity(data, a){
   renderBigOpportunityBlock(data, a);
 }
