@@ -1,6 +1,6 @@
 // Vercel Function directa para IOL.
 // Ruta: /api/iol-dashboard
-// SOLO LECTURA: obtiene token, portafolio, estado de cuenta y algunas cotizaciones.
+// SOLO LECTURA: obtiene token, portafolio, estado de cuenta y cotizaciones ampliadas.
 // NO contiene funciones de compra, venta ni envío de órdenes.
 
 const IOL_BASE = "https://api.invertironline.com";
@@ -153,12 +153,22 @@ async function getQuoteSafe(symbol, token) {
 }
 
 function buildWatchlist() {
-  const raw = env("WATCHLIST", "YPFD,PAMP,VIST,GGAL,BMA,AL30,GD30,TX26,NVDA,SPY,QQQ");
-  return raw
-    .split(",")
-    .map(x => x.trim().toUpperCase())
-    .filter(Boolean)
-    .slice(0, 20);
+  const defaultWatchlist = [
+    // acciones argentinas líquidas
+    "YPFD", "PAMP", "VIST", "GGAL", "BMA", "TXAR", "ALUA", "TGSU2", "CEPU", "BYMA", "COME", "LOMA",
+    // bonos soberanos / CER frecuentes
+    "AL29", "AL30", "GD30", "GD35", "TX26", "TZX26",
+    // CEDEARs y ETFs para detectar oportunidades globales, incluido Micron
+    "MU", "NVDA", "AMD", "MSFT", "AAPL", "GOOGL", "META", "AMZN", "SPY", "QQQ", "DIA", "IWM", "GLD", "XLP", "XLV", "KO", "PG", "JNJ", "BRKB"
+  ];
+
+  const raw = env("WATCHLIST", defaultWatchlist.join(","));
+  return Array.from(new Set(
+    raw
+      .split(",")
+      .map(x => x.trim().toUpperCase())
+      .filter(Boolean)
+  )).slice(0, 60);
 }
 
 module.exports = async function handler(req, res) {
@@ -191,7 +201,7 @@ module.exports = async function handler(req, res) {
     const symbols = Array.from(new Set([
       ...Array.from(findSymbols(portfolio)),
       ...buildWatchlist()
-    ])).slice(0, 25);
+    ])).slice(0, 60);
 
     const quotes = await Promise.all(symbols.map(sym => getQuoteSafe(sym, token)));
 
@@ -204,6 +214,14 @@ module.exports = async function handler(req, res) {
       account,
       estadoCuenta: account,
       quotes,
+      quoteUniverse: symbols,
+      improvements: {
+        expandedUniverse: true,
+        includesMicronMU: symbols.includes("MU"),
+        includesSemiconductors: ["MU", "NVDA", "AMD"].filter(s => symbols.includes(s)),
+        includesGlobalEtfs: ["SPY", "QQQ", "DIA", "IWM", "GLD", "XLP", "XLV"].filter(s => symbols.includes(s)),
+        note: "El backend ahora consulta un universo más amplio para que el frontend pueda detectar oportunidades globales y no depender solo de AL30/caución."
+      },
       security: {
         readonly: true,
         ordersEnabled: false,
