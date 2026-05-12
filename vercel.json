@@ -2,6 +2,10 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
+      "source": "/",
+      "destination": "/recomendaciones.html"
+    },
+    {
       "source": "/.netlify/functions/iol-dashboard",
       "destination": "/api/iol-dashboard"
     },
