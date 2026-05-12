@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/",
-      "destination": "/recomendaciones.html"
+      "destination": "/index.html"
     },
     {
       "source": "/.netlify/functions/iol-dashboard",
