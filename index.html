@@ -166,6 +166,10 @@
     .mc-mini-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
     @media(max-width:560px){.mc-mini-grid{grid-template-columns:1fr}}
 
+
+    .opdiag{border:1px solid rgba(245,201,123,.45);background:linear-gradient(145deg,rgba(245,201,123,.14),rgba(255,123,114,.06))}
+    .opdiag strong{color:var(--txt)}
+
     pre{
       white-space:pre-wrap;word-break:break-word;background:#090c10;border:1px solid var(--line);
       padding:12px;border-radius:12px;color:#c9d1d9;max-height:360px;overflow:auto
@@ -261,6 +265,12 @@
       <div class="stat"><div class="label">Gan./Pérd. actual</div><div class="value mono money-sensitive" id="portfolioPnLActual">—</div></div>
       <div class="stat"><div class="label">Gan./Pérd. diaria</div><div class="value mono money-sensitive" id="portfolioPnLDaily">—</div></div>
       <div class="stat"><div class="label">Señal general</div><div class="value" id="generalSignal">—</div></div>
+    </div>
+
+    <div id="operationalDiagnostic" class="card opdiag">
+      <div class="eyebrow">Diagnóstico operativo</div>
+      <h2>Capital operable real</h2>
+      <div class="notice">Actualizá la app para ver si hay dinero libre suficiente para una oportunidad de corto plazo.</div>
     </div>
 
     <div id="messageArea" style="margin-top:14px"></div>
@@ -1387,6 +1397,21 @@ function oportunidadCategoria(x){
   return {accion:'NO OPERAR', clase:'pill warn', razon:'No hay ventaja suficiente frente a caución o liquidez.'};
 }
 
+
+function suggestionCapitalARS(realAvailable){
+  const n = toNumber(realAvailable);
+  // La recomendación debe existir aunque no haya saldo disponible.
+  // Si el saldo real es bajo, usa capital de referencia para mostrar una sugerencia teórica.
+  if(Number.isFinite(n) && n >= 50000) return {amount:n, real:true};
+  return {amount:100000, real:false};
+}
+
+function suggestionMoneyLabel(amount, isReal){
+  if(!Number.isFinite(amount)) return 'No calculado';
+  return (isReal ? '' : 'Teórico: ') + money(amount);
+}
+
+
 function oportunidadMontoPct(x, disponibleARS){
   const score = Number(x.score || 0);
   const type = String(x.type || '');
@@ -1401,8 +1426,9 @@ function oportunidadMontoPct(x, disponibleARS){
   if(type === 'CEDEAR/ETF') pct = Math.min(pct, 12);
   if(type === 'Bono') pct = Math.min(pct, 10);
 
-  const monto = Number.isFinite(disponibleARS) && disponibleARS > 0 ? disponibleARS * pct / 100 : NaN;
-  return {pct, monto};
+  const cap = suggestionCapitalARS(disponibleARS);
+  const monto = cap.amount * pct / 100;
+  return {pct, monto, capitalReal:cap.real};
 }
 
 function buildOpportunities(data, a){
@@ -1518,7 +1544,7 @@ function renderBigOpportunityBlock(data, a){
         <div class="eyebrow">Filtro estricto activo</div>
         <h2>No hay gran oportunidad</h2>
         <p class="muted small">
-          La app no detectó una oportunidad de mercado lo suficientemente fuerte. No se fuerza una compra.
+          La app no detectó una oportunidad de mercado lo suficientemente fuerte. No se fuerza una compra, pero cuando haya una señal fuerte la mostrará aunque no tengas saldo libre.
         </p>
         <div class="grid">
           <div class="stat">
@@ -1569,9 +1595,10 @@ function renderBigOpportunityBlock(data, a){
       </div>
 
       <div class="divider"></div>
+      <div class="notice">La recomendación de compra es teórica si no hay saldo disponible. Para ejecutarla hay que liberar o cargar capital.</div>
 
       <div class="grid">
-        <div class="stat"><div class="label">Monto sugerido</div><div class="value mono money-sensitive">${Number.isFinite(p.monto) ? money(p.monto) : 'No calculado'}</div></div>
+        <div class="stat"><div class="label">Monto sugerido</div><div class="value mono money-sensitive">${suggestionMoneyLabel(p.monto, p.capitalReal)}</div><div class="tiny">${p.capitalReal ? 'Con saldo disponible real' : 'Referencia aunque no tengas saldo libre'}</div></div>
         <div class="stat"><div class="label">Porcentaje</div><div class="value mono">${p.pct}%</div></div>
         <div class="stat"><div class="label">Comprar hasta</div><div class="value mono money-sensitive">${Number.isFinite(p.entryMax) ? money(p.entryMax) : '—'}</div></div>
         <div class="stat"><div class="label">Invalidación</div><div class="value mono money-sensitive">${Number.isFinite(p.stop) ? money(p.stop) : '—'}</div></div>
@@ -1736,10 +1763,11 @@ function mcPlan(x, availableARS){
   if(type === 'Acción AR') pct = Math.min(pct, 12);
   if(type === 'CEDEAR/ETF') pct = Math.min(pct, 14);
 
-  const monto = Number.isFinite(availableARS) && availableARS > 0 ? availableARS * pct / 100 : NaN;
+  const cap = suggestionCapitalARS(availableARS);
+  const monto = cap.amount * pct / 100;
 
   return {
-    pct,monto,buyLow,buyHigh,stop,target1,target2,stopPct,targetPct,
+    pct,monto,capitalReal:cap.real,buyLow,buyHigh,stop,target1,target2,stopPct,targetPct,
     plazo: type === 'Bono' ? '15 a 45 días' : '1 a 7 ruedas',
     riesgo: type === 'Bono'
       ? 'Moderado/alto: tasa, dólar y riesgo país.'
@@ -1763,7 +1791,7 @@ function mcBuildAggressiveEngine(data, a){
     ? detectAvailableBalances(data, a.total)
     : {ars:{detected:false,amount:0}, usd:{detected:false,amount:0}};
 
-  const availableARS = balances.ars.detected ? balances.ars.amount : NaN;
+  const availableARS = balances.ars.detected ? balances.ars.amount : 0;
 
   const analyzed = mcUniqueCandidates(a)
     .map(x => {
@@ -1801,8 +1829,9 @@ function renderMaxGainEngine(data, a){
       <div class="card mc-no">
         <div class="eyebrow">Máxima ganancia / corto plazo</div>
         <h2>No operar agresivo ahora</h2>
+        <p class="muted small"><b>Compra teórica siempre activa:</b> si hay señal fuerte, se mostrará aunque no tengas saldo libre.</p>
         <p class="muted small">
-          El motor agresivo no encontró una oportunidad suficientemente fuerte. Para buscar máximas ganancias también hay que evitar operaciones malas.
+          El motor agresivo no encontró una oportunidad suficientemente fuerte. La recomendación aparecerá siempre que haya una señal seria, aunque no tengas saldo disponible.
         </p>
         <div class="mc-mini-grid">
           <div class="stat">
@@ -1856,7 +1885,7 @@ function renderMaxGainEngine(data, a){
       <div class="divider"></div>
 
       <div class="grid">
-        <div class="stat"><div class="label">Monto sugerido</div><div class="value mono money-sensitive">${Number.isFinite(p.monto) ? money(p.monto) : 'No calculado'}</div></div>
+        <div class="stat"><div class="label">Monto sugerido</div><div class="value mono money-sensitive">${suggestionMoneyLabel(p.monto, p.capitalReal)}</div><div class="tiny">${p.capitalReal ? 'Con saldo disponible real' : 'Referencia aunque no tengas saldo libre'}</div></div>
         <div class="stat"><div class="label">Porcentaje</div><div class="value mono">${p.pct}%</div></div>
         <div class="stat"><div class="label">Comprar desde</div><div class="value mono money-sensitive">${Number.isFinite(p.buyLow) ? money(p.buyLow) : '—'}</div></div>
         <div class="stat"><div class="label">Comprar hasta</div><div class="value mono money-sensitive">${Number.isFinite(p.buyHigh) ? money(p.buyHigh) : '—'}</div></div>
@@ -1895,10 +1924,80 @@ function renderMaxGainEngine(data, a){
 }
 
 
+
+function renderOperationalDiagnostic(data, a){
+  const box = $('operationalDiagnostic');
+  if(!box) return;
+
+  const balances = typeof detectAvailableBalances === 'function'
+    ? detectAvailableBalances(data, a.total)
+    : {ars:{detected:false,amount:0}, usd:{detected:false,amount:0}};
+
+  const ars = balances.ars || {detected:false, amount:0};
+  const usd = balances.usd || {detected:false, amount:0};
+  const minARS = 50000;
+
+  if(!ars.detected){
+    box.innerHTML = `
+      <div class="eyebrow">Diagnóstico operativo</div>
+      <h2>No detecté ARS disponible</h2>
+      <p class="muted small">La app no puede calcular compras reales porque IOL no devolvió saldo operable en pesos.</p>
+      <div class="mc-plan"><b>Acción:</b> revisar saldo en IOL o usar la pestaña Cartera para decidir sobre tus tenencias.</div>
+    `;
+    return;
+  }
+
+  if(Number(ars.amount) < minARS){
+    box.innerHTML = `
+      <div class="eyebrow">Diagnóstico operativo</div>
+      <h2>Sin capital libre suficiente</h2>
+      <div class="grid">
+        <div class="stat">
+          <div class="label">ARS disponible para operar</div>
+          <div class="value mono money-sensitive">${money(ars.amount)}</div>
+        </div>
+        <div class="stat">
+          <div class="label">USD disponible</div>
+          <div class="value mono money-sensitive">${usd.detected ? usdMoney(usd.amount) : 'No detectado'}</div>
+        </div>
+      </div>
+      <div class="mc-plan">
+        <p class="muted small"><b>Conclusión:</b> no se puede ejecutar una compra real con ${money(ars.amount)} disponible, pero la app igual mostrará sugerencias teóricas de compra.</p>
+        <p class="muted small"><b>Qué mirar ahora:</b> entrá en <b>Cartera</b> para ver si conviene mantener, reducir o tomar ganancia en tus tenencias.</p>
+        <p class="muted small"><b>Regla:</b> el motor muestra oportunidades aunque no haya saldo; para ejecutarlas hay que liberar o cargar capital.</p>
+      </div>
+    `;
+    applyMoneyVisibility();
+    return;
+  }
+
+  box.innerHTML = `
+    <div class="eyebrow">Diagnóstico operativo</div>
+    <h2>Hay capital operable</h2>
+    <div class="grid">
+      <div class="stat">
+        <div class="label">ARS disponible para operar</div>
+        <div class="value mono money-sensitive">${money(ars.amount)}</div>
+      </div>
+      <div class="stat">
+        <div class="label">USD disponible</div>
+        <div class="value mono money-sensitive">${usd.detected ? usdMoney(usd.amount) : 'No detectado'}</div>
+      </div>
+    </div>
+    <div class="mc-plan">
+      <p class="muted small"><b>Acción:</b> revisar Motor agresivo controlado y Grandes oportunidades.</p>
+      <p class="muted small"><b>Condición:</b> comprar solo si hay entrada, objetivo, stop e invalidación claros.</p>
+    </div>
+  `;
+  applyMoneyVisibility();
+}
+
+
 function render(data,cached=false){
   lastData=data;
   const a=buildAnalysis(data);
   renderMainAvailableCash(data, a.total);
+  renderOperationalDiagnostic(data, a);
   renderPortfolioResults(a);
   renderMaxGainEngine(data, a);
   renderDailyOpportunity(data, a);
@@ -3667,13 +3766,9 @@ function runAssistSimulation(){
   const engine = mcBuildAggressiveEngine(lastData, a);
   const balances = engine.balances;
 
-  if(!balances.ars.detected || !Number.isFinite(balances.ars.amount) || balances.ars.amount <= 0){
-    $('assistDecision').innerHTML = '<div class="warning">No detecté disponible ARS real. La IA asistida no simula compras con dinero no confirmado.</div>';
-    return;
-  }
-
-  const baseCapital = Math.min(c.capital, balances.ars.amount, balances.ars.amount * c.maxDailyPct / 100);
-  const maxPerAsset = Math.min(baseCapital, balances.ars.amount * c.maxPerAssetPct / 100);
+  const simCap = suggestionCapitalARS(balances.ars.detected ? balances.ars.amount : 0);
+  const baseCapital = Math.min(c.capital, simCap.amount, simCap.amount * c.maxDailyPct / 100);
+  const maxPerAsset = Math.min(baseCapital, simCap.amount * c.maxPerAssetPct / 100);
   const maxLossMoney = c.capital * c.maxLossPct / 100;
   const strong = engine.strong.filter(x => allowedByAssist(x.sym, c.allowed)).slice(0, c.maxOps);
 
