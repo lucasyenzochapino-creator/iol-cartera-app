@@ -1,8 +1,8 @@
 {
   "name": "IOL Cartera Pro",
   "short_name": "Cartera Pro",
-  "description": "App segura para ver cartera real de IOL y panel educativo de escenarios.",
-  "start_url": "./index.html",
+  "description": "App segura para ver cartera real de IOL y panel integrado.",
+  "start_url": "./app-integrada.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#0d1117",
@@ -23,10 +23,10 @@
   ],
   "shortcuts": [
     {
-      "name": "Escenarios",
-      "short_name": "Escenarios",
-      "description": "Abrir panel educativo de escenarios por semáforo.",
-      "url": "./escenarios.html",
+      "name": "Panel integrado",
+      "short_name": "Panel",
+      "description": "Abrir el panel integrado de la app.",
+      "url": "./app-integrada.html",
       "icons": [
         {
           "src": "./icon-192.png",
