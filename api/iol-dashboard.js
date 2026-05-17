@@ -1,1 +1,1 @@
-module.exports = require("../iol-dashboard.js");
+module.exports = require("../iol-dashboard-v2.js");
