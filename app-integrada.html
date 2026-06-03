@@ -129,7 +129,7 @@ nav{position:fixed;left:0;right:0;bottom:0;background:#0d1117f0;border-top:1px s
         <div class="tiny" id="totalDailyPct">—</div>
       </div>
       <div class="stat-box">
-        <div class="lbl">P&amp;L total</div>
+        <div class="lbl">P&L total</div>
         <div class="val-sm money" id="totalAccumPnl">—</div>
         <div class="tiny" id="totalAccumPct">—</div>
       </div>
@@ -204,6 +204,8 @@ nav{position:fixed;left:0;right:0;bottom:0;background:#0d1117f0;border-top:1px s
   <div class="notice" style="font-size:12px">Requiere <b>ANTHROPIC_API_KEY</b> en variables de entorno. Las respuestas son orientativas y no constituyen asesoramiento financiero formal.</div>
 </section>
 
+
+
 <!-- ===== CONFIG ===== -->
 <section id="config" class="hide">
   <div class="card">
@@ -240,6 +242,7 @@ nav{position:fixed;left:0;right:0;bottom:0;background:#0d1117f0;border-top:1px s
 
 <script>
 // ── URLs ──────────────────────────────────────────────────────────
+// Use /.netlify/functions/ for both Vercel (rewrites to /api/) and Netlify
 const BASE_FN = '/.netlify/functions';
 const API = BASE_FN + '/iol-dashboard';
 const CONSULTA_API = BASE_FN + '/consulta';
@@ -554,8 +557,8 @@ function holdingCard(h) {
     ${h.currentPrice ? `<div><div class="lbl">Precio</div><div class="val-sm">${Number(h.currentPrice).toLocaleString('es-AR',{maximumFractionDigits:2})}</div></div>` : ''}
     ${h.dailyPct != null ? `<div><div class="lbl">Hoy</div><div class="val-sm">${pctSpan(h.dailyPct,true)}</div></div>` : ''}
     ${dailyPnlARS != null ? `<div><div class="lbl">Hoy ARS</div><div class="val-sm money ${dailyPnlARS>0?'gn':dailyPnlARS<0?'rd':'nt'}">${money(dailyPnlARS)}</div></div>` : ''}
-    ${h.pnlPct != null ? `<div><div class="lbl">P&amp;L total</div><div class="val-sm">${pctSpan(h.pnlPct,true)}</div></div>` : ''}
-    ${h.pnl != null ? `<div><div class="lbl">P&amp;L ARS</div><div class="val-sm money ${Number(h.pnl)>0?'gn':Number(h.pnl)<0?'rd':'nt'}">${money(h.pnl)}</div></div>` : ''}
+    ${h.pnlPct != null ? `<div><div class="lbl">P&L total</div><div class="val-sm">${pctSpan(h.pnlPct,true)}</div></div>` : ''}
+    ${h.pnl != null ? `<div><div class="lbl">P&L ARS</div><div class="val-sm money ${Number(h.pnl)>0?'gn':Number(h.pnl)<0?'rd':'nt'}">${money(h.pnl)}</div></div>` : ''}
     ${h.invalidation ? `<div><div class="lbl">Stop</div><div class="val-sm">${h.invalidation}</div></div>` : ''}
   </div>
   ${h.rsi != null || h.sma20 != null ? `<div style="background:#0a1018;border-radius:8px;padding:7px 9px;margin-top:6px;font-size:11px;color:#6a8fa8;display:flex;flex-wrap:wrap;gap:10px">
@@ -567,7 +570,7 @@ function holdingCard(h) {
 </div>`;
 }
 
-// ── Recomendaciones (Tab Recom.) ────────────────────────────────
+// ── Recomendaciones (Tab Recom.) ────
 function renderRecomendaciones(data) {
   const daily = data.dailyAnalysis || {};
   const newOpps = daily.newOpportunities || data.newOpportunities || [];
@@ -731,7 +734,7 @@ function renderPortfolio(data) {
   <div class="grid3" style="margin-top:8px">
     <div class="stat-box"><div class="lbl">Total</div><div class="val-sm money">${money(totalVal)}</div></div>
     ${hasDailyPnl ? `<div class="stat-box"><div class="lbl">Hoy</div><div class="val-sm ${totalDailyPnl>0?'gn':totalDailyPnl<0?'rd':'nt'} money">${money(totalDailyPnl)}</div><div class="tiny">${pctSpan(dailyPct)}</div></div>` : '<div class="stat-box"><div class="lbl">Hoy</div><div class="val-sm nt">—</div></div>'}
-    ${hasAccumPnl ? `<div class="stat-box"><div class="lbl">P&amp;L total</div><div class="val-sm ${totalAccumPnl>0?'gn':totalAccumPnl<0?'rd':'nt'} money">${money(totalAccumPnl)}</div><div class="tiny">${pctSpan(accumPct)}</div></div>` : '<div class="stat-box"><div class="lbl">P&amp;L total</div><div class="val-sm nt">—</div></div>'}
+    ${hasAccumPnl ? `<div class="stat-box"><div class="lbl">P&L total</div><div class="val-sm ${totalAccumPnl>0?'gn':totalAccumPnl<0?'rd':'nt'} money">${money(totalAccumPnl)}</div><div class="tiny">${pctSpan(accumPct)}</div></div>` : '<div class="stat-box"><div class="lbl">P&L total</div><div class="val-sm nt">—</div></div>'}
   </div>
 </div>`;
 
@@ -755,18 +758,21 @@ function renderPortfolio(data) {
       <div style="margin-top:3px">${actionBadge(h.decision)}</div>
     </div>
   </div>
+
   <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;padding:10px;background:#0a1018;border-radius:10px">
     ${h.currentPrice ? `<div><div class="lbl">Precio ahora</div><div class="val-sm">${Number(h.currentPrice).toLocaleString('es-AR',{maximumFractionDigits:2})}</div></div>` : ''}
     ${h.dailyPct != null ? `<div><div class="lbl">Variación hoy</div><div class="val-sm">${pctSpan(h.dailyPct,true)}</div></div>` : ''}
     ${dailyPnlARS != null ? `<div><div class="lbl">Ganancia/pérd. hoy</div><div class="val-sm money ${dailyPnlARS>0?'gn':dailyPnlARS<0?'rd':'nt'}">${money(dailyPnlARS)}</div></div>` : ''}
-    ${h.pnlPct != null ? `<div><div class="lbl">P&amp;L acumulado</div><div class="val-sm">${pctSpan(h.pnlPct,true)}</div></div>` : ''}
-    ${h.pnl != null ? `<div><div class="lbl">P&amp;L ARS acumulado</div><div class="val-sm money ${Number(h.pnl)>0?'gn':Number(h.pnl)<0?'rd':'nt'}">${money(h.pnl)}</div></div>` : ''}
+    ${h.pnlPct != null ? `<div><div class="lbl">P&L acumulado</div><div class="val-sm">${pctSpan(h.pnlPct,true)}</div></div>` : ''}
+    ${h.pnl != null ? `<div><div class="lbl">P&L ARS acumulado</div><div class="val-sm money ${Number(h.pnl)>0?'gn':Number(h.pnl)<0?'rd':'nt'}">${money(h.pnl)}</div></div>` : ''}
   </div>
+
   <div style="margin-top:8px;font-size:12px;color:#c0d8e8">${esc(h.reason||'')}</div>
   ${human.queHacer ? `<div style="background:#0a1018;border-radius:10px;padding:8px;margin-top:8px;font-size:12px;color:#b0c8e0;line-height:1.5">${esc(human.queHacer)}</div>` : ''}
 </div>`;
   }).join('');
 }
+
 
 // ── Consulta IA ───────────────────────────────────────────────────
 async function consultarIA() {
