@@ -1,4 +1,4 @@
-const CACHE_NAME = "iol-cartera-pro-v8";
+const CACHE_NAME = "iol-cartera-pro-v9";
 const PRECACHE = [
   "./app-integrada.html",
   "./manifest.json",
@@ -32,11 +32,13 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const url = event.request.url;
 
+  // API calls: always network, never cache
   if (isApiCall(url)) {
     event.respondWith(fetch(event.request));
     return;
   }
 
+  // Navigations: network-first, fall back to cached app-integrada.html
   if (event.request.mode === "navigate") {
     event.respondWith(
       fetch(event.request, { cache: "no-store" })
@@ -50,6 +52,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // Static assets: network-first with cache fallback
   event.respondWith(
     fetch(event.request)
       .then((response) => {
