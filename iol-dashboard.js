@@ -68,31 +68,47 @@ async function getIolToken(username, password) {
   body.set("password", password);
   body.set("grant_type", "password");
 
-  const response = await fetch(`${IOL_BASE}/token`, {
-    method: "POST",
-    headers: {
-      "content-type": "application/x-www-form-urlencoded",
-      "accept": "application/json"
-    },
-    body
-  });
-
-  const data = await parseJsonResponse(response, "Token IOL");
-  const token = data.access_token || data.accessToken || data.token;
-  if (!token) throw new Error("IOL no devolvió access_token.");
-  return token;
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 10000);
+  try {
+    const response = await fetch(`${IOL_BASE}/token`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+        "accept": "application/json"
+      },
+      body,
+      signal: ctrl.signal
+    });
+    clearTimeout(t);
+    const data = await parseJsonResponse(response, "Token IOL");
+    const token = data.access_token || data.accessToken || data.token;
+    if (!token) throw new Error("IOL no devolvió access_token.");
+    return token;
+  } catch (e) {
+    clearTimeout(t);
+    throw e;
+  }
 }
 
 async function iolGet(path, token, label) {
-  const response = await fetch(`${IOL_BASE}${path}`, {
-    method: "GET",
-    headers: {
-      "authorization": `Bearer ${token}`,
-      "accept": "application/json"
-    }
-  });
-
-  return parseJsonResponse(response, label || path);
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    const response = await fetch(`${IOL_BASE}${path}`, {
+      method: "GET",
+      headers: {
+        "authorization": `Bearer ${token}`,
+        "accept": "application/json"
+      },
+      signal: ctrl.signal
+    });
+    clearTimeout(t);
+    return parseJsonResponse(response, label || path);
+  } catch (e) {
+    clearTimeout(t);
+    throw e;
+  }
 }
 
 function findSymbols(obj, depth = 0, out = new Set()) {
@@ -840,7 +856,7 @@ module.exports = async function handler(req, res) {
       ...holdings.map(h => h.symbol),
       ...Array.from(findSymbols(portfolio)),
       ...buildWatchlist()
-    ]).slice(0, 60);
+    ]).slice(0, 45);
 
     const quotes = await Promise.all(symbols.map(sym => getQuoteSafe(sym, token)));
 
