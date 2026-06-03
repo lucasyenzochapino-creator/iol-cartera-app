@@ -875,6 +875,29 @@ setInterval(() => {
   if (getPin()) refreshNow();
 }, 3 * 60 * 1000);
 
+// ── Service Worker: registro y auto-reload al actualizar ──────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+  navigator.serviceWorker.addEventListener('message', e => {
+    if (e.data?.type === 'SW_UPDATED') {
+      // Nueva versión disponible — recargar para aplicar cambios
+      window.location.reload();
+    }
+  });
+  // También detectar nuevo SW en espera y activarlo inmediatamente
+  navigator.serviceWorker.ready.then(reg => {
+    reg.addEventListener('updatefound', () => {
+      const newSW = reg.installing;
+      if (!newSW) return;
+      newSW.addEventListener('statechange', () => {
+        if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+          newSW.postMessage({ type: 'SKIP_WAITING' });
+        }
+      });
+    });
+  });
+}
+
 // ── Init ──────────────────────────────────────────────────────────
 applyMoney();
 (function init() {

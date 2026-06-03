@@ -1,4 +1,4 @@
-const CACHE_NAME = "iol-cartera-pro-v10";
+const CACHE_NAME = "iol-cartera-pro-v11";
 const PRECACHE = [
   "./app-integrada.html",
   "./manifest.json",
@@ -25,8 +25,19 @@ self.addEventListener("activate", (event) => {
       Promise.all(keys.map((key) => {
         if (key !== CACHE_NAME) return caches.delete(key);
       }))
-    ).then(() => self.clients.claim())
+    )
+    .then(() => self.clients.claim())
+    .then(() => {
+      // Notificar a todos los clientes para que recarguen con la nueva versión
+      return self.clients.matchAll({ includeUncontrolled: true, type: 'window' }).then(clients => {
+        clients.forEach(client => client.postMessage({ type: 'SW_UPDATED', version: CACHE_NAME }));
+      });
+    })
   );
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener("fetch", (event) => {
