@@ -69,7 +69,7 @@ async function getIolToken(username, password) {
   body.set("grant_type", "password");
 
   const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 10000);
+  const t = setTimeout(() => ctrl.abort(), 6000);
   try {
     const response = await fetch(`${IOL_BASE}/token`, {
       method: "POST",
@@ -93,7 +93,7 @@ async function getIolToken(username, password) {
 
 async function iolGet(path, token, label) {
   const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 8000);
+  const t = setTimeout(() => ctrl.abort(), 5000);
   try {
     const response = await fetch(`${IOL_BASE}${path}`, {
       method: "GET",
@@ -285,22 +285,12 @@ function quoteFromIol(symbol, data) {
 }
 
 async function getQuoteSafe(symbol, token) {
-  const mercados = ["bCBA", "bcba", "BCBA"];
-
-  for (const mercado of mercados) {
-    try {
-      const data = await iolGet(`/api/v2/${mercado}/Titulos/${encodeURIComponent(symbol)}/Cotizacion`, token, `Cotización ${symbol}`);
-      return quoteFromIol(symbol, data);
-    } catch (e) {
-      // probar siguiente variante
-    }
+  try {
+    const data = await iolGet(`/api/v2/bCBA/Titulos/${encodeURIComponent(symbol)}/Cotizacion`, token, `Cotización ${symbol}`);
+    return quoteFromIol(symbol, data);
+  } catch {
+    return { ok: false, symbol, error: "No pude obtener cotización" };
   }
-
-  return {
-    ok: false,
-    symbol,
-    error: "No pude obtener cotización"
-  };
 }
 
 // ── Price History & Technical Indicators ─────────────────────────────────────
@@ -525,7 +515,6 @@ function scoreQuote(quote) {
     };
   }
 
-  // Base score reflects the safety floor of each asset class
   const basePts = {
     lecap: 68, bono_cer: 62, bono: 60,
     cedear_etf: 65, cedear_defensivo: 63,
@@ -539,7 +528,6 @@ function scoreQuote(quote) {
   const pct = quote.pct;
 
   if (pct !== null && Number.isFinite(pct)) {
-    // Momentum scoring: optimal zone is 0.3%-2% (controlled positive move)
     if (pct >= 0.3 && pct <= 2) {
       score += 14; reasons.push("momentum controlado");
     } else if (pct > 2 && pct <= 4) {
@@ -563,12 +551,10 @@ function scoreQuote(quote) {
     score -= 5; reasons.push("sin variación diaria disponible");
   }
 
-  // Volume bonus
   if (quote.volume && Number.isFinite(quote.volume) && quote.volume > 0) {
     score += 3; reasons.push("volumen presente");
   }
 
-  // Asset-class adjustments
   if (assetClass === "cedear_etf") {
     score += 7; riskScore -= 10; reasons.push("diversificación amplia");
   } else if (assetClass === "cedear_defensivo") {
@@ -579,7 +565,6 @@ function scoreQuote(quote) {
     score += 8; riskScore -= 14; reasons.push("instrumento de corto plazo en pesos");
   }
 
-  // Liquidity bonus
   const liq = liquidityScore(symbol, assetClass);
   if (liq >= 20) { score += 7; reasons.push("alta liquidez"); }
   else if (liq >= 14) { score += 3; }
@@ -607,9 +592,6 @@ function roundPrice(value) {
   return Math.round(value * 100) / 100;
 }
 
-// IOL commission rates (round-trip: buy + sell)
-// Acciones/CEDEARs: ~0.6% per leg + bursátil + CNV ≈ 1.5% total
-// Bonos: ~0.3% per leg ≈ 0.7% total
 function commissionRoundTrip(assetClass) {
   if (assetClass === "bono" || assetClass === "bono_cer" || assetClass === "lecap") return 0.007;
   return 0.015;
@@ -632,8 +614,6 @@ function buildTradePlan(scored, availableARS) {
   if (scored.assetClass === "cedear_etf" || scored.assetClass === "cedear_defensivo") allocationPct = Math.min(allocationPct, 0.30);
   if (isBono && scored.riskColor !== "Rojo") allocationPct = Math.min(allocationPct, 0.30);
 
-  // Solo calcular monto si el saldo disponible parece razonable (< 50M ARS)
-  // Evita sugerir montos absurdos cuando IOL devuelve el total del portfolio como "disponible"
   const cashReasonable = availableARS > 100 && availableARS < 50_000_000;
   const amount = cashReasonable ? Math.round(availableARS * allocationPct) : null;
 
@@ -692,7 +672,7 @@ function extractAvailableCash(account) {
 function analyzeHolding(holding, scored) {
   const pct = scored.quote?.pct;
   const pnlPct = holding.pnlPct;
-  const commRt = commissionRoundTrip(scored.assetClass) * 100; // as pct
+  const commRt = commissionRoundTrip(scored.assetClass) * 100;
   let decision = "Mantener y controlar";
   let priority = "media";
   let reason = scored.thesis;
@@ -710,12 +690,10 @@ function analyzeHolding(holding, scored) {
     priority = "alta";
     reason = `Caída diaria del ${pct.toFixed(1)}%. No promediar a la baja sin señal de recuperación clara.`;
   } else if (pnlPct !== null && pnlPct > 0 && pnlPct < commRt) {
-    // Ganancia menor a la comisión de salida → no vale vender
     decision = "Mantener · ganancia menor a comisión IOL";
     priority = "baja";
     reason = `P&L de +${pnlPct.toFixed(1)}% no cubre la comisión de venta (~${(commRt/2).toFixed(1)}%). Mejor esperar más movimiento antes de salir.`;
   } else if (pnlPct !== null && pnlPct < 0 && Math.abs(pnlPct) < commRt) {
-    // Pérdida pequeña + comisión haría el daño mayor
     decision = "Mantener · salir ahora suma comisión";
     priority = "baja";
     reason = `Pérdida de ${pnlPct.toFixed(1)}%. Vender ahora agregaría la comisión IOL (~${(commRt/2).toFixed(1)}%) al costo. Si no hay catalizador negativo, esperá recuperación.`;
@@ -858,16 +836,17 @@ module.exports = async function handler(req, res) {
       ...buildWatchlist()
     ]).slice(0, 45);
 
-    const quotes = await Promise.all(symbols.map(sym => getQuoteSafe(sym, token)));
-
-    // Fetch price history for held symbols only — used for RSI and moving averages
+    // Fetch quotes and price history in parallel to save time
     const historyMap = new Map();
-    await Promise.allSettled(holdings.map(async h => {
-      try {
-        const hist = await fetchPriceHistory(h.symbol, token);
-        if (hist.length) historyMap.set(h.symbol, hist);
-      } catch {}
-    }));
+    const [quotes] = await Promise.all([
+      Promise.all(symbols.map(sym => getQuoteSafe(sym, token))),
+      Promise.allSettled(holdings.map(async h => {
+        try {
+          const hist = await fetchPriceHistory(h.symbol, token);
+          if (hist.length) historyMap.set(h.symbol, hist);
+        } catch {}
+      }))
+    ]);
 
     const dailyAnalysis = buildDailyAnalysis(portfolio, account, quotes, historyMap);
 
