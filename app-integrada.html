@@ -26,19 +26,16 @@ h1{font-size:16px;margin:0}
 .input{width:100%;padding:12px;border-radius:12px;background:#1f2937;border:1px solid var(--line);color:var(--txt);font-size:14px}
 .textarea{width:100%;padding:12px;border-radius:12px;background:#1f2937;border:1px solid var(--line);color:var(--txt);font-size:14px;resize:vertical;min-height:80px;font-family:inherit}
 .section-title{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.12em;color:var(--accent);margin:18px 0 8px;padding-left:2px}
-/* Action badges */
 .badge{display:inline-flex;align-items:center;gap:4px;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}
 .badge-buy{background:#56d36420;color:#56d364;border:1px solid #56d36450}
 .badge-hold{background:#ffd33d20;color:#ffd33d;border:1px solid #ffd33d50}
 .badge-sell{background:#ff7b7220;color:#ff7b72;border:1px solid #ff7b7250}
 .badge-wait{background:#79c0ff18;color:#79c0ff;border:1px solid #79c0ff40}
-/* Risk pills */
 .pill{display:inline-block;border-radius:999px;padding:3px 8px;font-size:10px;font-weight:900;text-transform:uppercase}
 .pv{background:#56d36418;color:#56d364;border:1px solid #56d36440}
 .pa{background:#ffd33d18;color:#ffd33d;border:1px solid #ffd33d40}
 .po{background:#f08c3b18;color:#f08c3b;border:1px solid #f08c3b40}
 .pr{background:#ff7b7218;color:#ff7b72;border:1px solid #ff7b7240}
-/* Rec cards */
 .rec-card{background:#111820;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:8px}
 .rec-card.v{border-color:#56d36440}
 .rec-card.a{border-color:#ffd33d40}
@@ -46,35 +43,28 @@ h1{font-size:16px;margin:0}
 .rec-card.r{border-color:#ff7b7240}
 .symbol{font-size:20px;font-weight:950;letter-spacing:-.02em}
 .price-big{font-size:22px;font-weight:950}
-/* Holding cards */
 .holding-card{background:#111820;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:8px}
 .holding-card.v{border-left:3px solid #56d364}
 .holding-card.a{border-left:3px solid #ffd33d}
 .holding-card.o{border-left:3px solid #f08c3b}
 .holding-card.r{border-left:3px solid #ff7b72}
-/* PnL colors */
 .gn{color:var(--green)}
 .rd{color:var(--red)}
 .nt{color:var(--muted)}
-/* News */
 .news-item{border-bottom:1px solid var(--line);padding:12px 0}
 .news-item:last-child{border-bottom:none}
 .news-source{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.1em}
 .news-ar{color:#79c0ff}
 .news-global{color:#f5c97b}
-/* Market badge */
 .mkt{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 10px;font-size:11px;font-weight:900;border:1px solid}
 .mkt-open{background:#56d36415;color:#56d364;border-color:#56d36440}
 .mkt-closed{background:#ffd33d15;color:#ffd33d;border-color:#ffd33d40}
 .mkt-wknd{background:#79c0ff15;color:#79c0ff;border-color:#79c0ff40}
-/* Macro strip */
 .macro-strip{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
 .macro-pill{background:#1a2030;border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:11px;font-weight:700}
 .macro-pill .ml{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);display:block;margin-bottom:2px}
-/* Health bar */
 .health-bar{height:6px;border-radius:999px;background:var(--line);overflow:hidden;margin-top:4px}
 .health-fill{height:100%;border-radius:999px;transition:width .4s}
-/* Misc */
 .row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .tiny{font-size:12px;color:var(--muted)}
 .notice{background:#79c0ff15;border:1px solid #79c0ff35;border-radius:12px;padding:12px;color:#c0d8f0;font-size:13px;margin-bottom:10px}
@@ -87,7 +77,31 @@ nav{position:fixed;left:0;right:0;bottom:0;background:#0d1117f0;border-top:1px s
 .tab.active{color:var(--accent);background:#f5c97b15}
 .hide{display:none!important}
 .divider{height:1px;background:var(--line);margin:10px 0}
-@media(max-width:640px){.grid2,.grid3{grid-template-columns:1fr}}
+.opp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.opp-card{background:#111820;border:1px solid var(--line);border-radius:14px;padding:11px 12px;display:flex;flex-direction:column;gap:5px}
+.opp-card.v{border-top:3px solid #56d364}
+.opp-card.a{border-top:3px solid #ffd33d}
+.opp-card.o{border-top:3px solid #f08c3b}
+.opp-card.r{border-top:3px solid #ff7b72}
+.opp-ticker{font-size:19px;font-weight:950;letter-spacing:-.02em;line-height:1}
+.opp-price{font-size:15px;font-weight:900;color:#e8f0f8}
+.opp-pct-up{color:#56d364;font-size:12px;font-weight:700}
+.opp-pct-dn{color:#ff7b72;font-size:12px;font-weight:700}
+.opp-pct-nt{color:#8b949e;font-size:12px;font-weight:700}
+.opp-action{display:inline-block;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+.opp-action.buy{background:#56d36425;color:#56d364;border:1px solid #56d36440}
+.opp-action.hold{background:#ffd33d20;color:#ffd33d;border:1px solid #ffd33d40}
+.opp-action.wait{background:#79c0ff18;color:#79c0ff;border:1px solid #79c0ff30}
+.opp-targets{font-size:10px;color:#7a9ab8;line-height:1.8}
+.opp-targets b{color:#b0c8e0}
+.opp-thesis{font-size:10px;color:#6a8aaa;line-height:1.4;margin-top:2px}
+.opp-comm{font-size:9px;color:#4a6a7a;margin-top:3px;padding-top:4px;border-top:1px solid #1e2d3d}
+.h-card{background:#111820;border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:8px}
+.h-card.v{border-left:3px solid #56d364}
+.h-card.a{border-left:3px solid #ffd33d}
+.h-card.o{border-left:3px solid #f08c3b}
+.h-card.r{border-left:3px solid #ff7b72}
+@media(max-width:640px){.grid2,.grid3{grid-template-columns:1fr}.opp-grid{grid-template-columns:1fr 1fr}}
 </style></head>
 <body>
 <header><div class="head">
@@ -100,7 +114,6 @@ nav{position:fixed;left:0;right:0;bottom:0;background:#0d1117f0;border-top:1px s
 
 <main class="wrap">
 
-<!-- ===== HOY ===== -->
 <section id="hoy">
   <div id="setup" class="card hide">
     <div class="lbl">Conectar con IOL</div>
@@ -112,7 +125,6 @@ nav{position:fixed;left:0;right:0;bottom:0;background:#0d1117f0;border-top:1px s
     </div>
   </div>
 
-  <!-- Portfolio summary -->
   <div class="hero-card card">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:10px">
       <div>
@@ -129,7 +141,7 @@ nav{position:fixed;left:0;right:0;bottom:0;background:#0d1117f0;border-top:1px s
         <div class="tiny" id="totalDailyPct">—</div>
       </div>
       <div class="stat-box">
-        <div class="lbl">P&L total</div>
+        <div class="lbl">P&amp;L total</div>
         <div class="val-sm money" id="totalAccumPnl">—</div>
         <div class="tiny" id="totalAccumPct">—</div>
       </div>
@@ -142,26 +154,21 @@ nav{position:fixed;left:0;right:0;bottom:0;background:#0d1117f0;border-top:1px s
 
   <button class="btn btn-secondary" style="width:100%;margin-bottom:12px;font-size:12px" onclick="toggleMoney()">Ocultar / mostrar montos</button>
 
-  <!-- Macro indicators -->
   <div id="macroSection" class="hide" style="margin-bottom:4px">
     <div id="macroStrip" class="macro-strip"></div>
   </div>
 
-  <!-- Portfolio health -->
   <div id="portfolioHealthCard" class="hide card" style="margin-bottom:10px"></div>
 
-  <!-- Recomendación principal -->
   <div class="card" id="mainRecCard">
     <div class="lbl">Recomendación del día</div>
     <div style="font-size:17px;font-weight:900;margin:6px 0 4px" id="mainTitle">Actualizá para ver análisis</div>
-    <div class="tiny" id="mainText">Conectá tu cuenta IOL para ver recomendaciones personalizadas.</div>
+    <div class="tiny" id="mainText">Conecta tu cuenta IOL para ver recomendaciones personalizadas.</div>
   </div>
 
-  <!-- Holding analysis -->
   <div class="section-title">Tus posiciones</div>
   <div id="lectura"></div>
 
-  <!-- Oportunidades del día -->
   <div id="oppsTitle" style="display:none;margin:16px 0 8px">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
       <div style="display:flex;align-items:center;gap:8px">
@@ -175,7 +182,6 @@ nav{position:fixed;left:0;right:0;bottom:0;background:#0d1117f0;border-top:1px s
   <div id="oppsInline"></div>
 </section>
 
-<!-- ===== RECOMENDACIONES ===== -->
 <section id="recom" class="hide">
   <div style="margin-bottom:12px">
     <div class="lbl" style="font-size:11px">Solo instrumentos con señal positiva · validá precio y volumen en IOL antes de operar</div>
@@ -183,19 +189,16 @@ nav{position:fixed;left:0;right:0;bottom:0;background:#0d1117f0;border-top:1px s
   <div id="recomendaciones"></div>
 </section>
 
-<!-- ===== CARTERA ===== -->
 <section id="cartera" class="hide">
   <div id="portfolioPnlSummary" style="margin-bottom:12px"></div>
   <div id="portfolio"></div>
 </section>
 
-<!-- ===== TÉCNICO ===== -->
 <section id="raw" class="hide">
   <div class="section-title">Respuesta cruda de la API</div>
   <pre id="rawJson">Sin datos.</pre>
 </section>
 
-<!-- ===== CONSULTA IA ===== -->
 <section id="consulta" class="hide">
   <div class="card">
     <div class="lbl">Asesor IA · Powered by Claude</div>
@@ -207,9 +210,6 @@ nav{position:fixed;left:0;right:0;bottom:0;background:#0d1117f0;border-top:1px s
   <div class="notice" style="font-size:12px">Requiere <b>ANTHROPIC_API_KEY</b> en variables de entorno. Las respuestas son orientativas y no constituyen asesoramiento financiero formal.</div>
 </section>
 
-
-
-<!-- ===== CONFIG ===== -->
 <section id="config" class="hide">
   <div class="card">
     <div class="lbl">PIN de la app</div>
@@ -229,9 +229,9 @@ nav{position:fixed;left:0;right:0;bottom:0;background:#0d1117f0;border-top:1px s
     <div id="notifStatus" class="tiny" style="margin-top:6px"></div>
   </div>
 
-  <div class="notice" style="font-size:12px;margin-top:8px">📰 <b>Noticias + Macro integradas:</b> Titulares de Ámbito, WSJ, Cronista y datos del dólar (Blue, CCL, MEP) ya están en el análisis. El asesor IA los considera en cada respuesta.</div>
+  <div class="notice" style="font-size:12px;margin-top:8px">📰 <b>Noticias + Macro integradas:</b> Titulares de Ámbito, WSJ, Cronista y datos del dólar (Blue, CCL, MEP) ya están en el análisis.</div>
   <div class="notice" style="font-size:12px;margin-top:8px">💰 <b>Comisiones IOL:</b> Recomendaciones descuentan ~1.5% acciones / ~0.7% bonos. Solo se sugiere operar si el potencial supera ese costo.</div>
-  <div class="notice" style="font-size:12px;margin-top:8px">📊 <b>Indicadores técnicos:</b> RSI(14) y medias móviles MA20/MA50 se calculan automáticamente para tus tenencias y ajustan el score.</div>
+  <div class="notice" style="font-size:12px;margin-top:8px">📊 <b>Indicadores técnicos:</b> RSI(14) y medias móviles MA20/MA50 se calculan automáticamente para tus tenencias.</div>
 </section>
 
 </main>
@@ -244,17 +244,13 @@ nav{position:fixed;left:0;right:0;bottom:0;background:#0d1117f0;border-top:1px s
 </nav>
 
 <script>
-// ── URLs ──────────────────────────────────────────────────────────
-// Use /.netlify/functions/ for both Vercel (rewrites to /api/) and Netlify
 const BASE_FN = '/.netlify/functions';
 const API = BASE_FN + '/iol-dashboard';
 const CONSULTA_API = BASE_FN + '/consulta';
 const NOTICIAS_API = BASE_FN + '/noticias';
 
-// ── State ─────────────────────────────────────────────────────────
 let lastData = null;
 
-// ── Utils ─────────────────────────────────────────────────────────
 function $(id) { return document.getElementById(id); }
 function esc(s) { return String(s ?? '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 
@@ -283,15 +279,9 @@ function pillCls(c) { return c==='Verde'?'pv':c==='Amarillo'?'pa':c==='Naranja'?
 
 function actionBadge(action) {
   const a = String(action || '').toLowerCase();
-  if (a.includes('comprar') || a.startsWith('buy')) {
-    return '<span class="badge badge-buy">▲ Comprar</span>';
-  }
-  if (a.includes('vender') || a.includes('reducir') || a.includes('salir')) {
-    return '<span class="badge badge-sell">▼ Reducir</span>';
-  }
-  if (a.includes('mantener') || a.includes('seguimiento')) {
-    return '<span class="badge badge-hold">● Mantener</span>';
-  }
+  if (a.includes('comprar') || a.startsWith('buy')) return '<span class="badge badge-buy">▲ Comprar</span>';
+  if (a.includes('vender') || a.includes('reducir') || a.includes('salir')) return '<span class="badge badge-sell">▼ Reducir</span>';
+  if (a.includes('mantener') || a.includes('seguimiento')) return '<span class="badge badge-hold">● Mantener</span>';
   return '<span class="badge badge-wait">⏸ Esperar</span>';
 }
 
@@ -311,7 +301,6 @@ function categoryOf(ac) {
   return 'Otros';
 }
 
-// ── Push Notifications ───────────────────────────────────────────
 let alertedSymbols = new Set();
 
 function requestNotifications() {
@@ -349,7 +338,6 @@ function checkAlerts(data) {
     }
   });
 
-  // Alertas de compra: score >= 65 y riesgo Verde o Amarillo
   const buyOpps = opps.filter(o => o.score >= 65 && (o.riskColor === 'Verde' || o.riskColor === 'Amarillo'));
   buyOpps.slice(0, 3).forEach(o => {
     const key = `${o.symbol}-opp-${alertKey}`;
@@ -373,21 +361,18 @@ function initNotifBtn() {
   }
 }
 
-// ── Macro data display ────────────────────────────────────────────
 function renderMacro(data) {
   const macro = data.macro || data.dailyAnalysis?.macro;
   const sec = $('macroSection');
   const strip = $('macroStrip');
   if (!macro || !strip) { if (sec) sec.classList.add('hide'); return; }
   sec.classList.remove('hide');
-
   const fmtARS = v => v != null ? '$' + Number(v).toLocaleString('es-AR', {maximumFractionDigits:0}) : '—';
   const blue = macro.blue?.venta;
   const brecha = macro.brechaBlueOficial;
   const ccl = macro.ccl?.venta;
   const mep = macro.mep?.venta;
   const brechaColor = brecha == null ? '' : brecha > 50 ? 'rd' : brecha > 20 ? '' : 'gn';
-
   strip.innerHTML = [
     blue != null ? `<div class="macro-pill"><span class="ml">Dólar Blue</span><span>${fmtARS(blue)}</span></div>` : '',
     brecha != null ? `<div class="macro-pill"><span class="ml">Brecha c/Oficial</span><span class="${brechaColor}">${brecha > 0 ? '+' : ''}${brecha}%</span></div>` : '',
@@ -396,37 +381,27 @@ function renderMacro(data) {
   ].filter(Boolean).join('');
 }
 
-// ── Portfolio Health Card ─────────────────────────────────────────
 function renderPortfolioHealth(data) {
   const ph = data.dailyAnalysis?.portfolioHealth || data.portfolioHealth;
   const card = $('portfolioHealthCard');
   if (!card) return;
   if (!ph) { card.classList.add('hide'); return; }
   card.classList.remove('hide');
-
   const scoreColor = ph.diversScore >= 70 ? '#56d364' : ph.diversScore >= 50 ? '#ffd33d' : '#ff7b72';
   const warnings = ph.warnings || [];
-
   card.innerHTML = `<div class="lbl">Salud de cartera</div>
 <div style="display:flex;align-items:center;gap:10px;margin:8px 0">
   <div style="flex:1">
     <div class="health-bar"><div class="health-fill" style="width:${ph.diversScore}%;background:${scoreColor}"></div></div>
     <div class="tiny" style="margin-top:3px">Diversificación: <b style="color:${scoreColor}">${ph.diversScore}/100</b></div>
   </div>
-  <div class="stat-box" style="min-width:70px;text-align:center">
-    <div class="lbl">ARS</div><div class="val-sm">${ph.arsPct}%</div>
-  </div>
-  <div class="stat-box" style="min-width:70px;text-align:center">
-    <div class="lbl">USD</div><div class="val-sm">${ph.usdPct}%</div>
-  </div>
-  <div class="stat-box" style="min-width:70px;text-align:center">
-    <div class="lbl">Activos</div><div class="val-sm">${ph.numPositions}</div>
-  </div>
+  <div class="stat-box" style="min-width:70px;text-align:center"><div class="lbl">ARS</div><div class="val-sm">${ph.arsPct}%</div></div>
+  <div class="stat-box" style="min-width:70px;text-align:center"><div class="lbl">USD</div><div class="val-sm">${ph.usdPct}%</div></div>
+  <div class="stat-box" style="min-width:70px;text-align:center"><div class="lbl">Activos</div><div class="val-sm">${ph.numPositions}</div></div>
 </div>
 ${warnings.map(w => `<div class="warning" style="font-size:12px;margin-top:6px">⚠ ${esc(w)}</div>`).join('')}`;
 }
 
-// ── PIN ───────────────────────────────────────────────────────────
 function getPin() { return localStorage.getItem('APP_PIN') || ''; }
 function savePin() { const v = $('pin').value.trim(); if (v) { localStorage.setItem('APP_PIN',v); refreshNow(); } }
 function savePin2() { const v = $('pin2').value.trim(); if (v) { localStorage.setItem('APP_PIN',v); refreshNow(); } }
@@ -434,21 +409,15 @@ function clearLocal() { localStorage.clear(); location.reload(); }
 function toggleMoney() { localStorage.setItem('HIDE_MONEY', localStorage.getItem('HIDE_MONEY')==='1'?'0':'1'); applyMoney(); }
 function applyMoney() { document.body.classList.toggle('money-hidden', localStorage.getItem('HIDE_MONEY')==='1'); }
 
-// ── Navigation ───────────────────────────────────────────────────
 function show(id, b) {
   ['hoy','recom','cartera','consulta','config','raw'].forEach(x => $(x) && $(x).classList.add('hide'));
   $(id) && $(id).classList.remove('hide');
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   b.classList.add('active');
   if (id === 'config') { $('pin2').value = getPin(); }
-  if (id === 'cartera' && lastData) {
-    renderPortfolio(lastData);
-    renderPortfolioHealth(lastData);
-    renderMacro(lastData);
-  }
+  if (id === 'cartera' && lastData) { renderPortfolio(lastData); renderPortfolioHealth(lastData); renderMacro(lastData); }
 }
 
-// ── Main render ──────────────────────────────────────────────────
 function render(data, cached) {
   lastData = data;
   const daily = data.dailyAnalysis || {};
@@ -460,69 +429,52 @@ function render(data, cached) {
 
   $('status').textContent = cached ? '📦 Dato guardado · Sin conexión' : '✓ IOL · ' + new Date().toLocaleTimeString('es-AR');
 
-  // Market badge
   if (ms) {
     const cls = ms.isOpen ? 'mkt-open' : (ms.isWeekday ? 'mkt-closed' : 'mkt-wknd');
     const dot = ms.isOpen ? '🟢' : (ms.isWeekday ? '🟡' : '🔵');
     $('marketBadge').innerHTML = `<span class="mkt ${cls}">${dot} ${esc(ms.status)} · ${esc(ms.argTime)}</span>`;
   }
 
-  // Portfolio totals
   const totalValue = holdings.reduce((s, h) => s + (Number(h.valueARS) || 0), 0);
   $('total').textContent = totalValue > 0 ? money(totalValue) : '—';
   $('mainSub').textContent = daily.generatedAt ? 'Actualizado: ' + new Date(daily.generatedAt).toLocaleString('es-AR') : (cached ? 'Último dato guardado' : '');
 
-  // P&L calculations
   const holdingAnalysis = daily.holdingAnalysis || data.holdingsAnalysis || [];
   let dailyPnlARS = 0, dailyPnlValid = false;
   let accumPnl = 0, accumPnlValid = false;
 
   holdingAnalysis.forEach(h => {
-    if (h.valueARS != null && h.dailyPct != null) {
-      dailyPnlARS += Number(h.valueARS) * Number(h.dailyPct) / 100;
-      dailyPnlValid = true;
-    }
+    if (h.valueARS != null && h.dailyPct != null) { dailyPnlARS += Number(h.valueARS) * Number(h.dailyPct) / 100; dailyPnlValid = true; }
     if (h.pnl != null) { accumPnl += Number(h.pnl); accumPnlValid = true; }
   });
 
   const dailyPct = totalValue > 0 && dailyPnlValid ? dailyPnlARS / totalValue * 100 : null;
   const accumPct = totalValue > 0 && accumPnlValid ? accumPnl / totalValue * 100 : null;
 
-  // Display P&L
   if (dailyPnlValid) {
     const cls = dailyPnlARS > 10 ? 'gn' : dailyPnlARS < -10 ? 'rd' : 'nt';
     $('totalDailyPnl').innerHTML = `<span class="${cls} money">${money(dailyPnlARS)}</span>`;
     $('totalDailyPct').innerHTML = pctSpan(dailyPct);
-  } else {
-    $('totalDailyPnl').textContent = '—'; $('totalDailyPct').textContent = '—';
-  }
+  } else { $('totalDailyPnl').textContent = '—'; $('totalDailyPct').textContent = '—'; }
+
   if (accumPnlValid) {
     $('totalAccumPnl').innerHTML = `<span class="${accumPnl > 0 ? 'gn' : accumPnl < 0 ? 'rd' : 'nt'}">${money(accumPnl)}</span>`;
     $('totalAccumPct').innerHTML = pctSpan(accumPct);
-  } else {
-    $('totalAccumPnl').textContent = '—'; $('totalAccumPct').textContent = '—';
-  }
+  } else { $('totalAccumPnl').textContent = '—'; $('totalAccumPct').textContent = '—'; }
 
   $('arsVal').textContent = cash.ars > 0 ? money(cash.ars) : '—';
-
-  // Main recommendation
   $('mainTitle').textContent = daily.mainRecommendation || data.mainRecommendation || '—';
   $('mainText').textContent = daily.summary || 'Presioná Actualizar para ver el análisis completo.';
-
-  // Raw JSON
   $('rawJson').textContent = JSON.stringify(data, null, 2);
 
-  // Render holding analysis
   renderLectura(holdingAnalysis);
   renderOppsInline(data);
   renderMacro(data);
   renderPortfolioHealth(data);
   checkAlerts(data);
-
   applyMoney();
 }
 
-// ── Holding analysis (Tab Hoy) ────────────────────────────────────
 function renderLectura(items) {
   if (!items.length) {
     $('lectura').innerHTML = '<div class="notice">No se detectaron tenencias. Verificá las credenciales en Config.</div>';
@@ -547,17 +499,10 @@ function holdingCard(h) {
   const pcl = pillCls(h.riskColor);
   const human = h.human || {};
   const dailyPnlARS = (h.valueARS != null && h.dailyPct != null) ? Number(h.valueARS) * Number(h.dailyPct) / 100 : null;
-
   return `<div class="rec-card ${cls}">
   <div class="row">
-    <div>
-      <span class="symbol">${esc(h.symbol)}</span>
-      <span class="tiny" style="margin-left:6px">${assetLabel(h.assetClass)}</span>
-    </div>
-    <div style="text-align:right">
-      ${actionBadge(h.decision)}
-      <div style="margin-top:4px"><span class="pill ${pcl}">${esc(h.riskColor||'—')}</span></div>
-    </div>
+    <div><span class="symbol">${esc(h.symbol)}</span><span class="tiny" style="margin-left:6px">${assetLabel(h.assetClass)}</span></div>
+    <div style="text-align:right">${actionBadge(h.decision)}<div style="margin-top:4px"><span class="pill ${pcl}">${esc(h.riskColor||'—')}</span></div></div>
   </div>
   <div class="tiny" style="margin-top:8px;color:var(--txt)">${esc(h.decision||'—')}</div>
   <div class="tiny" style="margin-top:3px">${esc(h.reason||'')}</div>
@@ -566,8 +511,8 @@ function holdingCard(h) {
     ${h.currentPrice ? `<div><div class="lbl">Precio</div><div class="val-sm">${Number(h.currentPrice).toLocaleString('es-AR',{maximumFractionDigits:2})}</div></div>` : ''}
     ${h.dailyPct != null ? `<div><div class="lbl">Hoy</div><div class="val-sm">${pctSpan(h.dailyPct,true)}</div></div>` : ''}
     ${dailyPnlARS != null ? `<div><div class="lbl">Hoy ARS</div><div class="val-sm money ${dailyPnlARS>0?'gn':dailyPnlARS<0?'rd':'nt'}">${money(dailyPnlARS)}</div></div>` : ''}
-    ${h.pnlPct != null ? `<div><div class="lbl">P&L total</div><div class="val-sm">${pctSpan(h.pnlPct,true)}</div></div>` : ''}
-    ${h.pnl != null ? `<div><div class="lbl">P&L ARS</div><div class="val-sm money ${Number(h.pnl)>0?'gn':Number(h.pnl)<0?'rd':'nt'}">${money(h.pnl)}</div></div>` : ''}
+    ${h.pnlPct != null ? `<div><div class="lbl">P&amp;L total</div><div class="val-sm">${pctSpan(h.pnlPct,true)}</div></div>` : ''}
+    ${h.pnl != null ? `<div><div class="lbl">P&amp;L ARS</div><div class="val-sm money ${Number(h.pnl)>0?'gn':Number(h.pnl)<0?'rd':'nt'}">${money(h.pnl)}</div></div>` : ''}
     ${h.invalidation ? `<div><div class="lbl">Stop</div><div class="val-sm">${h.invalidation}</div></div>` : ''}
   </div>
   ${h.rsi != null || h.sma20 != null ? `<div style="background:#0a1018;border-radius:8px;padding:7px 9px;margin-top:6px;font-size:11px;color:#6a8fa8;display:flex;flex-wrap:wrap;gap:10px">
@@ -579,51 +524,39 @@ function holdingCard(h) {
 </div>`;
 }
 
-// ── Recomendaciones (Tab Recom. — oculto en nav, disponible para debug) ────
 function renderRecomendaciones(data) {
   const daily = data.dailyAnalysis || {};
   const newOpps = daily.newOpportunities || data.newOpportunities || [];
   const ranking = daily.ranking || data.recommendations || [];
-  const cashARS = daily.availableCash?.ars || 0;
-
-  // Filter: only score >= 45 and not Rojo
   const quality = [...newOpps, ...ranking]
     .filter(x => x.score >= 45 && x.riskColor !== 'Rojo')
     .filter((x, i, a) => a.findIndex(y => y.symbol === x.symbol) === i);
-
   if (!quality.length) {
-    $('recomendaciones').innerHTML = '<div class="notice">No hay instrumentos con señal suficiente hoy. Mejor mantener liquidez o revisar posiciones actuales.</div>';
+    $('recomendaciones').innerHTML = '<div class="notice">No hay instrumentos con señal suficiente hoy.</div>';
     return;
   }
-
-  // Group by category
   const cats = new Map();
   quality.forEach(item => {
     const cat = categoryOf(item.assetClass);
     if (!cats.has(cat)) cats.set(cat, []);
     if (cats.get(cat).length < 4) cats.get(cat).push(item);
   });
-
   let html = '';
   cats.forEach((items, cat) => {
     html += `<div class="section-title">${esc(cat)}</div>`;
-    html += items.map(item => oppCard(item, cashARS)).join('');
+    html += `<div class="opp-grid">${items.map(item => oppCard(item)).join('')}</div>`;
   });
-
   $('recomendaciones').innerHTML = html;
 }
 
-// ── Oportunidades inline (Tab Hoy) ────────────────────────────────
 function renderOppsInline(data) {
   const daily = data.dailyAnalysis || {};
   const newOpps = daily.newOpportunities || data.newOpportunities || [];
   const ranking = daily.ranking || data.recommendations || [];
-  const cashARS = daily.availableCash?.ars || 0;
   const titleEl = $('oppsTitle');
   const containerEl = $('oppsInline');
   if (!titleEl || !containerEl) return;
 
-  // Filter: only score >= 45 and not Rojo, deduplicated
   const quality = [...newOpps, ...ranking]
     .filter(x => x.score >= 45 && x.riskColor !== 'Rojo')
     .filter((x, i, a) => a.findIndex(y => y.symbol === x.symbol) === i);
@@ -631,11 +564,10 @@ function renderOppsInline(data) {
   titleEl.style.display = '';
 
   if (!quality.length) {
-    containerEl.innerHTML = '<div class="notice">Sin señales de entrada claras hoy. Lo mejor: mantener liquidez o cauciones cortas hasta que haya movimiento. Usá el asesor IA para consultar opciones específicas.</div>';
+    containerEl.innerHTML = '<div class="notice">Sin señales de entrada claras hoy. Lo mejor: mantener liquidez o cauciones cortas.</div>';
     return;
   }
 
-  // Group by category
   const cats = new Map();
   quality.forEach(item => {
     const cat = categoryOf(item.assetClass);
@@ -645,80 +577,64 @@ function renderOppsInline(data) {
 
   let html = '';
   cats.forEach((items, cat) => {
-    html += `<div class="section-title">${esc(cat)}</div>`;
-    html += items.map(item => oppCard(item, cashARS)).join('');
+    html += `<div class="section-title" style="display:flex;align-items:center;gap:6px">${esc(cat)}<span style="background:#1a2a3a;border-radius:6px;padding:1px 7px;font-size:9px;color:#6a8aaa">${items.length}</span></div>`;
+    html += `<div class="opp-grid">${items.map(item => oppCard(item)).join('')}</div>`;
   });
 
   containerEl.innerHTML = html;
 }
 
-function oppCard(item, cashARS) {
+function oppCard(item) {
   const cls = riskCls(item.riskColor);
-  const pcl = pillCls(item.riskColor);
   const plan = item.tradePlan || {};
   const price = item.price ?? item.quote?.price;
   const dailyPct = item.dailyPct ?? item.quote?.pct;
-  const human = item.human || {};
-  const lbl = item.label || human.label || '';
-
-  // Commission and minimum investment calculation
   const ac = item.assetClass || '';
   const isBond = ['bono_dolar', 'bono_cer', 'lecap', 'bono'].includes(ac);
   const commPct = isBond ? 0.7 : 1.5;
   const priceNum = price != null ? Number(price) : null;
   const target1Num = plan.target1 ? Number(plan.target1) : null;
-  let expectedGainPct = null, netGainPct = null, minARS = null;
+  let netGainPct = null, minARS = null;
   if (priceNum && target1Num && priceNum > 0) {
-    expectedGainPct = (target1Num - priceNum) / priceNum * 100;
-    netGainPct = expectedGainPct - commPct;
-    if (netGainPct > 0.1) {
-      minARS = Math.ceil(Math.ceil(500 / (netGainPct / 100)) / 1000) * 1000;
-    }
+    const gross = (target1Num - priceNum) / priceNum * 100;
+    netGainPct = gross - commPct;
+    if (netGainPct > 0.1) minARS = Math.ceil(Math.ceil(500 / (netGainPct / 100)) / 1000) * 1000;
   }
   if (!minARS) minARS = isBond ? 10000 : 15000;
 
-  const commHTML = `<div style="background:#0d1820;border:1px solid #1e3040;border-radius:8px;padding:8px 10px;margin-top:8px;font-size:11px;line-height:1.7">
-    <div style="color:#7a9ab8;font-weight:700;margin-bottom:2px">COMISIÓN IOL (ida + vuelta): ~${commPct}%</div>
-    ${expectedGainPct != null ? `<div class="${netGainPct > 0 ? 'gn' : 'rd'}">Ganancia esperada: ~${expectedGainPct.toFixed(1)}% bruta${netGainPct > 0 ? ` · ~${netGainPct.toFixed(1)}% neta` : ' → no cubre comisión, esperá mejor precio'}</div>` : ''}
-    <div style="color:#e0f0ff">Mínimo para que valga la pena: <b>$${minARS.toLocaleString('es-AR')} ARS</b></div>
-  </div>`;
+  const actionStr = String(item.action || '').toLowerCase();
+  const actionCls = actionStr.includes('comprar') ? 'buy' : actionStr.includes('mantener') || actionStr.includes('seguimiento') ? 'hold' : 'wait';
+  const actionTxt = actionStr.includes('comprar') ? '▲ COMPRAR' : actionStr.includes('mantener') || actionStr.includes('seguimiento') ? '● MANTENER' : '⏸ ESPERAR';
 
-  const planDetails = [
-    plan.entryZone ? `Entrada: <b>${esc(plan.entryZone)}</b>` : '',
-    plan.target1 ? `Obj 1: <b>${plan.target1}</b>${plan.target2 ? ' · Obj 2: <b>'+plan.target2+'</b>' : ''}` : '',
-    plan.invalidation ? `Stop: <b>${plan.invalidation}</b>` : '',
-    plan.horizon ? `Horizonte: <b>${esc(plan.horizon)}</b>` : '',
-  ].filter(Boolean);
+  const pctCls = dailyPct == null ? '' : dailyPct > 0.05 ? 'opp-pct-up' : dailyPct < -0.05 ? 'opp-pct-dn' : 'opp-pct-nt';
+  const pctTxt = dailyPct != null ? `${dailyPct >= 0 ? '+' : ''}${Number(dailyPct).toFixed(2)}%` : '';
 
-  return `<div class="rec-card ${cls}">
-  <div class="row">
-    <div>
-      ${price != null ? `<div style="font-size:18px;font-weight:900">${Number(price).toLocaleString('es-AR',{maximumFractionDigits:2})}</div>` : ''}
-      <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
-        <span class="symbol" style="font-size:18px">${esc(item.symbol)}</span>
-        <span class="tiny">${assetLabel(item.assetClass)}</span>
-      </div>
-      ${lbl ? `<div style="font-size:11px;color:var(--accent);margin-top:2px;font-weight:900">${esc(lbl)}</div>` : ''}
-    </div>
-    <div style="text-align:right">
-      ${actionBadge(item.action)}
-      <div style="margin-top:4px"><span class="pill ${pcl}">${esc(item.riskColor||'—')}</span></div>
-      ${dailyPct != null ? `<div class="tiny" style="margin-top:4px">${pctSpan(dailyPct)} hoy</div>` : ''}
-      <div class="tiny" style="margin-top:2px">Score ${item.score}/100</div>
-    </div>
+  const semaforo = ['Verde','Amarillo','Naranja'].map(c => {
+    const on = c === item.riskColor;
+    const col = c==='Verde'?'#56d364':c==='Amarillo'?'#ffd33d':'#f08c3b';
+    return `<span style="width:7px;height:7px;border-radius:50%;display:inline-block;background:${on?col:'#1e2d3d'};border:1px solid ${col}40"></span>`;
+  }).join('');
+
+  return `<div class="opp-card ${cls}">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start">
+    <div class="opp-ticker">${esc(item.symbol)}</div>
+    <div style="display:flex;gap:3px;align-items:center;margin-top:3px">${semaforo}</div>
   </div>
-  ${planDetails.length ? `<div style="margin-top:8px;font-size:12px;color:#a0b8d0;line-height:1.6">
-    <b>Señal:</b> ${esc(item.thesis || '—')}
-    ${planDetails.map(d => `<br>${d}`).join('')}
-  </div>` : `<div style="margin-top:8px;font-size:12px;color:#a0b8d0">${esc(item.thesis || '—')}</div>`}
-  ${commHTML}
-  ${human.queEs ? `<div style="background:#0a1018;border-radius:10px;padding:9px;margin-top:8px;font-size:12px;color:#b0c8e0;line-height:1.5">
-    ${esc(human.queEs)}<br><b style="color:#c8d8f0">Qué hacer:</b> ${esc(human.queHacer||'—')}
-  </div>` : ''}
+  <div style="display:flex;align-items:baseline;gap:6px">
+    ${price != null ? `<span class="opp-price">${Number(price).toLocaleString('es-AR',{maximumFractionDigits:2})}</span>` : ''}
+    ${pctTxt ? `<span class="${pctCls}">${pctTxt}</span>` : ''}
+  </div>
+  <span class="opp-action ${actionCls}">${actionTxt}</span>
+  <div class="opp-targets">
+    ${plan.target1 ? `Obj: <b>${plan.target1}</b>` : ''}${plan.target2 ? ` / <b>${plan.target2}</b>` : ''}
+    ${plan.invalidation ? `&nbsp;&nbsp;Stop: <b>${plan.invalidation}</b>` : ''}
+    ${plan.horizon ? `<br>Plazo: <b>${esc(plan.horizon)}</b>` : ''}
+  </div>
+  ${item.thesis ? `<div class="opp-thesis">${esc(item.thesis.split(';')[0].trim())}</div>` : ''}
+  <div class="opp-comm">Comisión IOL ~${commPct}% · Mín: $${minARS.toLocaleString('es-AR')}${netGainPct != null && netGainPct > 0 ? ` · Neta ~${netGainPct.toFixed(1)}%` : ''}</div>
 </div>`;
 }
 
-// ── Cartera (Tab Cartera) ─────────────────────────────────────────
 function renderPortfolio(data) {
   const daily = data.dailyAnalysis || {};
   const holdingAnalysis = daily.holdingAnalysis || data.holdingsAnalysis || [];
@@ -733,7 +649,6 @@ function renderPortfolio(data) {
     return;
   }
 
-  // Portfolio P&L summary header
   let totalVal = 0, totalDailyPnl = 0, totalAccumPnl = 0, hasDailyPnl = false, hasAccumPnl = false;
   items.forEach(h => {
     const v = Number(h.valueARS) || 0;
@@ -749,7 +664,7 @@ function renderPortfolio(data) {
   <div class="grid3" style="margin-top:8px">
     <div class="stat-box"><div class="lbl">Total</div><div class="val-sm money">${money(totalVal)}</div></div>
     ${hasDailyPnl ? `<div class="stat-box"><div class="lbl">Hoy</div><div class="val-sm ${totalDailyPnl>0?'gn':totalDailyPnl<0?'rd':'nt'} money">${money(totalDailyPnl)}</div><div class="tiny">${pctSpan(dailyPct)}</div></div>` : '<div class="stat-box"><div class="lbl">Hoy</div><div class="val-sm nt">—</div></div>'}
-    ${hasAccumPnl ? `<div class="stat-box"><div class="lbl">P&L total</div><div class="val-sm ${totalAccumPnl>0?'gn':totalAccumPnl<0?'rd':'nt'} money">${money(totalAccumPnl)}</div><div class="tiny">${pctSpan(accumPct)}</div></div>` : '<div class="stat-box"><div class="lbl">P&L total</div><div class="val-sm nt">—</div></div>'}
+    ${hasAccumPnl ? `<div class="stat-box"><div class="lbl">P&amp;L total</div><div class="val-sm ${totalAccumPnl>0?'gn':totalAccumPnl<0?'rd':'nt'} money">${money(totalAccumPnl)}</div><div class="tiny">${pctSpan(accumPct)}</div></div>` : '<div class="stat-box"><div class="lbl">P&amp;L total</div><div class="val-sm nt">—</div></div>'}
   </div>
 </div>`;
 
@@ -758,7 +673,6 @@ function renderPortfolio(data) {
     const pcl = pillCls(h.riskColor);
     const dailyPnlARS = (h.valueARS != null && h.dailyPct != null) ? Number(h.valueARS) * Number(h.dailyPct) / 100 : null;
     const human = h.human || {};
-
     return `<div class="holding-card ${cls}">
   <div class="row">
     <div>
@@ -773,33 +687,26 @@ function renderPortfolio(data) {
       <div style="margin-top:3px">${actionBadge(h.decision)}</div>
     </div>
   </div>
-
-  <!-- P&L grid -->
   <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;padding:10px;background:#0a1018;border-radius:10px">
     ${h.currentPrice ? `<div><div class="lbl">Precio ahora</div><div class="val-sm">${Number(h.currentPrice).toLocaleString('es-AR',{maximumFractionDigits:2})}</div></div>` : ''}
     ${h.dailyPct != null ? `<div><div class="lbl">Variación hoy</div><div class="val-sm">${pctSpan(h.dailyPct,true)}</div></div>` : ''}
     ${dailyPnlARS != null ? `<div><div class="lbl">Ganancia/pérd. hoy</div><div class="val-sm money ${dailyPnlARS>0?'gn':dailyPnlARS<0?'rd':'nt'}">${money(dailyPnlARS)}</div></div>` : ''}
-    ${h.pnlPct != null ? `<div><div class="lbl">P&L acumulado</div><div class="val-sm">${pctSpan(h.pnlPct,true)}</div></div>` : ''}
-    ${h.pnl != null ? `<div><div class="lbl">P&L ARS acumulado</div><div class="val-sm money ${Number(h.pnl)>0?'gn':Number(h.pnl)<0?'rd':'nt'}">${money(h.pnl)}</div></div>` : ''}
+    ${h.pnlPct != null ? `<div><div class="lbl">P&amp;L acumulado</div><div class="val-sm">${pctSpan(h.pnlPct,true)}</div></div>` : ''}
+    ${h.pnl != null ? `<div><div class="lbl">P&amp;L ARS acumulado</div><div class="val-sm money ${Number(h.pnl)>0?'gn':Number(h.pnl)<0?'rd':'nt'}">${money(h.pnl)}</div></div>` : ''}
   </div>
-
   <div style="margin-top:8px;font-size:12px;color:#c0d8e8">${esc(h.reason||'')}</div>
   ${human.queHacer ? `<div style="background:#0a1018;border-radius:10px;padding:8px;margin-top:8px;font-size:12px;color:#b0c8e0;line-height:1.5">${esc(human.queHacer)}</div>` : ''}
 </div>`;
   }).join('');
 }
 
-
-// ── Consulta IA ───────────────────────────────────────────────────
 async function consultarIA() {
   const pregunta = $('preguntaInput').value.trim();
   if (!pregunta) return;
   const pin = getPin();
   if (!pin) { $('respuestaIA').innerHTML = '<div class="warning">Configurá el PIN en Config.</div>'; return; }
-
   $('respuestaIA').innerHTML = '<div class="notice">Consultando al asesor IA…</div>';
   $('btnConsultar').disabled = true;
-
   try {
     const daily = lastData?.dailyAnalysis || {};
     const contexto = lastData ? {
@@ -822,7 +729,6 @@ async function consultarIA() {
       macro: lastData.macro || null,
       portfolioHealth: daily.portfolioHealth || null
     } : null;
-
     const r = await fetch(CONSULTA_API, {
       method: 'POST',
       headers: {'content-type':'application/json','x-app-pin':pin},
@@ -830,7 +736,6 @@ async function consultarIA() {
     });
     const d = await r.json();
     if (!r.ok || !d.ok) throw new Error(d.error || `HTTP ${r.status}`);
-
     $('respuestaIA').innerHTML = `<div class="card">
   <div class="lbl">Asesor IA</div>
   <div style="margin-top:10px;white-space:pre-wrap;line-height:1.6;font-size:14px">${esc(d.respuesta)}</div>
@@ -843,15 +748,12 @@ async function consultarIA() {
   }
 }
 
-// ── Refresh ───────────────────────────────────────────────────────
 async function refreshNow() {
   const pin = getPin() || $('pin')?.value?.trim() || '';
   if (!pin) { $('setup').classList.remove('hide'); $('status').textContent = 'Ingresá el PIN para conectar'; return; }
-
   $('status').textContent = 'Conectando con IOL…';
   $('refreshBtn').textContent = 'Cargando…';
   $('refreshBtn').disabled = true;
-
   try {
     const r = await fetch(API, { headers: {'x-app-pin': pin}, cache: 'no-store' });
     const text = await r.text();
@@ -870,21 +772,13 @@ async function refreshNow() {
   }
 }
 
-// ── Auto-refresh: cada 3 min con app abierta (alertas en tiempo real) ───
-setInterval(() => {
-  if (getPin()) refreshNow();
-}, 3 * 60 * 1000);
+setInterval(() => { if (getPin()) refreshNow(); }, 3 * 60 * 1000);
 
-// ── Service Worker: registro y auto-reload al actualizar ──────────
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(() => {});
   navigator.serviceWorker.addEventListener('message', e => {
-    if (e.data?.type === 'SW_UPDATED') {
-      // Nueva versión disponible — recargar para aplicar cambios
-      window.location.reload();
-    }
+    if (e.data?.type === 'SW_UPDATED') window.location.reload();
   });
-  // También detectar nuevo SW en espera y activarlo inmediatamente
   navigator.serviceWorker.ready.then(reg => {
     reg.addEventListener('updatefound', () => {
       const newSW = reg.installing;
@@ -898,7 +792,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// ── Init ──────────────────────────────────────────────────────────
 applyMoney();
 (function init() {
   const pin = getPin();
