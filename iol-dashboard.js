@@ -269,7 +269,7 @@ function quoteFromIol(symbol, data) {
 }
 
 async function getQuoteSafe(symbol, token) {
-  const mercados = ["bcba", "BCBA"];
+  const mercados = ["bCBA", "bcba", "BCBA"];
 
   for (const mercado of mercados) {
     try {
