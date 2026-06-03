@@ -221,7 +221,7 @@ nav{position:fixed;left:0;right:0;bottom:0;background:#0d1117f0;border-top:1px s
 
   <div class="card" style="margin-top:10px">
     <div class="lbl">Alertas automáticas</div>
-    <p class="tiny" style="margin:4px 0 10px">Recibí una alerta cuando una tenencia cae más del 3% o aparece una oportunidad con score ≥ 80.</p>
+    <p class="tiny" style="margin:4px 0 10px">Alertas automáticas con la app abierta: oportunidades de compra (score ≥ 65) y caídas > 3% en tus tenencias. Se actualiza cada 3 minutos.</p>
     <button class="btn btn-secondary btn-sm" onclick="requestNotifications()" id="notifBtn">Activar alertas</button>
     <div id="notifStatus" class="tiny" style="margin-top:6px"></div>
   </div>
@@ -343,17 +343,19 @@ function checkAlerts(data) {
     }
   });
 
-  const strongBuy = opps.find(o => o.score >= 80 && (o.riskColor === 'Verde' || o.riskColor === 'Amarillo'));
-  if (strongBuy) {
-    const key = `${strongBuy.symbol}-opp-${alertKey}`;
+  // Alertas de compra: score >= 65 y riesgo Verde o Amarillo
+  const buyOpps = opps.filter(o => o.score >= 65 && (o.riskColor === 'Verde' || o.riskColor === 'Amarillo'));
+  buyOpps.slice(0, 3).forEach(o => {
+    const key = `${o.symbol}-opp-${alertKey}`;
     if (!alertedSymbols.has(key)) {
       alertedSymbols.add(key);
-      new Notification(`📈 Oportunidad destacada: ${strongBuy.symbol}`, {
-        body: `Score ${strongBuy.score}/100 · ${strongBuy.action || ''}`,
+      const commPct = ['bono_dolar','bono_cer','lecap','bono'].includes(o.assetClass||'') ? 0.7 : 1.5;
+      new Notification(`📈 Oportunidad de compra: ${o.symbol}`, {
+        body: `Score ${o.score}/100 · ${o.action || ''} · Comisión IOL ~${commPct}%`,
         icon: './icon-192.png', badge: './icon-192.png'
       });
     }
-  }
+  });
 }
 
 function initNotifBtn() {
@@ -861,11 +863,10 @@ async function refreshNow() {
   }
 }
 
-// ── Auto-refresh when market is open (every 2 min) ───────────────
+// ── Auto-refresh: cada 3 min con app abierta (alertas en tiempo real) ───
 setInterval(() => {
-  const ms = lastData?.marketStatus || lastData?.dailyAnalysis?.marketStatus;
-  if (ms?.isOpen && getPin()) refreshNow();
-}, 2 * 60 * 1000);
+  if (getPin()) refreshNow();
+}, 3 * 60 * 1000);
 
 // ── Init ──────────────────────────────────────────────────────────
 applyMoney();
