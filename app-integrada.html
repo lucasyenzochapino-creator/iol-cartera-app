@@ -221,7 +221,7 @@ nav{position:fixed;left:0;right:0;bottom:0;background:#0d1117f0;border-top:1px s
 
   <div class="card" style="margin-top:10px">
     <div class="lbl">Alertas automáticas</div>
-    <p class="tiny" style="margin:4px 0 10px">Recibí una alerta cuando una tenencia cae más del 3% o aparece una oportunidad con score ≥ 80.</p>
+    <p class="tiny" style="margin:4px 0 10px">Alertas automáticas con la app abierta: oportunidades de compra (score ≥ 65) y caídas > 3% en tus tenencias. Se actualiza cada 3 minutos.</p>
     <button class="btn btn-secondary btn-sm" onclick="requestNotifications()" id="notifBtn">Activar alertas</button>
     <div id="notifStatus" class="tiny" style="margin-top:6px"></div>
   </div>
@@ -343,17 +343,19 @@ function checkAlerts(data) {
     }
   });
 
-  const strongBuy = opps.find(o => o.score >= 80 && (o.riskColor === 'Verde' || o.riskColor === 'Amarillo'));
-  if (strongBuy) {
-    const key = `${strongBuy.symbol}-opp-${alertKey}`;
+  // Alertas de compra: score >= 65 y riesgo Verde o Amarillo
+  const buyOpps = opps.filter(o => o.score >= 65 && (o.riskColor === 'Verde' || o.riskColor === 'Amarillo'));
+  buyOpps.slice(0, 3).forEach(o => {
+    const key = `${o.symbol}-opp-${alertKey}`;
     if (!alertedSymbols.has(key)) {
       alertedSymbols.add(key);
-      new Notification(`📈 Oportunidad destacada: ${strongBuy.symbol}`, {
-        body: `Score ${strongBuy.score}/100 · ${strongBuy.action || ''}`,
+      const commPct = ['bono_dolar','bono_cer','lecap','bono'].includes(o.assetClass||'') ? 0.7 : 1.5;
+      new Notification(`📈 Oportunidad de compra: ${o.symbol}`, {
+        body: `Score ${o.score}/100 · ${o.action || ''} · Comisión IOL ~${commPct}%`,
         icon: './icon-192.png', badge: './icon-192.png'
       });
     }
-  }
+  });
 }
 
 function initNotifBtn() {
@@ -570,13 +572,14 @@ function holdingCard(h) {
 </div>`;
 }
 
-// ── Recomendaciones (Tab Recom.) ────
+// ── Recomendaciones (Tab Recom. — oculto en nav, disponible para debug) ────
 function renderRecomendaciones(data) {
   const daily = data.dailyAnalysis || {};
   const newOpps = daily.newOpportunities || data.newOpportunities || [];
   const ranking = daily.ranking || data.recommendations || [];
   const cashARS = daily.availableCash?.ars || 0;
 
+  // Filter: only score >= 45 and not Rojo
   const quality = [...newOpps, ...ranking]
     .filter(x => x.score >= 45 && x.riskColor !== 'Rojo')
     .filter((x, i, a) => a.findIndex(y => y.symbol === x.symbol) === i);
@@ -586,6 +589,7 @@ function renderRecomendaciones(data) {
     return;
   }
 
+  // Group by category
   const cats = new Map();
   quality.forEach(item => {
     const cat = categoryOf(item.assetClass);
@@ -612,6 +616,7 @@ function renderOppsInline(data) {
   const containerEl = $('oppsInline');
   if (!titleEl || !containerEl) return;
 
+  // Filter: only score >= 45 and not Rojo, deduplicated
   const quality = [...newOpps, ...ranking]
     .filter(x => x.score >= 45 && x.riskColor !== 'Rojo')
     .filter((x, i, a) => a.findIndex(y => y.symbol === x.symbol) === i);
@@ -623,6 +628,7 @@ function renderOppsInline(data) {
     return;
   }
 
+  // Group by category
   const cats = new Map();
   quality.forEach(item => {
     const cat = categoryOf(item.assetClass);
@@ -648,6 +654,7 @@ function oppCard(item, cashARS) {
   const human = item.human || {};
   const lbl = item.label || human.label || '';
 
+  // Commission and minimum investment calculation
   const ac = item.assetClass || '';
   const isBond = ['bono_dolar', 'bono_cer', 'lecap', 'bono'].includes(ac);
   const commPct = isBond ? 0.7 : 1.5;
@@ -719,6 +726,7 @@ function renderPortfolio(data) {
     return;
   }
 
+  // Portfolio P&L summary header
   let totalVal = 0, totalDailyPnl = 0, totalAccumPnl = 0, hasDailyPnl = false, hasAccumPnl = false;
   items.forEach(h => {
     const v = Number(h.valueARS) || 0;
@@ -759,6 +767,7 @@ function renderPortfolio(data) {
     </div>
   </div>
 
+  <!-- P&L grid -->
   <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;padding:10px;background:#0a1018;border-radius:10px">
     ${h.currentPrice ? `<div><div class="lbl">Precio ahora</div><div class="val-sm">${Number(h.currentPrice).toLocaleString('es-AR',{maximumFractionDigits:2})}</div></div>` : ''}
     ${h.dailyPct != null ? `<div><div class="lbl">Variación hoy</div><div class="val-sm">${pctSpan(h.dailyPct,true)}</div></div>` : ''}
@@ -854,11 +863,10 @@ async function refreshNow() {
   }
 }
 
-// ── Auto-refresh when market is open (every 2 min) ───────────────
+// ── Auto-refresh: cada 3 min con app abierta (alertas en tiempo real) ───
 setInterval(() => {
-  const ms = lastData?.marketStatus || lastData?.dailyAnalysis?.marketStatus;
-  if (ms?.isOpen && getPin()) refreshNow();
-}, 2 * 60 * 1000);
+  if (getPin()) refreshNow();
+}, 3 * 60 * 1000);
 
 // ── Init ──────────────────────────────────────────────────────────
 applyMoney();
