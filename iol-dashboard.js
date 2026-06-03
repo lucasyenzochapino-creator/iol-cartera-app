@@ -208,16 +208,7 @@ function extractHoldings(portfolio) {
     );
 
     if (symbol && /^[A-Z0-9.]{2,12}$/i.test(symbol) && (quantity !== null || valueARS !== null)) {
-      holdings.push({
-        symbol,
-        quantity,
-        valueARS,
-        avgPrice,
-        pnl,
-        pnlPct,
-        sourcePath: path,
-        raw: obj
-      });
+      holdings.push({ symbol, quantity, valueARS, avgPrice, pnl, pnlPct, sourcePath: path, raw: obj });
     }
 
     Object.entries(obj).forEach(([key, value]) => visit(value, path ? `${path}.${key}` : key, depth + 1));
@@ -247,41 +238,17 @@ function extractHoldings(portfolio) {
 
 function quoteFromIol(symbol, data) {
   const price = firstNumber(
-    data?.ultimoPrecio,
-    data?.ultimoOperado,
-    data?.precio,
-    data?.cotizacion,
-    data?.lastPrice,
-    data?.ultimo,
-    data?.puntas?.precioCompra,
-    data?.puntas?.precioVenta
+    data?.ultimoPrecio, data?.ultimoOperado, data?.precio, data?.cotizacion,
+    data?.lastPrice, data?.ultimo, data?.puntas?.precioCompra, data?.puntas?.precioVenta
   );
-
   const change = firstNumber(
-    data?.variacion,
-    data?.variacionPorcentual,
-    data?.variacionDiaria,
-    data?.porcentajeVariacion,
-    data?.changePercent
+    data?.variacion, data?.variacionPorcentual, data?.variacionDiaria,
+    data?.porcentajeVariacion, data?.changePercent
   );
-
   const volume = firstNumber(
-    data?.volumen,
-    data?.montoOperado,
-    data?.volumenNominal,
-    data?.cantidadOperaciones
+    data?.volumen, data?.montoOperado, data?.volumenNominal, data?.cantidadOperaciones
   );
-
-  return {
-    ok: true,
-    symbol,
-    raw: data,
-    price,
-    last: price,
-    change,
-    pct: change,
-    volume
-  };
+  return { ok: true, symbol, raw: data, price, last: price, change, pct: change, volume };
 }
 
 async function getQuoteSafe(symbol, token) {
@@ -292,8 +259,6 @@ async function getQuoteSafe(symbol, token) {
     return { ok: false, symbol, error: "No pude obtener cotización" };
   }
 }
-
-// ── Price History & Technical Indicators ─────────────────────────────────────
 
 async function fetchPriceHistory(symbol, token) {
   const today = new Date();
@@ -379,8 +344,6 @@ function applyTechnicals(scored, closes) {
   };
 }
 
-// ── Portfolio Health Score ────────────────────────────────────────────────────
-
 function calcPortfolioHealth(holdingAnalysis) {
   if (!holdingAnalysis.length) return null;
   const totalValue = holdingAnalysis.reduce((s, h) => s + (Number(h.valueARS) || 0), 0);
@@ -424,32 +387,21 @@ function calcPortfolioHealth(holdingAnalysis) {
 
 function uniqueUpper(list) {
   return Array.from(new Set(
-    list
-      .map(x => String(x || "").trim().toUpperCase())
-      .filter(Boolean)
+    list.map(x => String(x || "").trim().toUpperCase()).filter(Boolean)
   ));
 }
 
 function buildWatchlist() {
   const defaultWatchlist = [
-    // Merval - acciones líquidas con mayor volumen
     "YPFD","PAMP","VIST","GGAL","BMA","TXAR","ALUA","TGSU2","CEPU","BYMA","COME","LOMA","EDN","TRAN","SUPV","BBAR","CRES","TGNO4","MIRG","HARG",
-    // Bonos soberanos dólar (AL, GD)
     "AL29","AL30","AL35","GD30","GD35","GD38",
-    // Bonos CER / pesos
     "TX26","TX28","TZX26",
-    // ETFs de EE.UU. - diversificación global
     "SPY","QQQ","GLD","IWM","TLT","XLP","XLV","XLK","XLE",
-    // CEDEARs tech de calidad
     "AAPL","MSFT","GOOGL","NVDA","META","AMZN","AMD","TSLA",
-    // CEDEARs defensivos
     "KO","PG","JNJ","BRKB","WMT","MCD",
-    // CEDEARs financieros
     "JPM","V","MA","BAC","GS",
-    // CEDEARs energía
     "XOM","CVX"
   ];
-
   const raw = env("WATCHLIST", defaultWatchlist.join(","));
   return uniqueUpper(raw.split(",")).slice(0, 70);
 }
@@ -475,18 +427,7 @@ function classifyAsset(symbol) {
 }
 
 function riskBase(assetClass) {
-  const bases = {
-    lecap: 28,
-    bono: 38,
-    bono_cer: 36,
-    cedear_etf: 38,
-    cedear_defensivo: 34,
-    cedear_financiero: 52,
-    cedear_industrial: 50,
-    cedear_global: 58,
-    accion_local: 62,
-    otro: 54
-  };
+  const bases = { lecap:28, bono:38, bono_cer:36, cedear_etf:38, cedear_defensivo:34, cedear_financiero:52, cedear_industrial:50, cedear_global:58, accion_local:62, otro:54 };
   return bases[assetClass] || 54;
 }
 
@@ -502,7 +443,7 @@ function scoreQuote(quote) {
   const assetClass = classifyAsset(symbol);
 
   if (!quote.ok || !quote.price || quote.price <= 0) {
-    const basePts = { lecap: 58, bono_cer: 52, bono: 52, cedear_etf: 56, cedear_defensivo: 54, cedear_financiero: 48, cedear_industrial: 46, cedear_global: 50, accion_local: 44, otro: 40 };
+    const basePts = { lecap:58, bono_cer:52, bono:52, cedear_etf:56, cedear_defensivo:54, cedear_financiero:48, cedear_industrial:46, cedear_global:50, accion_local:44, otro:40 };
     const rs = riskBase(assetClass);
     return {
       symbol, assetClass,
@@ -515,55 +456,32 @@ function scoreQuote(quote) {
     };
   }
 
-  const basePts = {
-    lecap: 68, bono_cer: 62, bono: 60,
-    cedear_etf: 65, cedear_defensivo: 63,
-    cedear_financiero: 56, cedear_industrial: 55, cedear_global: 58,
-    accion_local: 52, otro: 50
-  };
-
+  const basePts = { lecap:68, bono_cer:62, bono:60, cedear_etf:65, cedear_defensivo:63, cedear_financiero:56, cedear_industrial:55, cedear_global:58, accion_local:52, otro:50 };
   let score = basePts[assetClass] ?? 50;
   let riskScore = riskBase(assetClass);
   const reasons = [];
   const pct = quote.pct;
 
   if (pct !== null && Number.isFinite(pct)) {
-    if (pct >= 0.3 && pct <= 2) {
-      score += 14; reasons.push("momentum controlado");
-    } else if (pct > 2 && pct <= 4) {
-      score += 8; riskScore += 5; reasons.push("momentum positivo fuerte");
-    } else if (pct > 4 && pct <= 7) {
-      score += 3; riskScore += 10; reasons.push("suba fuerte: no perseguir precio");
-    } else if (pct > 7) {
-      score -= 6; riskScore += 16; reasons.push("suba excesiva: esperar retroceso o confirmación");
-    } else if (pct >= -0.3) {
-      score += 2; reasons.push("movimiento neutral");
-    } else if (pct >= -1.5) {
-      score -= 8; riskScore += 5; reasons.push("debilidad leve");
-    } else if (pct >= -3) {
-      score -= 16; riskScore += 10; reasons.push("debilidad moderada");
-    } else if (pct >= -6) {
-      score -= 24; riskScore += 15; reasons.push("debilidad fuerte");
-    } else {
-      score -= 32; riskScore += 20; reasons.push("caída severa: esperar confirmación de piso");
-    }
+    if (pct >= 0.3 && pct <= 2) { score += 14; reasons.push("momentum controlado"); }
+    else if (pct > 2 && pct <= 4) { score += 8; riskScore += 5; reasons.push("momentum positivo fuerte"); }
+    else if (pct > 4 && pct <= 7) { score += 3; riskScore += 10; reasons.push("suba fuerte: no perseguir precio"); }
+    else if (pct > 7) { score -= 6; riskScore += 16; reasons.push("suba excesiva: esperar retroceso o confirmación"); }
+    else if (pct >= -0.3) { score += 2; reasons.push("movimiento neutral"); }
+    else if (pct >= -1.5) { score -= 8; riskScore += 5; reasons.push("debilidad leve"); }
+    else if (pct >= -3) { score -= 16; riskScore += 10; reasons.push("debilidad moderada"); }
+    else if (pct >= -6) { score -= 24; riskScore += 15; reasons.push("debilidad fuerte"); }
+    else { score -= 32; riskScore += 20; reasons.push("caída severa: esperar confirmación de piso"); }
   } else {
     score -= 5; reasons.push("sin variación diaria disponible");
   }
 
-  if (quote.volume && Number.isFinite(quote.volume) && quote.volume > 0) {
-    score += 3; reasons.push("volumen presente");
-  }
+  if (quote.volume && Number.isFinite(quote.volume) && quote.volume > 0) { score += 3; reasons.push("volumen presente"); }
 
-  if (assetClass === "cedear_etf") {
-    score += 7; riskScore -= 10; reasons.push("diversificación amplia");
-  } else if (assetClass === "cedear_defensivo") {
-    score += 5; riskScore -= 12; reasons.push("defensivo relativo");
-  } else if (assetClass === "bono" || assetClass === "bono_cer") {
-    score += 5; riskScore -= 5; reasons.push("renta fija soberana");
-  } else if (assetClass === "lecap") {
-    score += 8; riskScore -= 14; reasons.push("instrumento de corto plazo en pesos");
-  }
+  if (assetClass === "cedear_etf") { score += 7; riskScore -= 10; reasons.push("diversificación amplia"); }
+  else if (assetClass === "cedear_defensivo") { score += 5; riskScore -= 12; reasons.push("defensivo relativo"); }
+  else if (assetClass === "bono" || assetClass === "bono_cer") { score += 5; riskScore -= 5; reasons.push("renta fija soberana"); }
+  else if (assetClass === "lecap") { score += 8; riskScore -= 14; reasons.push("instrumento de corto plazo en pesos"); }
 
   const liq = liquidityScore(symbol, assetClass);
   if (liq >= 20) { score += 7; reasons.push("alta liquidez"); }
@@ -571,7 +489,6 @@ function scoreQuote(quote) {
 
   score = Math.max(0, Math.min(100, Math.round(score)));
   riskScore = Math.max(0, Math.min(100, Math.round(riskScore)));
-
   const riskColor = riskScore <= 36 ? "Verde" : riskScore <= 56 ? "Amarillo" : riskScore <= 74 ? "Naranja" : "Rojo";
 
   let action = "Esperar";
@@ -616,7 +533,6 @@ function buildTradePlan(scored, availableARS) {
 
   const cashReasonable = availableARS > 100 && availableARS < 50_000_000;
   const amount = cashReasonable ? Math.round(availableARS * allocationPct) : null;
-
   const minGainPct = commRt * 100;
   const breakEvenPrice = price ? roundPrice(price * (1 + commRt)) : null;
   const target1Mult = isBono ? Math.max(1.06, 1 + commRt * 4) : Math.max(1.09, 1 + commRt * 5);
@@ -638,34 +554,26 @@ function buildTradePlan(scored, availableARS) {
 
 function extractAvailableCash(account) {
   const candidates = [];
-
   function walk(obj, path = "", depth = 0) {
     if (!obj || depth > 7) return;
     if (Array.isArray(obj)) return obj.forEach((x, i) => walk(x, `${path}[${i}]`, depth + 1));
     if (typeof obj !== "object") return;
-
     const joined = (Object.keys(obj).join(" ") + " " + path).toLowerCase();
     const hasCashWords = /disponible|saldo|comprar|operar|liquido|liquidez/.test(joined);
     const currency = String(obj.moneda || obj.currency || obj.simboloMoneda || "").toUpperCase();
-
     for (const key of Object.keys(obj)) {
       const n = toNumber(obj[key]);
       if (n !== null && hasCashWords) candidates.push({ path: `${path}.${key}`, value: n, currency });
     }
-
     Object.entries(obj).forEach(([k, v]) => walk(v, path ? `${path}.${k}` : k, depth + 1));
   }
-
   walk(account);
-
   const ars = candidates
     .filter(x => !x.currency || /ARS|PESO|\$/.test(x.currency) || /pesos|ars|disponible/i.test(x.path))
     .sort((a, b) => b.value - a.value)[0]?.value || 0;
-
   const usd = candidates
     .filter(x => /USD|DOLAR|DÓLAR|US/.test(x.currency) || /dolar|dólar|usd/i.test(x.path))
     .sort((a, b) => b.value - a.value)[0]?.value || 0;
-
   return { ars, usd, candidates: candidates.slice(0, 12) };
 }
 
@@ -712,25 +620,13 @@ function analyzeHolding(holding, scored) {
   }
 
   return {
-    symbol: holding.symbol,
-    quantity: holding.quantity,
-    valueARS: holding.valueARS,
-    avgPrice: holding.avgPrice,
-    pnl: holding.pnl,
-    pnlPct: holding.pnlPct,
-    currentPrice: scored.quote?.price || null,
-    dailyPct: pct,
-    score: scored.score,
-    riskColor: scored.riskColor,
-    assetClass: scored.assetClass,
-    decision,
-    priority,
-    reason,
-    commissionRoundTripPct: commRt,
+    symbol: holding.symbol, quantity: holding.quantity, valueARS: holding.valueARS,
+    avgPrice: holding.avgPrice, pnl: holding.pnl, pnlPct: holding.pnlPct,
+    currentPrice: scored.quote?.price || null, dailyPct: pct,
+    score: scored.score, riskColor: scored.riskColor, assetClass: scored.assetClass,
+    decision, priority, reason, commissionRoundTripPct: commRt,
     invalidation: scored.quote?.price ? roundPrice(scored.quote.price * (scored.assetClass === "accion_local" ? 0.94 : 0.95)) : null,
-    rsi: scored.rsi ?? null,
-    sma20: scored.sma20 ?? null,
-    sma50: scored.sma50 ?? null,
+    rsi: scored.rsi ?? null, sma20: scored.sma20 ?? null, sma50: scored.sma50 ?? null,
     actionType: "tenencia"
   };
 }
@@ -783,15 +679,9 @@ function buildDailyAnalysis(portfolio, account, quotes, historyMap = new Map()) 
 
   return {
     generatedAt: new Date().toISOString(),
-    availableCash,
-    holdingsCount: holdings.length,
-    holdings,
-    holdingAnalysis,
-    ranking: scoredUniverse.slice(0, 12),
-    newOpportunities,
-    bestNewOpportunity,
-    mainRecommendation,
-    summary,
+    availableCash, holdingsCount: holdings.length, holdings,
+    holdingAnalysis, ranking: scoredUniverse.slice(0, 12),
+    newOpportunities, bestNewOpportunity, mainRecommendation, summary,
     portfolioHealth: calcPortfolioHealth(holdingAnalysis),
     rules: [
       "Primero se revisan tenencias actuales.",
@@ -818,7 +708,6 @@ module.exports = async function handler(req, res) {
 
     const username = env("IOL_USERNAME", env("IOL_USER"));
     const password = env("IOL_PASSWORD");
-
     requiredEnv("IOL_USERNAME", username);
     requiredEnv("IOL_PASSWORD", password);
 
@@ -836,7 +725,6 @@ module.exports = async function handler(req, res) {
       ...buildWatchlist()
     ]).slice(0, 45);
 
-    // Fetch quotes and price history in parallel to save time
     const historyMap = new Map();
     const [quotes] = await Promise.all([
       Promise.all(symbols.map(sym => getQuoteSafe(sym, token))),
@@ -855,11 +743,8 @@ module.exports = async function handler(req, res) {
       provider: "IOL",
       mode: "solo_lectura",
       generatedAt: new Date().toISOString(),
-      portfolio,
-      account,
-      estadoCuenta: account,
-      quotes,
-      quoteUniverse: symbols,
+      portfolio, account, estadoCuenta: account,
+      quotes, quoteUniverse: symbols,
       dailyAnalysis,
       holdingsAnalysis: dailyAnalysis.holdingAnalysis,
       recommendations: dailyAnalysis.ranking,
