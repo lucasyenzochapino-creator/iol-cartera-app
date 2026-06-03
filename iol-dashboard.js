@@ -69,7 +69,7 @@ async function getIolToken(username, password) {
   body.set("grant_type", "password");
 
   const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 10000);
+  const t = setTimeout(() => ctrl.abort(), 6000);
   try {
     const response = await fetch(`${IOL_BASE}/token`, {
       method: "POST",
@@ -93,7 +93,7 @@ async function getIolToken(username, password) {
 
 async function iolGet(path, token, label) {
   const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 8000);
+  const t = setTimeout(() => ctrl.abort(), 5000);
   try {
     const response = await fetch(`${IOL_BASE}${path}`, {
       method: "GET",
@@ -285,22 +285,12 @@ function quoteFromIol(symbol, data) {
 }
 
 async function getQuoteSafe(symbol, token) {
-  const mercados = ["bCBA", "bcba", "BCBA"];
-
-  for (const mercado of mercados) {
-    try {
-      const data = await iolGet(`/api/v2/${mercado}/Titulos/${encodeURIComponent(symbol)}/Cotizacion`, token, `Cotización ${symbol}`);
-      return quoteFromIol(symbol, data);
-    } catch (e) {
-      // probar siguiente variante
-    }
+  try {
+    const data = await iolGet(`/api/v2/bCBA/Titulos/${encodeURIComponent(symbol)}/Cotizacion`, token, `Cotización ${symbol}`);
+    return quoteFromIol(symbol, data);
+  } catch {
+    return { ok: false, symbol, error: "No pude obtener cotización" };
   }
-
-  return {
-    ok: false,
-    symbol,
-    error: "No pude obtener cotización"
-  };
 }
 
 // ── Price History & Technical Indicators ─────────────────────────────────────
@@ -858,16 +848,17 @@ module.exports = async function handler(req, res) {
       ...buildWatchlist()
     ]).slice(0, 45);
 
-    const quotes = await Promise.all(symbols.map(sym => getQuoteSafe(sym, token)));
-
-    // Fetch price history for held symbols only — used for RSI and moving averages
+    // Fetch quotes and price history in parallel to save time
     const historyMap = new Map();
-    await Promise.allSettled(holdings.map(async h => {
-      try {
-        const hist = await fetchPriceHistory(h.symbol, token);
-        if (hist.length) historyMap.set(h.symbol, hist);
-      } catch {}
-    }));
+    const [quotes] = await Promise.all([
+      Promise.all(symbols.map(sym => getQuoteSafe(sym, token))),
+      Promise.allSettled(holdings.map(async h => {
+        try {
+          const hist = await fetchPriceHistory(h.symbol, token);
+          if (hist.length) historyMap.set(h.symbol, hist);
+        } catch {}
+      }))
+    ]);
 
     const dailyAnalysis = buildDailyAnalysis(portfolio, account, quotes, historyMap);
 
