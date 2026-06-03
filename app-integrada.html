@@ -82,7 +82,7 @@ h1{font-size:16px;margin:0}
 .danger{background:#ff7b7215;border:1px solid #ff7b7235;border-radius:12px;padding:12px;color:#ffb3ae;font-size:13px;margin-bottom:10px}
 .money-hidden .money{filter:blur(7px);user-select:none}
 pre{white-space:pre-wrap;word-break:break-word;background:#090c10;border:1px solid var(--line);border-radius:12px;padding:12px;max-height:400px;overflow:auto;font-size:11px}
-nav{position:fixed;left:0;right:0;bottom:0;background:#0d1117f0;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(6,1fr);gap:2px;padding:5px 4px;backdrop-filter:blur(12px)}
+nav{position:fixed;left:0;right:0;bottom:0;background:#0d1117f0;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);gap:2px;padding:5px 4px;backdrop-filter:blur(12px)}
 .tab{background:transparent;border:0;color:var(--muted);font-weight:900;padding:7px 2px;border-radius:9px;font-size:10px;cursor:pointer}
 .tab.active{color:var(--accent);background:#f5c97b15}
 .hide{display:none!important}
@@ -160,6 +160,16 @@ nav{position:fixed;left:0;right:0;bottom:0;background:#0d1117f0;border-top:1px s
   <!-- Holding analysis -->
   <div class="section-title">Tus posiciones</div>
   <div id="lectura"></div>
+
+  <!-- Oportunidades del día -->
+  <div id="oppsTitle" style="display:none;margin:16px 0 8px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="background:var(--accent);color:#000;padding:3px 10px;border-radius:8px;font-size:12px;font-weight:900;letter-spacing:.5px">OPORTUNIDADES</span>
+      <span style="font-size:14px;font-weight:700;color:#c8d8f0">de inversión del día</span>
+    </div>
+    <div class="tiny" style="margin-top:4px;color:#6a8aaa">Solo activos con señal positiva · verificá precio en IOL antes de operar</div>
+  </div>
+  <div id="oppsInline"></div>
 </section>
 
 <!-- ===== RECOMENDACIONES ===== -->
@@ -225,11 +235,9 @@ nav{position:fixed;left:0;right:0;bottom:0;background:#0d1117f0;border-top:1px s
 
 <nav>
   <button class="tab active" onclick="show('hoy',this)">Hoy</button>
-  <button class="tab" onclick="show('recom',this)">Recom.</button>
   <button class="tab" onclick="show('cartera',this)">Cartera</button>
   <button class="tab" onclick="show('consulta',this)">Consulta</button>
   <button class="tab" onclick="show('config',this)">Config</button>
-  <button class="tab" onclick="show('raw',this)">Técnico</button>
 </nav>
 
 <script>
@@ -424,8 +432,11 @@ function show(id, b) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   b.classList.add('active');
   if (id === 'config') { $('pin2').value = getPin(); }
-  if (id === 'recom' && lastData) renderRecomendaciones(lastData);
-  if (id === 'cartera' && lastData) renderPortfolio(lastData);
+  if (id === 'cartera' && lastData) {
+    renderPortfolio(lastData);
+    renderPortfolioHealth(lastData);
+    renderMacro(lastData);
+  }
 }
 
 // ── Main render ──────────────────────────────────────────────────
@@ -494,6 +505,7 @@ function render(data, cached) {
 
   // Render holding analysis
   renderLectura(holdingAnalysis);
+  renderOppsInline(data);
   renderMacro(data);
   renderPortfolioHealth(data);
   checkAlerts(data);
@@ -558,16 +570,16 @@ function holdingCard(h) {
 </div>`;
 }
 
-// ── Recomendaciones (Tab Recom.) ──────────────────────────────────
+// ── Recomendaciones (Tab Recom. — oculto en nav, disponible para debug) ────
 function renderRecomendaciones(data) {
   const daily = data.dailyAnalysis || {};
   const newOpps = daily.newOpportunities || data.newOpportunities || [];
   const ranking = daily.ranking || data.recommendations || [];
   const cashARS = daily.availableCash?.ars || 0;
 
-  // Filter: only score >= 55 and not Rojo
+  // Filter: only score >= 45 and not Rojo
   const quality = [...newOpps, ...ranking]
-    .filter(x => x.score >= 55 && x.riskColor !== 'Rojo')
+    .filter(x => x.score >= 45 && x.riskColor !== 'Rojo')
     .filter((x, i, a) => a.findIndex(y => y.symbol === x.symbol) === i);
 
   if (!quality.length) {
@@ -592,6 +604,45 @@ function renderRecomendaciones(data) {
   $('recomendaciones').innerHTML = html;
 }
 
+// ── Oportunidades inline (Tab Hoy) ────────────────────────────────
+function renderOppsInline(data) {
+  const daily = data.dailyAnalysis || {};
+  const newOpps = daily.newOpportunities || data.newOpportunities || [];
+  const ranking = daily.ranking || data.recommendations || [];
+  const cashARS = daily.availableCash?.ars || 0;
+  const titleEl = $('oppsTitle');
+  const containerEl = $('oppsInline');
+  if (!titleEl || !containerEl) return;
+
+  // Filter: only score >= 45 and not Rojo, deduplicated
+  const quality = [...newOpps, ...ranking]
+    .filter(x => x.score >= 45 && x.riskColor !== 'Rojo')
+    .filter((x, i, a) => a.findIndex(y => y.symbol === x.symbol) === i);
+
+  titleEl.style.display = '';
+
+  if (!quality.length) {
+    containerEl.innerHTML = '<div class="notice">Sin señales de entrada claras hoy. Lo mejor: mantener liquidez o cauciones cortas hasta que haya movimiento. Usá el asesor IA para consultar opciones específicas.</div>';
+    return;
+  }
+
+  // Group by category
+  const cats = new Map();
+  quality.forEach(item => {
+    const cat = categoryOf(item.assetClass);
+    if (!cats.has(cat)) cats.set(cat, []);
+    if (cats.get(cat).length < 4) cats.get(cat).push(item);
+  });
+
+  let html = '';
+  cats.forEach((items, cat) => {
+    html += `<div class="section-title">${esc(cat)}</div>`;
+    html += items.map(item => oppCard(item, cashARS)).join('');
+  });
+
+  containerEl.innerHTML = html;
+}
+
 function oppCard(item, cashARS) {
   const cls = riskCls(item.riskColor);
   const pcl = pillCls(item.riskColor);
@@ -601,11 +652,32 @@ function oppCard(item, cashARS) {
   const human = item.human || {};
   const lbl = item.label || human.label || '';
 
+  // Commission and minimum investment calculation
+  const ac = item.assetClass || '';
+  const isBond = ['bono_dolar', 'bono_cer', 'lecap'].includes(ac);
+  const commPct = isBond ? 0.7 : 1.5;
+  const priceNum = price != null ? Number(price) : null;
+  const target1Num = plan.target1 ? Number(plan.target1) : null;
+  let expectedGainPct = null, netGainPct = null, minARS = null;
+  if (priceNum && target1Num && priceNum > 0) {
+    expectedGainPct = (target1Num - priceNum) / priceNum * 100;
+    netGainPct = expectedGainPct - commPct;
+    if (netGainPct > 0.1) {
+      minARS = Math.ceil(Math.ceil(500 / (netGainPct / 100)) / 1000) * 1000;
+    }
+  }
+  if (!minARS) minARS = isBond ? 10000 : 15000;
+
+  const commHTML = `<div style="background:#0d1820;border:1px solid #1e3040;border-radius:8px;padding:8px 10px;margin-top:8px;font-size:11px;line-height:1.7">
+    <div style="color:#7a9ab8;font-weight:700;margin-bottom:2px">COMISIÓN IOL (ida + vuelta): ~${commPct}%</div>
+    ${expectedGainPct != null ? `<div class="${netGainPct > 0 ? 'gn' : 'rd'}">Ganancia esperada: ~${expectedGainPct.toFixed(1)}% bruta${netGainPct > 0 ? ` · ~${netGainPct.toFixed(1)}% neta` : ' → no cubre comisión, esperá mejor precio'}</div>` : ''}
+    <div style="color:#e0f0ff">Mínimo para que valga la pena: <b>$${minARS.toLocaleString('es-AR')} ARS</b></div>
+  </div>`;
+
   const planDetails = [
     plan.entryZone ? `Entrada: <b>${esc(plan.entryZone)}</b>` : '',
     plan.target1 ? `Obj 1: <b>${plan.target1}</b>${plan.target2 ? ' · Obj 2: <b>'+plan.target2+'</b>' : ''}` : '',
     plan.invalidation ? `Stop: <b>${plan.invalidation}</b>` : '',
-    plan.suggestedAmountARS ? `Monto sugerido: <b class="money">${money(plan.suggestedAmountARS)}</b> (${plan.allocationPct||0}%)` : '',
     plan.horizon ? `Horizonte: <b>${esc(plan.horizon)}</b>` : '',
   ].filter(Boolean);
 
@@ -626,10 +698,11 @@ function oppCard(item, cashARS) {
       <div class="tiny" style="margin-top:2px">Score ${item.score}/100</div>
     </div>
   </div>
-  <div style="margin-top:10px;font-size:12px;color:#a0b8d0;line-height:1.5">
+  ${planDetails.length ? `<div style="margin-top:8px;font-size:12px;color:#a0b8d0;line-height:1.6">
     <b>Señal:</b> ${esc(item.thesis || '—')}
     ${planDetails.map(d => `<br>${d}`).join('')}
-  </div>
+  </div>` : `<div style="margin-top:8px;font-size:12px;color:#a0b8d0">${esc(item.thesis || '—')}</div>`}
+  ${commHTML}
   ${human.queEs ? `<div style="background:#0a1018;border-radius:10px;padding:9px;margin-top:8px;font-size:12px;color:#b0c8e0;line-height:1.5">
     ${esc(human.queEs)}<br><b style="color:#c8d8f0">Qué hacer:</b> ${esc(human.queHacer||'—')}
   </div>` : ''}

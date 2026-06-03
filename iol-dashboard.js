@@ -496,11 +496,16 @@ function scoreQuote(quote) {
   const assetClass = classifyAsset(symbol);
 
   if (!quote.ok || !quote.price || quote.price <= 0) {
+    const basePts = { lecap: 58, bono_cer: 52, bono: 52, cedear_etf: 56, cedear_defensivo: 54, cedear_financiero: 48, cedear_industrial: 46, cedear_global: 50, accion_local: 44, otro: 40 };
+    const rs = riskBase(assetClass);
     return {
       symbol, assetClass,
-      score: 0, riskScore: 90,
-      riskColor: "Rojo", action: "Sin datos",
-      thesis: "Sin cotización válida desde IOL.", quote
+      score: basePts[assetClass] ?? 40,
+      riskScore: rs,
+      riskColor: rs <= 36 ? "Verde" : rs <= 56 ? "Amarillo" : rs <= 74 ? "Naranja" : "Rojo",
+      action: "Revisar en IOL",
+      thesis: "Sin precio en tiempo real. Verificá liquidez en IOL antes de operar.",
+      quote
     };
   }
 
@@ -602,27 +607,27 @@ function buildTradePlan(scored, availableARS) {
   let allocationPct = 0;
 
   if (scored.action.startsWith("Comprar")) {
-    allocationPct = scored.riskColor === "Verde" ? 0.40 : scored.riskColor === "Amarillo" ? 0.30 : scored.riskColor === "Naranja" ? 0.15 : 0;
+    allocationPct = scored.riskColor === "Verde" ? 0.35 : scored.riskColor === "Amarillo" ? 0.25 : scored.riskColor === "Naranja" ? 0.12 : 0;
   } else if (scored.action.includes("seguimiento") || scored.action.includes("parcial")) {
     allocationPct = 0.10;
   }
 
-  if (highBeta) allocationPct = Math.min(allocationPct, 0.20);
-  if (scored.assetClass === "cedear_etf" || scored.assetClass === "cedear_defensivo") allocationPct = Math.max(allocationPct, 0.20);
-  if (isBono && scored.riskColor !== "Rojo") allocationPct = Math.max(allocationPct, 0.25);
+  if (highBeta) allocationPct = Math.min(allocationPct, 0.15);
+  if (scored.assetClass === "cedear_etf" || scored.assetClass === "cedear_defensivo") allocationPct = Math.min(allocationPct, 0.30);
+  if (isBono && scored.riskColor !== "Rojo") allocationPct = Math.min(allocationPct, 0.30);
 
-  const amount = availableARS > 0 ? Math.round(availableARS * allocationPct) : null;
+  // Solo calcular monto si el saldo disponible parece razonable (< 50M ARS)
+  // Evita sugerir montos absurdos cuando IOL devuelve el total del portfolio como "disponible"
+  const cashReasonable = availableARS > 100 && availableARS < 50_000_000;
+  const amount = cashReasonable ? Math.round(availableARS * allocationPct) : null;
 
-  // Minimum move needed to cover commissions (so trade is profitable net of fees)
   const minGainPct = commRt * 100;
   const breakEvenPrice = price ? roundPrice(price * (1 + commRt)) : null;
-
-  // Targets must exceed commission cost to be meaningful
   const target1Mult = isBono ? Math.max(1.06, 1 + commRt * 4) : Math.max(1.09, 1 + commRt * 5);
   const target2Mult = isBono ? Math.max(1.10, 1 + commRt * 7) : Math.max(1.15, 1 + commRt * 8);
 
   return {
-    entryZone: price ? `${roundPrice(price * (highBeta ? 0.985 : 0.99))} - ${roundPrice(price * 1.008)}` : "Esperar precio válido",
+    entryZone: price ? `${roundPrice(price * (highBeta ? 0.985 : 0.99))} - ${roundPrice(price * 1.008)}` : "Ver precio en IOL",
     target1: price ? roundPrice(price * target1Mult) : null,
     target2: price ? roundPrice(price * target2Mult) : null,
     invalidation: price ? roundPrice(price * (highBeta ? 0.94 : isBono ? 0.958 : 0.952)) : null,
@@ -630,9 +635,8 @@ function buildTradePlan(scored, availableARS) {
     minGainToProfit: `+${minGainPct.toFixed(1)}% (comisión IOL ida y vuelta)`,
     allocationPct: Math.round(allocationPct * 100),
     suggestedAmountARS: amount,
-    estimatedUnits: amount && price ? Math.floor((amount / price) * 100) / 100 : null,
     horizon: highBeta ? "1 a 4 semanas" : isBono ? "3 a 10 semanas" : "2 a 8 semanas",
-    rule: `Mínimo requerido para cubrir comisiones IOL: ${minGainPct.toFixed(1)}%. Si toca invalidación, salir. Si llega a objetivo 1, tomar parcial y subir stop.`
+    rule: `Usar ~${Math.round(allocationPct * 100)}% del capital disponible. Mínimo para cubrir comisiones IOL: +${minGainPct.toFixed(1)}%.`
   };
 }
 
@@ -762,21 +766,21 @@ function buildDailyAnalysis(portfolio, account, quotes, historyMap = new Map()) 
   const held = new Set(holdings.map(h => h.symbol));
   const newOpportunities = scoredUniverse
     .filter(item => !held.has(item.symbol))
-    .filter(item => item.quote?.ok && item.score >= 55 && item.riskColor !== "Rojo")
+    .filter(item => item.score >= 45 && item.riskColor !== 'Rojo')
     .slice(0, 8);
 
   const bestNewOpportunity = newOpportunities[0] || null;
   const urgentHoldings = holdingAnalysis.filter(x => x.priority === "alta");
 
-  let mainRecommendation = "Esperar / caución corta";
-  let summary = "No se detecta una oportunidad nueva suficientemente clara. Priorizar control de cartera y liquidez.";
+  let mainRecommendation = "Revisá las oportunidades del día";
+  let summary = "Hay activos con señal positiva en el universo analizado. Mirá la sección Oportunidades para ver qué tiene mejor entrada hoy.";
 
   if (urgentHoldings.length) {
-    mainRecommendation = "Primero corregir riesgo en cartera actual";
-    summary = `Hay ${urgentHoldings.length} tenencia(s) con prioridad alta. Antes de comprar más, revisar stops, reducción o salida parcial.`;
-  } else if (bestNewOpportunity && availableCash.ars > 0) {
-    mainRecommendation = `${bestNewOpportunity.action}: ${bestNewOpportunity.symbol}`;
-    summary = `La mejor oportunidad fuera de tus tenencias es ${bestNewOpportunity.symbol}, con score ${bestNewOpportunity.score} y riesgo ${bestNewOpportunity.riskColor}.`;
+    mainRecommendation = "Revisá tu cartera antes de operar";
+    summary = `Hay ${urgentHoldings.length} tenencia(s) con señal de alerta. Antes de comprar más, revisá stops o reducción parcial.`;
+  } else if (bestNewOpportunity) {
+    mainRecommendation = `Oportunidad: ${bestNewOpportunity.symbol} (score ${bestNewOpportunity.score})`;
+    summary = `La mejor entrada del día es ${bestNewOpportunity.symbol} (${bestNewOpportunity.action}), riesgo ${bestNewOpportunity.riskColor}. Usá el asesor IA para más detalles.`;
   } else if (holdingAnalysis.some(h => h.decision.includes("aumentar"))) {
     const candidate = holdingAnalysis.find(h => h.decision.includes("aumentar"));
     mainRecommendation = `Mantener / posible aumento en ${candidate.symbol}`;
