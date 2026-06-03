@@ -654,7 +654,7 @@ function oppCard(item, cashARS) {
 
   // Commission and minimum investment calculation
   const ac = item.assetClass || '';
-  const isBond = ['bono_dolar', 'bono_cer', 'lecap'].includes(ac);
+  const isBond = ['bono_dolar', 'bono_cer', 'lecap', 'bono'].includes(ac);
   const commPct = isBond ? 0.7 : 1.5;
   const priceNum = price != null ? Number(price) : null;
   const target1Num = plan.target1 ? Number(plan.target1) : null;
