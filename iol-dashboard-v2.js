@@ -76,6 +76,37 @@ async function fetchNewsHeadlines() {
   return settled.flatMap(r => r.status === 'fulfilled' ? r.value : []).slice(0, 15);
 }
 
+async function fetchMacroData() {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch('https://dolarapi.com/v1/dolares', {
+      signal: ctrl.signal,
+      headers: { 'user-agent': 'IOL-Cartera-Pro/1.0', 'accept': 'application/json' }
+    });
+    clearTimeout(t);
+    if (!r.ok) return null;
+    const dolares = await r.json();
+    if (!Array.isArray(dolares)) return null;
+    const find = (...names) => dolares.find(d => names.some(n => String(d.nombre || '').toLowerCase().includes(n.toLowerCase())));
+    const blue = find('blue');
+    const oficial = find('oficial');
+    const ccl = find('contado', 'ccl');
+    const mep = find('bolsa', 'mep');
+    if (!blue) return null;
+    const brecha = (blue && oficial && oficial.venta > 0)
+      ? Math.round((blue.venta / oficial.venta - 1) * 100) : null;
+    return {
+      blue: { compra: blue.compra, venta: blue.venta },
+      oficial: oficial ? { compra: oficial.compra, venta: oficial.venta } : null,
+      ccl: ccl ? { venta: ccl.venta } : null,
+      mep: mep ? { venta: mep.venta } : null,
+      brechaBlueOficial: brecha,
+      updatedAt: blue.fechaActualizacion || new Date().toISOString()
+    };
+  } catch { return null; }
+}
+
 function explain(x, newsHeadlines) {
   const ac = x.assetClass || cls(x.symbol);
   const tp = x.tradePlan || {};
@@ -151,7 +182,7 @@ function norm(x, newsHeadlines) {
   };
 }
 
-function enrich(data, newsHeadlines) {
+function enrich(data, newsHeadlines, macroData) {
   if (!data || typeof data !== 'object') return data;
 
   const ms = marketStatus();
@@ -162,6 +193,12 @@ function enrich(data, newsHeadlines) {
   if (newsHeadlines && newsHeadlines.length) {
     data.newsContext = newsHeadlines;
     if (data.dailyAnalysis) data.dailyAnalysis.newsContext = newsHeadlines;
+  }
+
+  // Embed macro data (blue dollar, CCL, MEP)
+  if (macroData) {
+    data.macro = macroData;
+    if (data.dailyAnalysis) data.dailyAnalysis.macro = macroData;
   }
 
   const held = new Set((data.dailyAnalysis?.holdings || []).map(h => String(h.symbol || '').toUpperCase()));
@@ -214,20 +251,22 @@ module.exports = async function handler(req, res) {
     send(b) { chunks.push(typeof b === 'string' ? b : JSON.stringify(b)); }
   };
 
-  // Run base handler and news fetch in parallel to save time
-  const [, newsResult] = await Promise.allSettled([
+  // Run base handler, news fetch, and macro data in parallel to save time
+  const [, newsResult, macroResult] = await Promise.allSettled([
     baseHandler(req, fake),
-    fetchNewsHeadlines()
+    fetchNewsHeadlines(),
+    fetchMacroData()
   ]);
 
   const newsHeadlines = newsResult.status === 'fulfilled' ? newsResult.value : [];
+  const macroData = macroResult.status === 'fulfilled' ? macroResult.value : null;
 
   let data;
   try { data = JSON.parse(chunks.join('')); } catch {
     data = { ok: false, error: 'Respuesta base no JSON', raw: chunks.join('').slice(0, 500) };
   }
 
-  const out = fake.statusCode >= 200 && fake.statusCode < 300 ? enrich(data, newsHeadlines) : data;
+  const out = fake.statusCode >= 200 && fake.statusCode < 300 ? enrich(data, newsHeadlines, macroData) : data;
   res.status(fake.statusCode).setHeader('content-type', 'application/json; charset=utf-8');
   res.send(JSON.stringify(out));
 };

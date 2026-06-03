@@ -28,7 +28,7 @@ function buildSystemPrompt(contexto) {
   let ctx = "";
 
   if (contexto) {
-    const { mainRecommendation, summary, holdingsCount, availableCash, marketStatus, holdingAnalysis, newOpportunities } = contexto;
+    const { mainRecommendation, summary, holdingsCount, availableCash, marketStatus, holdingAnalysis, newOpportunities, macro, portfolioHealth } = contexto;
     const arsDisp = availableCash?.ars > 0
       ? "$" + Math.round(availableCash.ars).toLocaleString("es-AR")
       : "no detectado";
@@ -57,6 +57,22 @@ function buildSystemPrompt(contexto) {
         const precio = o.price != null ? Number(o.price).toLocaleString("es-AR", {maximumFractionDigits: 2}) : "—";
         ctx += `\n- ${o.symbol} (${o.assetClass || "—"}): score ${o.score}/100, riesgo ${o.riskColor}, precio ${precio}, hoy ${hoy}\n  → ${o.action}: ${o.thesis}`;
       });
+    }
+
+    if (macro) {
+      const blueStr = macro.blue?.venta ? `$${macro.blue.venta.toLocaleString('es-AR')}` : "—";
+      const oficialStr = macro.oficial?.venta ? `$${macro.oficial.venta.toLocaleString('es-AR')}` : "—";
+      const cclStr = macro.ccl?.venta ? `$${macro.ccl.venta.toLocaleString('es-AR')}` : "—";
+      const mepStr = macro.mep?.venta ? `$${macro.mep.venta.toLocaleString('es-AR')}` : "—";
+      ctx += `\n\n## Tipo de cambio actual\n- Dólar Blue: ${blueStr} | Oficial: ${oficialStr} | CCL: ${cclStr} | MEP: ${mepStr}`;
+      if (macro.brechaBlueOficial != null) ctx += `\n- Brecha blue/oficial: ${macro.brechaBlueOficial > 0 ? '+' : ''}${macro.brechaBlueOficial}%`;
+    }
+
+    if (portfolioHealth) {
+      ctx += `\n\n## Salud de cartera\n- Score de diversificación: ${portfolioHealth.diversScore}/100\n- Exposición ARS: ${portfolioHealth.arsPct}% | USD-linked: ${portfolioHealth.usdPct}%\n- Posiciones: ${portfolioHealth.numPositions} activos en ${portfolioHealth.numClasses} clases`;
+      if (portfolioHealth.warnings?.length) {
+        portfolioHealth.warnings.forEach(w => { ctx += `\n- ⚠ ${w}`; });
+      }
     }
 
     if (contexto.newsContext?.length) {

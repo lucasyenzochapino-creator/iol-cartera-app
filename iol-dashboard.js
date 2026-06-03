@@ -287,6 +287,135 @@ async function getQuoteSafe(symbol, token) {
   };
 }
 
+// ── Price History & Technical Indicators ─────────────────────────────────────
+
+async function fetchPriceHistory(symbol, token) {
+  const today = new Date();
+  const from = new Date(today);
+  from.setDate(from.getDate() - 90);
+  const fmt = d => d.toISOString().split('T')[0];
+  for (const mercado of ["bCBA", "bcba"]) {
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 5000);
+      const resp = await fetch(
+        `${IOL_BASE}/api/v2/${mercado}/Titulos/${encodeURIComponent(symbol)}/Cotizacion/serializada?fechaDesde=${fmt(from)}&fechaHasta=${fmt(today)}&ajustada=sinAjustar`,
+        { method: "GET", headers: { "authorization": `Bearer ${token}`, "accept": "application/json" }, signal: ctrl.signal }
+      );
+      clearTimeout(t);
+      if (!resp.ok) continue;
+      const data = await resp.json();
+      if (Array.isArray(data) && data.length >= 5) return data;
+      const arr = data?.cotizaciones || data?.items || data?.data;
+      if (Array.isArray(arr) && arr.length >= 5) return arr;
+    } catch {}
+  }
+  return [];
+}
+
+function extractCloses(history) {
+  return history
+    .map(c => firstNumber(c.ultimo, c.cierre, c.close, c.precioPromedio, c.price))
+    .filter(v => v != null);
+}
+
+function calcRSI(closes, period = 14) {
+  if (closes.length < period + 1) return null;
+  const gains = [], losses = [];
+  for (let i = 1; i < closes.length; i++) {
+    const diff = closes[i] - closes[i - 1];
+    gains.push(diff > 0 ? diff : 0);
+    losses.push(diff < 0 ? -diff : 0);
+  }
+  let avgGain = gains.slice(0, period).reduce((a, b) => a + b) / period;
+  let avgLoss = losses.slice(0, period).reduce((a, b) => a + b) / period;
+  for (let i = period; i < gains.length; i++) {
+    avgGain = (avgGain * (period - 1) + gains[i]) / period;
+    avgLoss = (avgLoss * (period - 1) + losses[i]) / period;
+  }
+  if (avgLoss === 0) return 100;
+  return Math.round(100 - 100 / (1 + avgGain / avgLoss));
+}
+
+function calcSMA(values, period) {
+  if (values.length < period) return null;
+  return values.slice(-period).reduce((a, b) => a + b, 0) / period;
+}
+
+function applyTechnicals(scored, closes) {
+  if (!closes || closes.length < 10) return { ...scored, rsi: null, sma20: null, sma50: null };
+  const rsi = calcRSI(closes);
+  const sma20 = calcSMA(closes, 20);
+  const sma50 = calcSMA(closes, 50);
+  const price = scored.quote?.price;
+  let bonus = 0;
+  const reasons = [];
+  if (rsi != null) {
+    if (rsi < 30) { bonus += 12; reasons.push(`RSI ${rsi} sobrevendido`); }
+    else if (rsi < 42) { bonus += 6; reasons.push(`RSI ${rsi} zona de entrada`); }
+    else if (rsi > 72) { bonus -= 12; reasons.push(`RSI ${rsi} sobrecomprado`); }
+    else if (rsi > 62) { bonus -= 4; reasons.push(`RSI ${rsi} calentando`); }
+  }
+  if (price && sma20) {
+    if (price > sma20 * 1.01 && price < sma20 * 1.05) { bonus += 5; reasons.push("sobre MA20"); }
+    else if (price < sma20 * 0.99) { bonus -= 6; reasons.push("bajo MA20"); }
+  }
+  if (sma20 && sma50) {
+    if (sma20 > sma50 * 1.01) { bonus += 8; reasons.push("MA20>MA50 alcista"); }
+    else if (sma20 < sma50 * 0.99) { bonus -= 8; reasons.push("MA20<MA50 bajista"); }
+  }
+  const newScore = Math.max(0, Math.min(100, Math.round(scored.score + bonus)));
+  return {
+    ...scored, score: newScore, rsi,
+    sma20: sma20 ? Math.round(sma20 * 100) / 100 : null,
+    sma50: sma50 ? Math.round(sma50 * 100) / 100 : null,
+    thesis: [scored.thesis, ...reasons].filter(Boolean).join('; ')
+  };
+}
+
+// ── Portfolio Health Score ────────────────────────────────────────────────────
+
+function calcPortfolioHealth(holdingAnalysis) {
+  if (!holdingAnalysis.length) return null;
+  const totalValue = holdingAnalysis.reduce((s, h) => s + (Number(h.valueARS) || 0), 0);
+  if (totalValue <= 0) return null;
+  const byClass = new Map();
+  holdingAnalysis.forEach(h => {
+    const ac = h.assetClass || 'otro';
+    byClass.set(ac, (byClass.get(ac) || 0) + (Number(h.valueARS) || 0));
+  });
+  const concentrations = holdingAnalysis
+    .map(h => ({ symbol: h.symbol, pct: (Number(h.valueARS) || 0) / totalValue * 100 }))
+    .sort((a, b) => b.pct - a.pct);
+  const arsClasses = new Set(['accion_local', 'lecap', 'bono_cer']);
+  const usdClasses = new Set(['bono', 'cedear_etf', 'cedear_global', 'cedear_defensivo', 'cedear_financiero', 'cedear_industrial']);
+  let arsPct = 0, usdPct = 0;
+  byClass.forEach((v, k) => {
+    if (arsClasses.has(k)) arsPct += v / totalValue * 100;
+    else if (usdClasses.has(k)) usdPct += v / totalValue * 100;
+  });
+  const maxConc = concentrations[0]?.pct || 100;
+  let diversScore = 40;
+  const n = holdingAnalysis.length;
+  if (n >= 6) diversScore += 20; else if (n >= 4) diversScore += 12; else if (n >= 2) diversScore += 5;
+  if (byClass.size >= 3) diversScore += 20; else if (byClass.size >= 2) diversScore += 10;
+  if (maxConc < 25) diversScore += 20; else if (maxConc < 40) diversScore += 8; else diversScore -= 12;
+  const warnings = [];
+  if (maxConc > 40) warnings.push(`${concentrations[0].symbol} es el ${maxConc.toFixed(0)}% de tu cartera — alto riesgo de concentración`);
+  if (arsPct > 70) warnings.push(`${arsPct.toFixed(0)}% en activos ARS — poca cobertura cambiaria`);
+  if (usdPct > 85) warnings.push(`${usdPct.toFixed(0)}% dolarizado — considerá algo en tasa ARS de corto plazo`);
+  if (n < 3) warnings.push("Menos de 3 posiciones — concentración muy alta");
+  return {
+    diversScore: Math.max(0, Math.min(100, Math.round(diversScore))),
+    arsPct: Math.round(arsPct), usdPct: Math.round(usdPct),
+    numPositions: n, numClasses: byClass.size,
+    maxConcentrationPct: Math.round(maxConc),
+    topHoldings: concentrations.slice(0, 3),
+    warnings,
+    byClassPct: Object.fromEntries([...byClass.entries()].map(([k, v]) => [k, Math.round(v / totalValue * 100)]))
+  };
+}
+
 function uniqueUpper(list) {
   return Array.from(new Set(
     list
@@ -601,11 +730,14 @@ function analyzeHolding(holding, scored) {
     reason,
     commissionRoundTripPct: commRt,
     invalidation: scored.quote?.price ? roundPrice(scored.quote.price * (scored.assetClass === "accion_local" ? 0.94 : 0.95)) : null,
+    rsi: scored.rsi ?? null,
+    sma20: scored.sma20 ?? null,
+    sma50: scored.sma50 ?? null,
     actionType: "tenencia"
   };
 }
 
-function buildDailyAnalysis(portfolio, account, quotes) {
+function buildDailyAnalysis(portfolio, account, quotes, historyMap = new Map()) {
   const holdings = extractHoldings(portfolio);
   const availableCash = extractAvailableCash(account);
   const quoteMap = new Map(quotes.map(q => [q.symbol, q]));
@@ -618,7 +750,9 @@ function buildDailyAnalysis(portfolio, account, quotes) {
   const holdingAnalysis = holdings
     .map(holding => {
       const quote = quoteMap.get(holding.symbol) || { ok: false, symbol: holding.symbol, error: "Sin cotización" };
-      return analyzeHolding(holding, scoreQuote(quote));
+      const scored = scoreQuote(quote);
+      const closes = extractCloses(historyMap.get(holding.symbol) || []);
+      return analyzeHolding(holding, applyTechnicals(scored, closes));
     })
     .sort((a, b) => {
       const weight = { alta: 3, media: 2, baja: 1 };
@@ -660,6 +794,7 @@ function buildDailyAnalysis(portfolio, account, quotes) {
     bestNewOpportunity,
     mainRecommendation,
     summary,
+    portfolioHealth: calcPortfolioHealth(holdingAnalysis),
     rules: [
       "Primero se revisan tenencias actuales.",
       "Después se analiza dinero disponible.",
@@ -704,7 +839,17 @@ module.exports = async function handler(req, res) {
     ]).slice(0, 60);
 
     const quotes = await Promise.all(symbols.map(sym => getQuoteSafe(sym, token)));
-    const dailyAnalysis = buildDailyAnalysis(portfolio, account, quotes);
+
+    // Fetch price history for held symbols only — used for RSI and moving averages
+    const historyMap = new Map();
+    await Promise.allSettled(holdings.map(async h => {
+      try {
+        const hist = await fetchPriceHistory(h.symbol, token);
+        if (hist.length) historyMap.set(h.symbol, hist);
+      } catch {}
+    }));
+
+    const dailyAnalysis = buildDailyAnalysis(portfolio, account, quotes, historyMap);
 
     return json(res, 200, {
       ok: true,
