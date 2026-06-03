@@ -1,1 +1,808 @@
-<!doctype html><html lang="es-AR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0d1117"><title>IOL Cartera Pro</title><link rel="manifest" href="./manifest.json"><style>:root{--bg:#0d1117;--card:#161b22;--card2:#1f2937;--line:#30363d;--txt:#f0f3f5;--muted:#a8b2bc;--accent:#f5c97b;--green:#56d364;--yellow:#ffd33d;--red:#ff7b72;--blue:#79c0ff}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#182238 0,#0d1117 38%,#080b10 100%);color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;padding-bottom:86px}header{position:sticky;top:0;z-index:5;background:rgba(13,17,23,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(14px)}.head,.wrap{max-width:940px;margin:auto}.head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px}.wrap{padding:14px}.logo{width:42px;height:42px;border-radius:14px;background:#101722;color:var(--accent);display:grid;place-items:center;font-family:Georgia,serif;font-weight:950}.brand{display:flex;align-items:center;gap:10px}h1{font-size:17px;margin:0}h2{font-size:19px;margin:0 0 10px}.sub,.muted{color:var(--muted);font-size:13px}.card{background:rgba(22,27,34,.96);border:1px solid var(--line);border-radius:18px;padding:15px;margin-bottom:12px}.hero{background:linear-gradient(145deg,#202b3d,#111923)}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.recgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.stat{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px}.label{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#8b949e;font-weight:900}.value{font-size:17px;font-weight:900;margin-top:4px}.btn{border:0;border-radius:13px;padding:12px 14px;font-weight:900;cursor:pointer}.btn-primary{background:var(--accent);color:#111}.btn-secondary{background:var(--card2);color:var(--txt);border:1px solid var(--line)}.input{width:100%;padding:13px;border-radius:13px;background:var(--card2);border:1px solid var(--line);color:var(--txt)}.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.pill{display:inline-block;border-radius:999px;padding:5px 10px;font-size:11px;font-weight:950;text-transform:uppercase}.pv{background:#56d36422;color:var(--green);border:1px solid #56d36455}.pa{background:#ffd33d22;color:var(--yellow);border:1px solid #ffd33d55}.pr{background:#ff7b7222;color:var(--red);border:1px solid #ff7b7255}.pb{background:#79c0ff22;color:var(--blue);border:1px solid #79c0ff55}.section{font-size:18px;font-weight:950;margin:20px 0 10px;border-left:4px solid var(--accent);padding-left:10px}.idea,.rec{background:#111820;border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px}.idea.v,.rec.v{border-color:#56d36466}.idea.a,.rec.a{border-color:#ffd33d66}.idea.r,.rec.r{border-color:#ff7b7266}.row{display:flex;justify-content:space-between;gap:10px}.tiny{font-size:12px;color:#8b949e}.notice{background:#79c0ff18;border:1px solid #79c0ff44;border-radius:14px;padding:12px;color:#d8ecff}.warning{background:#ffd33d18;border:1px solid #ffd33d44;border-radius:14px;padding:12px;color:#fff0ad}.hide{display:none!important}.money-hidden .money{filter:blur(8px);user-select:none}.meter{width:46px;height:24px;border-radius:46px 46px 0 0;background:conic-gradient(from 270deg,var(--green) 0 45deg,var(--yellow) 45deg 92deg,var(--red) 92deg 180deg,transparent 180deg);position:relative;overflow:hidden}.meter:after{content:"";position:absolute;left:10px;right:10px;bottom:0;height:14px;background:#111820;border-radius:16px 16px 0 0}.rec-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}.price{font-weight:950;font-size:16px}.symbol{font-size:20px;font-weight:950;letter-spacing:-.03em}.cat-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:18px 0 10px}.cat-title span{background:#c8f94b;color:#111;padding:4px 10px;border-radius:7px;font-weight:950}.box-note{font-size:12px;color:#d8ecff;background:#79c0ff14;border:1px solid #79c0ff30;border-radius:12px;padding:10px;margin-top:10px}nav{position:fixed;left:0;right:0;bottom:0;background:#0d1117ee;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);gap:3px;padding:7px}.tab{background:transparent;border:0;color:#8b949e;font-weight:900;padding:9px 2px;border-radius:13px;font-size:11px}.tab.active{color:var(--accent);background:#f5c97b18}pre{white-space:pre-wrap;word-break:break-word;background:#090c10;border:1px solid var(--line);border-radius:14px;padding:12px;max-height:360px;overflow:auto}@media(max-width:640px){.grid,.actions,.recgrid{grid-template-columns:1fr}.row{flex-direction:column}.rec-head{flex-direction:row}.head{align-items:flex-start}.btn{padding:11px 12px}}</style></head><body><header><div class="head"><div class="brand"><div class="logo">IOL</div><div><h1>Cartera Pro</h1><div class="sub" id="status">Cartera + recomendaciones</div></div></div><button class="btn btn-primary" onclick="refreshNow()">Actualizar</button></div></header><main class="wrap"><section id="hoy"><div id="setup" class="card"><h2>PIN de la app</h2><p class="muted">Solo lectura. No ejecuta operaciones.</p><input id="pin" class="input" placeholder="APP_PIN"><div class="actions"><button class="btn btn-primary" onclick="savePin()">Guardar</button><button class="btn btn-secondary" onclick="refreshNow()">Probar</button></div></div><div class="card hero"><div class="label">Cartera real IOL</div><div class="value money" id="total">—</div><p class="muted" id="mainSub">Esperando datos</p></div><div class="grid"><div class="stat"><div class="label">Disponible ARS</div><div class="value money" id="ars">—</div></div><div class="stat"><div class="label">Tenencias</div><div class="value" id="count">—</div></div></div><button class="btn btn-secondary" style="width:100%;margin:10px 0" onclick="toggleMoney()" id="hideMoney">Ocultar montos</button><div class="card"><div class="label">Resumen</div><h2 id="mainTitle">Actualizar para evaluar</h2><p class="muted" id="mainText">El saldo no bloquea el análisis. Las recomendaciones aparecen en su pestaña inferior.</p></div><div class="section">Lectura sobre tus tenencias</div><div id="lectura"></div></section><section id="recom" class="hide"><div class="card"><div class="label">Recomendaciones</div><h2>Solo instrumentos destacados</h2><p class="muted">Ordenado por categoría y semáforo. Si una categoría no tiene nada razonable, se muestra como vacío. Validar precio, volumen y spread en IOL antes de actuar.</p></div><div id="recomendaciones"></div></section><section id="cartera" class="hide"><div class="section">Tenencias detectadas</div><div id="portfolio"></div></section><section id="config" class="hide"><div class="card"><h2>Configuración</h2><input id="pin2" class="input" placeholder="APP_PIN"><div class="actions"><button class="btn btn-primary" onclick="savePin2()">Guardar</button><button class="btn btn-secondary" onclick="clearLocal()">Borrar PIN</button></div></div></section><section id="raw" class="hide"><pre id="rawJson">Sin datos</pre></section></main><nav><button class="tab active" onclick="show('hoy',this)">Hoy</button><button class="tab" onclick="show('recom',this)">Recom.</button><button class="tab" onclick="show('cartera',this)">Cartera</button><button class="tab" onclick="show('config',this)">Config</button><button class="tab" onclick="show('raw',this)">Técnico</button></nav><script>const API=location.hostname.includes('vercel.app')?'/api/iol-dashboard':'/.netlify/functions/iol-dashboard';const BASE=[{sym:'KO',cat:'Cedears',color:'Verde',kind:'CEDEAR defensivo',ref:'Consumo global',note:'Menor volatilidad relativa frente a tecnología agresiva',price:'Ref. IOL',score:82},{sym:'SPY',cat:'Cedears',color:'Amarillo',kind:'ETF CEDEAR',ref:'Índice USA',note:'Exposición amplia a EE.UU. sin depender de una sola empresa',price:'Ref. IOL',score:78},{sym:'MSFT',cat:'Cedears',color:'Amarillo',kind:'Tecnología calidad',ref:'Software / IA',note:'Tecnología de calidad, menos extrema que momentum puro',price:'Ref. IOL',score:76},{sym:'NVDA',cat:'Cedears',color:'Rojo',kind:'Alta beta',ref:'IA / chips',note:'Potencial alto, volatilidad alta. Solo con validación fuerte',price:'Ref. IOL',score:72},{sym:'GGAL',cat:'Merval',color:'Amarillo',kind:'Acción líder',ref:'Financiero',note:'Papel líquido para seguimiento táctico del mercado local',price:'Ref. IOL',score:79},{sym:'PAMP',cat:'Merval',color:'Amarillo',kind:'Acción líder',ref:'Energía',note:'Perfil energético local con buena liquidez relativa',price:'Ref. IOL',score:77},{sym:'YPFD',cat:'Merval',color:'Rojo',kind:'Acción alta beta',ref:'Energía',note:'Mayor sensibilidad a contexto político, petróleo y flujo local',price:'Ref. IOL',score:70},{sym:'AL30',cat:'Bonos / cobertura',color:'Amarillo',kind:'Bono soberano',ref:'Renta fija',note:'Instrumento líquido, sensible a riesgo país y dólar financiero',price:'Ref. IOL',score:75},{sym:'GD30',cat:'Bonos / cobertura',color:'Amarillo',kind:'Bono soberano',ref:'Renta fija',note:'Alternativa soberana para seguir si mejora el contexto local',price:'Ref. IOL',score:73},{sym:'CAUCION',cat:'Bonos / cobertura',color:'Verde',kind:'Tasa corto plazo',ref:'Liquidez',note:'Opción defensiva para esperar con baja volatilidad',price:'Tasa del día',score:86},{sym:'DOLAR MEP',cat:'Bonos / cobertura',color:'Verde',kind:'Cobertura',ref:'Tipo de cambio',note:'Cobertura parcial ante presión cambiaria',price:'Ref. mercado',score:80}];let lastA=null;function $(i){return document.getElementById(i)}function n(v){let x=Number(String(v??'').replace(/[^0-9.-]/g,''));return Number.isFinite(x)?x:NaN}function money(v){let x=n(v);return Number.isFinite(x)?x.toLocaleString('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}):'—'}function esc(s){return String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}function getPin(){return localStorage.getItem('APP_PIN')||''}function savePin(){let v=$('pin').value.trim();if(v.length>7){localStorage.setItem('APP_PIN',v);refreshNow()}}function savePin2(){let v=$('pin2').value.trim();if(v.length>7){localStorage.setItem('APP_PIN',v);refreshNow()}}function clearLocal(){localStorage.removeItem('APP_PIN');localStorage.removeItem('LAST_IOL_DATA');location.reload()}function toggleMoney(){localStorage.setItem('HIDE_MONEY',localStorage.getItem('HIDE_MONEY')==='1'?'0':'1');applyMoney()}function applyMoney(){document.body.classList.toggle('money-hidden',localStorage.getItem('HIDE_MONEY')==='1')}function show(id,b){['hoy','recom','cartera','config','raw'].forEach(x=>$(x).classList.add('hide'));$(id).classList.remove('hide');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));b.classList.add('active');if(id==='config')$('pin2').value=getPin();if(id==='recom'&&lastA)renderRecomendaciones(lastA)}function sym(i){return (i?.simbolo||i?.ticker||i?.symbol||i?.titulo?.simbolo||i?.descripcion?.split?.(' ')?.[0]||'').toString().toUpperCase()}function val(i){for(const k of ['valuacion','valorActual','valorizado','monto','importe','valorMercado']){let x=n(i?.[k]);if(Number.isFinite(x))return x}return NaN}function findArr(o,d=0){if(!o||d>6)return[];if(Array.isArray(o)){if(o.some(x=>x&&typeof x==='object'&&sym(x)))return o;for(const it of o){let r=findArr(it,d+1);if(r.length)return r}}else if(typeof o==='object'){for(const k of Object.keys(o)){let r=findArr(o[k],d+1);if(r.length)return r}}return[]}function detectCash(data,total){let txt=JSON.stringify(data||{});let vals=[...txt.matchAll(/"([^"]*(disponible|saldo|cash|efectivo)[^"]*)"\s*:\s*([0-9.]+)/gi)].map(m=>({k:m[1],v:n(m[3])})).filter(x=>x.v>0&&(!total||x.v<total*1.3));let ars=vals.find(x=>/ars|peso|disponible/i.test(x.k))||vals[0];return ars?ars.v:0}function analyze(data){let arr=findArr(data.portfolio||data);let pos=arr.map(i=>({sym:sym(i),value:val(i)})).filter(x=>x.sym);let total=pos.reduce((a,x)=>a+(Number.isFinite(x.value)?x.value:0),0);let cash=detectCash(data,total);return{pos,total,cash,source:data.source||'IOL'}}function render(data,cached=false){let a=analyze(data);lastA=a;$('setup').classList.add('hide');$('status').textContent=cached?'Dato guardado + recomendaciones':'IOL + recomendaciones';$('total').textContent=a.total?money(a.total):'Sin cartera detectada';$('mainSub').textContent=a.source;$('ars').textContent=a.cash?money(a.cash):'No detectado';$('count').textContent=a.pos.length||'—';$('rawJson').textContent=JSON.stringify(data,null,2);renderMain(a);renderLectura(a.pos);renderRecomendaciones(a);applyMoney()}function renderMain(a){let top=BASE.find(x=>x.color==='Verde')||BASE[0];$('mainTitle').textContent='Ver pestaña Recomendaciones';$('mainText').textContent='Ahí aparecen solo instrumentos destacados por categoría, con semáforo claro. El saldo actual no bloquea la recomendación: solo indica si hoy sería operable o teórica.'}function colorClass(c){return c==='Verde'?'v':c==='Amarillo'?'a':'r'}function pillClass(c){return c==='Verde'?'pv':c==='Amarillo'?'pa':'pr'}function renderRecCard(x,held,cash){let teoria=cash>0?'Operable con saldo detectado':'Teórica si agregás capital';let heldTxt=held.has(x.sym)?' · ya está en cartera':'';return`<div class="rec ${colorClass(x.color)}"><div class="rec-head"><div><div class="price money">${esc(x.price)}</div><div class="symbol">${esc(x.sym)}</div><div class="tiny">${esc(x.kind)} · ${esc(x.ref)}${heldTxt}</div></div><div><div class="meter"></div><span class="pill ${pillClass(x.color)}">${x.color}</span></div></div><div class="box-note"><b>Lectura:</b> ${esc(x.note)}<br><b>Estado:</b> ${esc(teoria)}<br><b>Score:</b> ${x.score}/100</div></div>`}function renderRecomendaciones(a){let held=new Set(a.pos.map(p=>p.sym));let cats=[...new Set(BASE.map(x=>x.cat))];let html=cats.map(cat=>{let items=BASE.filter(x=>x.cat===cat&&x.score>=70).slice(0,5);let body=items.length?`<div class="recgrid">${items.map(x=>renderRecCard(x,held,a.cash)).join('')}</div>`:'<div class="warning">No hay recomendados claros para esta categoría.</div>';return`<div class="cat-title"><h2>Recomendaciones</h2><span>${esc(cat)}</span></div>${body}`}).join('');$('recomendaciones').innerHTML=html}function renderLectura(pos){if(!pos.length){$('lectura').innerHTML='<div class="notice">No se detectaron tenencias. Igual la pestaña Recomendaciones muestra alternativas destacadas.</div>';$('portfolio').innerHTML=$('lectura').innerHTML;return}let html=pos.map(p=>`<div class="idea"><b>${esc(p.sym)}</b><div class="muted">Valuación detectada: <span class="money">${money(p.value)}</span></div><p class="muted">Lectura: revisar peso en cartera, liquidez y comparar con la pestaña Recomendaciones.</p></div>`).join('');$('lectura').innerHTML=html;$('portfolio').innerHTML=html}async function refreshNow(){let pin=getPin()||$('pin').value.trim();if(!pin){$('setup').classList.remove('hide');render({portfolio:[],source:'Motor local'},true);return}try{let r=await fetch(API,{headers:{'x-app-pin':pin},cache:'no-store'});let t=await r.text();let d=JSON.parse(t);if(!r.ok||!d.ok)throw Error(d.error||'Error');localStorage.setItem('LAST_IOL_DATA',JSON.stringify(d));render(d,false)}catch(e){let c=localStorage.getItem('LAST_IOL_DATA');if(c)render(JSON.parse(c),true);else render({portfolio:[],source:'Motor local sin IOL'},true);$('status').textContent='IOL no disponible, recomendaciones activas'}}applyMoney();if(getPin())refreshNow();else render({portfolio:[],source:'Motor local'},true);</script></body></html>
+<!doctype html><html lang="es-AR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0d1117"><title>IOL Cartera Pro</title><link rel="manifest" href="./manifest.json"><style>
+:root{--bg:#0d1117;--card:#161b22;--card2:#1f2937;--line:#30363d;--txt:#f0f3f5;--muted:#8b949e;--accent:#f5c97b;--green:#56d364;--yellow:#ffd33d;--orange:#f08c3b;--red:#ff7b72;--blue:#79c0ff}
+*{box-sizing:border-box}
+body{margin:0;background:#0d1117;color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;padding-bottom:88px}
+header{position:sticky;top:0;z-index:5;background:rgba(13,17,23,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(14px)}
+.head,.wrap{max-width:960px;margin:auto}
+.head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px}
+.wrap{padding:12px 14px}
+.logo{width:38px;height:38px;border-radius:12px;background:#101722;color:var(--accent);display:grid;place-items:center;font-family:Georgia,serif;font-weight:950;font-size:14px}
+.brand{display:flex;align-items:center;gap:10px}
+h1{font-size:16px;margin:0}
+.sub{color:var(--muted);font-size:12px}
+.card{background:#161b22;border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px}
+.hero-card{background:linear-gradient(145deg,#1a2540,#0f1824);border:1px solid #2a3d5a}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.stat-box{background:#1a2030;border:1px solid var(--line);border-radius:12px;padding:10px}
+.lbl{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:900}
+.val{font-size:16px;font-weight:900;margin-top:3px}
+.val-sm{font-size:13px;font-weight:700;margin-top:2px}
+.btn{border:0;border-radius:12px;padding:11px 14px;font-weight:900;cursor:pointer;font-size:13px;transition:opacity .15s}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--accent);color:#111}
+.btn-secondary{background:#1f2937;color:var(--txt);border:1px solid var(--line)}
+.btn-sm{padding:7px 12px;font-size:12px;border-radius:9px}
+.input{width:100%;padding:12px;border-radius:12px;background:#1f2937;border:1px solid var(--line);color:var(--txt);font-size:14px}
+.textarea{width:100%;padding:12px;border-radius:12px;background:#1f2937;border:1px solid var(--line);color:var(--txt);font-size:14px;resize:vertical;min-height:80px;font-family:inherit}
+.section-title{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.12em;color:var(--accent);margin:18px 0 8px;padding-left:2px}
+/* Action badges */
+.badge{display:inline-flex;align-items:center;gap:4px;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}
+.badge-buy{background:#56d36420;color:#56d364;border:1px solid #56d36450}
+.badge-hold{background:#ffd33d20;color:#ffd33d;border:1px solid #ffd33d50}
+.badge-sell{background:#ff7b7220;color:#ff7b72;border:1px solid #ff7b7250}
+.badge-wait{background:#79c0ff18;color:#79c0ff;border:1px solid #79c0ff40}
+/* Risk pills */
+.pill{display:inline-block;border-radius:999px;padding:3px 8px;font-size:10px;font-weight:900;text-transform:uppercase}
+.pv{background:#56d36418;color:#56d364;border:1px solid #56d36440}
+.pa{background:#ffd33d18;color:#ffd33d;border:1px solid #ffd33d40}
+.po{background:#f08c3b18;color:#f08c3b;border:1px solid #f08c3b40}
+.pr{background:#ff7b7218;color:#ff7b72;border:1px solid #ff7b7240}
+/* Rec cards */
+.rec-card{background:#111820;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:8px}
+.rec-card.v{border-color:#56d36440}
+.rec-card.a{border-color:#ffd33d40}
+.rec-card.o{border-color:#f08c3b40}
+.rec-card.r{border-color:#ff7b7240}
+.symbol{font-size:20px;font-weight:950;letter-spacing:-.02em}
+.price-big{font-size:22px;font-weight:950}
+/* Holding cards */
+.holding-card{background:#111820;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:8px}
+.holding-card.v{border-left:3px solid #56d364}
+.holding-card.a{border-left:3px solid #ffd33d}
+.holding-card.o{border-left:3px solid #f08c3b}
+.holding-card.r{border-left:3px solid #ff7b72}
+/* PnL colors */
+.gn{color:var(--green)}
+.rd{color:var(--red)}
+.nt{color:var(--muted)}
+/* News */
+.news-item{border-bottom:1px solid var(--line);padding:12px 0}
+.news-item:last-child{border-bottom:none}
+.news-source{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.1em}
+.news-ar{color:#79c0ff}
+.news-global{color:#f5c97b}
+/* Market badge */
+.mkt{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 10px;font-size:11px;font-weight:900;border:1px solid}
+.mkt-open{background:#56d36415;color:#56d364;border-color:#56d36440}
+.mkt-closed{background:#ffd33d15;color:#ffd33d;border-color:#ffd33d40}
+.mkt-wknd{background:#79c0ff15;color:#79c0ff;border-color:#79c0ff40}
+/* Macro strip */
+.macro-strip{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.macro-pill{background:#1a2030;border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:11px;font-weight:700}
+.macro-pill .ml{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);display:block;margin-bottom:2px}
+/* Health bar */
+.health-bar{height:6px;border-radius:999px;background:var(--line);overflow:hidden;margin-top:4px}
+.health-fill{height:100%;border-radius:999px;transition:width .4s}
+/* Misc */
+.row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.tiny{font-size:12px;color:var(--muted)}
+.notice{background:#79c0ff15;border:1px solid #79c0ff35;border-radius:12px;padding:12px;color:#c0d8f0;font-size:13px;margin-bottom:10px}
+.warning{background:#ffd33d15;border:1px solid #ffd33d35;border-radius:12px;padding:12px;color:#fff0ad;font-size:13px;margin-bottom:10px}
+.danger{background:#ff7b7215;border:1px solid #ff7b7235;border-radius:12px;padding:12px;color:#ffb3ae;font-size:13px;margin-bottom:10px}
+.money-hidden .money{filter:blur(7px);user-select:none}
+pre{white-space:pre-wrap;word-break:break-word;background:#090c10;border:1px solid var(--line);border-radius:12px;padding:12px;max-height:400px;overflow:auto;font-size:11px}
+nav{position:fixed;left:0;right:0;bottom:0;background:#0d1117f0;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(6,1fr);gap:2px;padding:5px 4px;backdrop-filter:blur(12px)}
+.tab{background:transparent;border:0;color:var(--muted);font-weight:900;padding:7px 2px;border-radius:9px;font-size:10px;cursor:pointer}
+.tab.active{color:var(--accent);background:#f5c97b15}
+.hide{display:none!important}
+.divider{height:1px;background:var(--line);margin:10px 0}
+@media(max-width:640px){.grid2,.grid3{grid-template-columns:1fr}}
+</style></head>
+<body>
+<header><div class="head">
+  <div class="brand">
+    <div class="logo">IOL</div>
+    <div><h1>Cartera Pro</h1><div class="sub" id="status">Iniciando…</div></div>
+  </div>
+  <button class="btn btn-primary" id="refreshBtn" onclick="refreshNow()">Actualizar</button>
+</div></header>
+
+<main class="wrap">
+
+<!-- ===== HOY ===== -->
+<section id="hoy">
+  <div id="setup" class="card hide">
+    <div class="lbl">Conectar con IOL</div>
+    <p class="tiny" style="margin:6px 0 12px">Ingresá el PIN de la app. Solo lectura — no ejecuta órdenes.</p>
+    <input id="pin" class="input" type="password" placeholder="APP_PIN" autocomplete="off">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+      <button class="btn btn-primary" onclick="savePin()">Guardar y conectar</button>
+      <button class="btn btn-secondary" onclick="refreshNow()">Probar</button>
+    </div>
+  </div>
+
+  <!-- Portfolio summary -->
+  <div class="hero-card card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+      <div>
+        <div class="lbl">Cartera total</div>
+        <div class="price-big money" id="total">—</div>
+        <div class="tiny" id="mainSub" style="margin-top:2px">—</div>
+      </div>
+      <div id="marketBadge"></div>
+    </div>
+    <div class="grid3">
+      <div class="stat-box">
+        <div class="lbl">Hoy</div>
+        <div class="val-sm" id="totalDailyPnl">—</div>
+        <div class="tiny" id="totalDailyPct">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="lbl">P&L total</div>
+        <div class="val-sm money" id="totalAccumPnl">—</div>
+        <div class="tiny" id="totalAccumPct">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="lbl">Disponible</div>
+        <div class="val-sm money" id="arsVal">—</div>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn btn-secondary" style="width:100%;margin-bottom:12px;font-size:12px" onclick="toggleMoney()">Ocultar / mostrar montos</button>
+
+  <!-- Macro indicators -->
+  <div id="macroSection" class="hide" style="margin-bottom:4px">
+    <div id="macroStrip" class="macro-strip"></div>
+  </div>
+
+  <!-- Portfolio health -->
+  <div id="portfolioHealthCard" class="hide card" style="margin-bottom:10px"></div>
+
+  <!-- Recomendación principal -->
+  <div class="card" id="mainRecCard">
+    <div class="lbl">Recomendación del día</div>
+    <div style="font-size:17px;font-weight:900;margin:6px 0 4px" id="mainTitle">Actualizá para ver análisis</div>
+    <div class="tiny" id="mainText">Conectá tu cuenta IOL para ver recomendaciones personalizadas.</div>
+  </div>
+
+  <!-- Holding analysis -->
+  <div class="section-title">Tus posiciones</div>
+  <div id="lectura"></div>
+</section>
+
+<!-- ===== RECOMENDACIONES ===== -->
+<section id="recom" class="hide">
+  <div style="margin-bottom:12px">
+    <div class="lbl" style="font-size:11px">Solo instrumentos con señal positiva · validá precio y volumen en IOL antes de operar</div>
+  </div>
+  <div id="recomendaciones"></div>
+</section>
+
+<!-- ===== CARTERA ===== -->
+<section id="cartera" class="hide">
+  <div id="portfolioPnlSummary" style="margin-bottom:12px"></div>
+  <div id="portfolio"></div>
+</section>
+
+<!-- ===== TÉCNICO ===== -->
+<section id="raw" class="hide">
+  <div class="section-title">Respuesta cruda de la API</div>
+  <pre id="rawJson">Sin datos.</pre>
+</section>
+
+<!-- ===== CONSULTA IA ===== -->
+<section id="consulta" class="hide">
+  <div class="card">
+    <div class="lbl">Asesor IA · Powered by Claude</div>
+    <p class="tiny" style="margin:4px 0 8px">Preguntá cualquier cosa sobre tu cartera, el mercado o estrategias. Usa tus datos reales de IOL.</p>
+    <textarea id="preguntaInput" class="textarea" placeholder="Ej: ¿Debería aumentar en GGAL? ¿Conviene entrar en AL30 hoy? ¿Cómo diversifico mejor ante la inflación?"></textarea>
+    <button class="btn btn-primary" id="btnConsultar" onclick="consultarIA()" style="width:100%;margin-top:8px">Consultar al asesor IA</button>
+  </div>
+  <div id="respuestaIA"></div>
+  <div class="notice" style="font-size:12px">Requiere <b>ANTHROPIC_API_KEY</b> en variables de entorno. Las respuestas son orientativas y no constituyen asesoramiento financiero formal.</div>
+</section>
+
+
+
+<!-- ===== CONFIG ===== -->
+<section id="config" class="hide">
+  <div class="card">
+    <div class="lbl">PIN de la app</div>
+    <p class="tiny" style="margin:4px 0 10px">Solo lectura. No ejecuta órdenes en IOL.</p>
+    <input id="pin2" class="input" type="password" placeholder="APP_PIN" autocomplete="off">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+      <button class="btn btn-primary" onclick="savePin2()">Guardar PIN</button>
+      <button class="btn btn-secondary" onclick="clearLocal()">Borrar datos</button>
+    </div>
+  </div>
+  <div class="notice" style="font-size:12px">El PIN se guarda solo en este dispositivo. Las credenciales IOL están en el servidor, nunca en el cliente.</div>
+
+  <div class="card" style="margin-top:10px">
+    <div class="lbl">Alertas automáticas</div>
+    <p class="tiny" style="margin:4px 0 10px">Recibí una alerta cuando una tenencia cae más del 3% o aparece una oportunidad con score ≥ 80.</p>
+    <button class="btn btn-secondary btn-sm" onclick="requestNotifications()" id="notifBtn">Activar alertas</button>
+    <div id="notifStatus" class="tiny" style="margin-top:6px"></div>
+  </div>
+
+  <div class="notice" style="font-size:12px;margin-top:8px">📰 <b>Noticias + Macro integradas:</b> Titulares de Ámbito, WSJ, Cronista y datos del dólar (Blue, CCL, MEP) ya están en el análisis. El asesor IA los considera en cada respuesta.</div>
+  <div class="notice" style="font-size:12px;margin-top:8px">💰 <b>Comisiones IOL:</b> Recomendaciones descuentan ~1.5% acciones / ~0.7% bonos. Solo se sugiere operar si el potencial supera ese costo.</div>
+  <div class="notice" style="font-size:12px;margin-top:8px">📊 <b>Indicadores técnicos:</b> RSI(14) y medias móviles MA20/MA50 se calculan automáticamente para tus tenencias y ajustan el score.</div>
+</section>
+
+</main>
+
+<nav>
+  <button class="tab active" onclick="show('hoy',this)">Hoy</button>
+  <button class="tab" onclick="show('recom',this)">Recom.</button>
+  <button class="tab" onclick="show('cartera',this)">Cartera</button>
+  <button class="tab" onclick="show('consulta',this)">Consulta</button>
+  <button class="tab" onclick="show('config',this)">Config</button>
+  <button class="tab" onclick="show('raw',this)">Técnico</button>
+</nav>
+
+<script>
+// ── URLs ──────────────────────────────────────────────────────────
+// Use /.netlify/functions/ for both Vercel (rewrites to /api/) and Netlify
+const BASE_FN = '/.netlify/functions';
+const API = BASE_FN + '/iol-dashboard';
+const CONSULTA_API = BASE_FN + '/consulta';
+const NOTICIAS_API = BASE_FN + '/noticias';
+
+// ── State ─────────────────────────────────────────────────────────
+let lastData = null;
+
+// ── Utils ─────────────────────────────────────────────────────────
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s ?? '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+function money(v) {
+  const x = Number(v);
+  if (!Number.isFinite(x)) return '—';
+  return x.toLocaleString('es-AR', {style:'currency', currency:'ARS', maximumFractionDigits:0});
+}
+
+function pctFmt(v, decimals) {
+  const x = Number(v);
+  if (!Number.isFinite(x)) return null;
+  return (x >= 0 ? '+' : '') + x.toFixed(decimals ?? 2) + '%';
+}
+
+function pctSpan(v, bold) {
+  const f = pctFmt(v);
+  if (!f) return '<span class="nt">—</span>';
+  const x = Number(v);
+  const cls = x > 0.05 ? 'gn' : x < -0.05 ? 'rd' : 'nt';
+  return bold ? `<b class="${cls}">${esc(f)}</b>` : `<span class="${cls}">${esc(f)}</span>`;
+}
+
+function riskCls(c) { return c==='Verde'?'v':c==='Amarillo'?'a':c==='Naranja'?'o':'r'; }
+function pillCls(c) { return c==='Verde'?'pv':c==='Amarillo'?'pa':c==='Naranja'?'po':'pr'; }
+
+function actionBadge(action) {
+  const a = String(action || '').toLowerCase();
+  if (a.includes('comprar') || a.startsWith('buy')) {
+    return '<span class="badge badge-buy">▲ Comprar</span>';
+  }
+  if (a.includes('vender') || a.includes('reducir') || a.includes('salir')) {
+    return '<span class="badge badge-sell">▼ Reducir</span>';
+  }
+  if (a.includes('mantener') || a.includes('seguimiento')) {
+    return '<span class="badge badge-hold">● Mantener</span>';
+  }
+  return '<span class="badge badge-wait">⏸ Esperar</span>';
+}
+
+function assetLabel(ac) {
+  const map = {accion_local:'Merval',bono:'Bono $USD',bono_cer:'Bono CER',lecap:'LECAP',cedear_etf:'CEDEAR ETF',cedear_defensivo:'CEDEAR Def.',cedear_global:'CEDEAR Tech',cedear_financiero:'CEDEAR Fin.',cedear_industrial:'CEDEAR Ind.',otro:'Otro'};
+  return map[ac] || esc(ac || '');
+}
+
+function categoryOf(ac) {
+  if (ac === 'accion_local') return 'Merval';
+  if (ac === 'bono' || ac === 'bono_cer' || ac === 'lecap') return 'Bonos AR';
+  if (ac === 'cedear_etf') return 'CEDEARs ETF';
+  if (ac === 'cedear_defensivo') return 'CEDEARs Defensivos';
+  if (ac === 'cedear_global' || ac === 'cedear_tech') return 'CEDEARs Tech';
+  if (ac === 'cedear_financiero') return 'CEDEARs Financieros';
+  if (ac === 'cedear_industrial') return 'CEDEARs Industriales';
+  return 'Otros';
+}
+
+// ── Push Notifications ───────────────────────────────────────────
+let alertedSymbols = new Set();
+
+function requestNotifications() {
+  if (!('Notification' in window)) { $('notifStatus').textContent = 'Tu navegador no soporta notificaciones.'; return; }
+  Notification.requestPermission().then(perm => {
+    if (perm === 'granted') {
+      $('notifStatus').textContent = '✓ Alertas activadas — recibirás avisos con la app abierta.';
+      $('notifBtn').textContent = '✓ Alertas activas';
+      $('notifBtn').disabled = true;
+    } else {
+      $('notifStatus').textContent = 'Permiso denegado. Activá las notificaciones en la configuración del navegador.';
+    }
+    localStorage.setItem('NOTIF_PERM', perm);
+  });
+}
+
+function checkAlerts(data) {
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+  const daily = data.dailyAnalysis || {};
+  const holdings = daily.holdingAnalysis || [];
+  const opps = daily.newOpportunities || [];
+  const alertKey = new Date().toDateString();
+
+  holdings.forEach(h => {
+    const key = `${h.symbol}-drop-${alertKey}`;
+    if (h.dailyPct != null && h.dailyPct < -3 && !alertedSymbols.has(key)) {
+      alertedSymbols.add(key);
+      new Notification(`⚠ ${h.symbol} cae ${h.dailyPct.toFixed(1)}% hoy`, {
+        body: h.reason || 'Revisá la posición.',
+        icon: './icon-192.png', badge: './icon-192.png'
+      });
+    }
+  });
+
+  const strongBuy = opps.find(o => o.score >= 80 && (o.riskColor === 'Verde' || o.riskColor === 'Amarillo'));
+  if (strongBuy) {
+    const key = `${strongBuy.symbol}-opp-${alertKey}`;
+    if (!alertedSymbols.has(key)) {
+      alertedSymbols.add(key);
+      new Notification(`📈 Oportunidad destacada: ${strongBuy.symbol}`, {
+        body: `Score ${strongBuy.score}/100 · ${strongBuy.action || ''}`,
+        icon: './icon-192.png', badge: './icon-192.png'
+      });
+    }
+  }
+}
+
+function initNotifBtn() {
+  if (typeof Notification === 'undefined') return;
+  if (Notification.permission === 'granted') {
+    const btn = $('notifBtn'); if (btn) { btn.textContent = '✓ Alertas activas'; btn.disabled = true; }
+    const st = $('notifStatus'); if (st) st.textContent = '✓ Alertas activadas.';
+  }
+}
+
+// ── Macro data display ────────────────────────────────────────────
+function renderMacro(data) {
+  const macro = data.macro || data.dailyAnalysis?.macro;
+  const sec = $('macroSection');
+  const strip = $('macroStrip');
+  if (!macro || !strip) { if (sec) sec.classList.add('hide'); return; }
+  sec.classList.remove('hide');
+
+  const fmtARS = v => v != null ? '$' + Number(v).toLocaleString('es-AR', {maximumFractionDigits:0}) : '—';
+  const blue = macro.blue?.venta;
+  const brecha = macro.brechaBlueOficial;
+  const ccl = macro.ccl?.venta;
+  const mep = macro.mep?.venta;
+  const brechaColor = brecha == null ? '' : brecha > 50 ? 'rd' : brecha > 20 ? '' : 'gn';
+
+  strip.innerHTML = [
+    blue != null ? `<div class="macro-pill"><span class="ml">Dólar Blue</span><span>${fmtARS(blue)}</span></div>` : '',
+    brecha != null ? `<div class="macro-pill"><span class="ml">Brecha c/Oficial</span><span class="${brechaColor}">${brecha > 0 ? '+' : ''}${brecha}%</span></div>` : '',
+    ccl != null ? `<div class="macro-pill"><span class="ml">CCL</span><span>${fmtARS(ccl)}</span></div>` : '',
+    mep != null ? `<div class="macro-pill"><span class="ml">MEP</span><span>${fmtARS(mep)}</span></div>` : '',
+  ].filter(Boolean).join('');
+}
+
+// ── Portfolio Health Card ─────────────────────────────────────────
+function renderPortfolioHealth(data) {
+  const ph = data.dailyAnalysis?.portfolioHealth || data.portfolioHealth;
+  const card = $('portfolioHealthCard');
+  if (!card) return;
+  if (!ph) { card.classList.add('hide'); return; }
+  card.classList.remove('hide');
+
+  const scoreColor = ph.diversScore >= 70 ? '#56d364' : ph.diversScore >= 50 ? '#ffd33d' : '#ff7b72';
+  const warnings = ph.warnings || [];
+
+  card.innerHTML = `<div class="lbl">Salud de cartera</div>
+<div style="display:flex;align-items:center;gap:10px;margin:8px 0">
+  <div style="flex:1">
+    <div class="health-bar"><div class="health-fill" style="width:${ph.diversScore}%;background:${scoreColor}"></div></div>
+    <div class="tiny" style="margin-top:3px">Diversificación: <b style="color:${scoreColor}">${ph.diversScore}/100</b></div>
+  </div>
+  <div class="stat-box" style="min-width:70px;text-align:center">
+    <div class="lbl">ARS</div><div class="val-sm">${ph.arsPct}%</div>
+  </div>
+  <div class="stat-box" style="min-width:70px;text-align:center">
+    <div class="lbl">USD</div><div class="val-sm">${ph.usdPct}%</div>
+  </div>
+  <div class="stat-box" style="min-width:70px;text-align:center">
+    <div class="lbl">Activos</div><div class="val-sm">${ph.numPositions}</div>
+  </div>
+</div>
+${warnings.map(w => `<div class="warning" style="font-size:12px;margin-top:6px">⚠ ${esc(w)}</div>`).join('')}`;
+}
+
+// ── PIN ───────────────────────────────────────────────────────────
+function getPin() { return localStorage.getItem('APP_PIN') || ''; }
+function savePin() { const v = $('pin').value.trim(); if (v) { localStorage.setItem('APP_PIN',v); refreshNow(); } }
+function savePin2() { const v = $('pin2').value.trim(); if (v) { localStorage.setItem('APP_PIN',v); refreshNow(); } }
+function clearLocal() { localStorage.clear(); location.reload(); }
+function toggleMoney() { localStorage.setItem('HIDE_MONEY', localStorage.getItem('HIDE_MONEY')==='1'?'0':'1'); applyMoney(); }
+function applyMoney() { document.body.classList.toggle('money-hidden', localStorage.getItem('HIDE_MONEY')==='1'); }
+
+// ── Navigation ───────────────────────────────────────────────────
+function show(id, b) {
+  ['hoy','recom','cartera','consulta','config','raw'].forEach(x => $(x) && $(x).classList.add('hide'));
+  $(id) && $(id).classList.remove('hide');
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  b.classList.add('active');
+  if (id === 'config') { $('pin2').value = getPin(); }
+  if (id === 'recom' && lastData) renderRecomendaciones(lastData);
+  if (id === 'cartera' && lastData) renderPortfolio(lastData);
+}
+
+// ── Main render ──────────────────────────────────────────────────
+function render(data, cached) {
+  lastData = data;
+  const daily = data.dailyAnalysis || {};
+  const cash = daily.availableCash || {};
+  const holdings = daily.holdings || [];
+  const ms = data.marketStatus || daily.marketStatus;
+
+  if (daily.holdingsCount !== undefined || holdings.length || data.ok) $('setup').classList.add('hide');
+
+  $('status').textContent = cached ? '📦 Dato guardado · Sin conexión' : '✓ IOL · ' + new Date().toLocaleTimeString('es-AR');
+
+  // Market badge
+  if (ms) {
+    const cls = ms.isOpen ? 'mkt-open' : (ms.isWeekday ? 'mkt-closed' : 'mkt-wknd');
+    const dot = ms.isOpen ? '🟢' : (ms.isWeekday ? '🟡' : '🔵');
+    $('marketBadge').innerHTML = `<span class="mkt ${cls}">${dot} ${esc(ms.status)} · ${esc(ms.argTime)}</span>`;
+  }
+
+  // Portfolio totals
+  const totalValue = holdings.reduce((s, h) => s + (Number(h.valueARS) || 0), 0);
+  $('total').textContent = totalValue > 0 ? money(totalValue) : '—';
+  $('mainSub').textContent = daily.generatedAt ? 'Actualizado: ' + new Date(daily.generatedAt).toLocaleString('es-AR') : (cached ? 'Último dato guardado' : '');
+
+  // P&L calculations
+  const holdingAnalysis = daily.holdingAnalysis || data.holdingsAnalysis || [];
+  let dailyPnlARS = 0, dailyPnlValid = false;
+  let accumPnl = 0, accumPnlValid = false;
+
+  holdingAnalysis.forEach(h => {
+    if (h.valueARS != null && h.dailyPct != null) {
+      dailyPnlARS += Number(h.valueARS) * Number(h.dailyPct) / 100;
+      dailyPnlValid = true;
+    }
+    if (h.pnl != null) { accumPnl += Number(h.pnl); accumPnlValid = true; }
+  });
+
+  const dailyPct = totalValue > 0 && dailyPnlValid ? dailyPnlARS / totalValue * 100 : null;
+  const accumPct = totalValue > 0 && accumPnlValid ? accumPnl / totalValue * 100 : null;
+
+  // Display P&L
+  if (dailyPnlValid) {
+    const cls = dailyPnlARS > 10 ? 'gn' : dailyPnlARS < -10 ? 'rd' : 'nt';
+    $('totalDailyPnl').innerHTML = `<span class="${cls} money">${money(dailyPnlARS)}</span>`;
+    $('totalDailyPct').innerHTML = pctSpan(dailyPct);
+  } else {
+    $('totalDailyPnl').textContent = '—'; $('totalDailyPct').textContent = '—';
+  }
+  if (accumPnlValid) {
+    $('totalAccumPnl').innerHTML = `<span class="${accumPnl > 0 ? 'gn' : accumPnl < 0 ? 'rd' : 'nt'}">${money(accumPnl)}</span>`;
+    $('totalAccumPct').innerHTML = pctSpan(accumPct);
+  } else {
+    $('totalAccumPnl').textContent = '—'; $('totalAccumPct').textContent = '—';
+  }
+
+  $('arsVal').textContent = cash.ars > 0 ? money(cash.ars) : '—';
+
+  // Main recommendation
+  $('mainTitle').textContent = daily.mainRecommendation || data.mainRecommendation || '—';
+  $('mainText').textContent = daily.summary || 'Presioná Actualizar para ver el análisis completo.';
+
+  // Raw JSON
+  $('rawJson').textContent = JSON.stringify(data, null, 2);
+
+  // Render holding analysis
+  renderLectura(holdingAnalysis);
+  renderMacro(data);
+  renderPortfolioHealth(data);
+  checkAlerts(data);
+
+  applyMoney();
+}
+
+// ── Holding analysis (Tab Hoy) ────────────────────────────────────
+function renderLectura(items) {
+  if (!items.length) {
+    $('lectura').innerHTML = '<div class="notice">No se detectaron tenencias. Verificá las credenciales en Config.</div>';
+    return;
+  }
+  const urgent = items.filter(h => h.priority === 'alta');
+  const rest = items.filter(h => h.priority !== 'alta');
+  let html = '';
+  if (urgent.length) {
+    html += '<div class="section-title" style="color:var(--red)">⚠ Atención urgente</div>';
+    html += urgent.map(h => holdingCard(h)).join('');
+  }
+  if (rest.length) {
+    if (urgent.length) html += '<div class="section-title">Seguimiento</div>';
+    html += rest.map(h => holdingCard(h)).join('');
+  }
+  $('lectura').innerHTML = html;
+}
+
+function holdingCard(h) {
+  const cls = h.priority === 'alta' ? 'r' : riskCls(h.riskColor);
+  const pcl = pillCls(h.riskColor);
+  const human = h.human || {};
+  const dailyPnlARS = (h.valueARS != null && h.dailyPct != null) ? Number(h.valueARS) * Number(h.dailyPct) / 100 : null;
+
+  return `<div class="rec-card ${cls}">
+  <div class="row">
+    <div>
+      <span class="symbol">${esc(h.symbol)}</span>
+      <span class="tiny" style="margin-left:6px">${assetLabel(h.assetClass)}</span>
+    </div>
+    <div style="text-align:right">
+      ${actionBadge(h.decision)}
+      <div style="margin-top:4px"><span class="pill ${pcl}">${esc(h.riskColor||'—')}</span></div>
+    </div>
+  </div>
+  <div class="tiny" style="margin-top:8px;color:var(--txt)">${esc(h.decision||'—')}</div>
+  <div class="tiny" style="margin-top:3px">${esc(h.reason||'')}</div>
+  <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px">
+    ${h.valueARS ? `<div><div class="lbl">Valuación</div><div class="val-sm money">${money(h.valueARS)}</div></div>` : ''}
+    ${h.currentPrice ? `<div><div class="lbl">Precio</div><div class="val-sm">${Number(h.currentPrice).toLocaleString('es-AR',{maximumFractionDigits:2})}</div></div>` : ''}
+    ${h.dailyPct != null ? `<div><div class="lbl">Hoy</div><div class="val-sm">${pctSpan(h.dailyPct,true)}</div></div>` : ''}
+    ${dailyPnlARS != null ? `<div><div class="lbl">Hoy ARS</div><div class="val-sm money ${dailyPnlARS>0?'gn':dailyPnlARS<0?'rd':'nt'}">${money(dailyPnlARS)}</div></div>` : ''}
+    ${h.pnlPct != null ? `<div><div class="lbl">P&L total</div><div class="val-sm">${pctSpan(h.pnlPct,true)}</div></div>` : ''}
+    ${h.pnl != null ? `<div><div class="lbl">P&L ARS</div><div class="val-sm money ${Number(h.pnl)>0?'gn':Number(h.pnl)<0?'rd':'nt'}">${money(h.pnl)}</div></div>` : ''}
+    ${h.invalidation ? `<div><div class="lbl">Stop</div><div class="val-sm">${h.invalidation}</div></div>` : ''}
+  </div>
+  ${h.rsi != null || h.sma20 != null ? `<div style="background:#0a1018;border-radius:8px;padding:7px 9px;margin-top:6px;font-size:11px;color:#6a8fa8;display:flex;flex-wrap:wrap;gap:10px">
+    ${h.rsi != null ? `<span><b style="color:${h.rsi<30?'#56d364':h.rsi>70?'#ff7b72':'#ffd33d'}">RSI ${h.rsi}</b>${h.rsi<30?' sobrevendido':h.rsi>70?' sobrecomprado':''}</span>` : ''}
+    ${h.sma20 != null ? `<span>MA20 ${Number(h.sma20).toLocaleString('es-AR',{maximumFractionDigits:2})}</span>` : ''}
+    ${h.sma50 != null ? `<span>MA50 ${Number(h.sma50).toLocaleString('es-AR',{maximumFractionDigits:2})}</span>` : ''}
+  </div>` : ''}
+  ${human.queHacer ? `<div style="background:#0a1018;border-radius:10px;padding:9px;margin-top:8px;font-size:12px;color:#b0c8e0;line-height:1.5">${esc(human.queHacer)}</div>` : ''}
+</div>`;
+}
+
+// ── Recomendaciones (Tab Recom.) ──────────────────────────────────
+function renderRecomendaciones(data) {
+  const daily = data.dailyAnalysis || {};
+  const newOpps = daily.newOpportunities || data.newOpportunities || [];
+  const ranking = daily.ranking || data.recommendations || [];
+  const cashARS = daily.availableCash?.ars || 0;
+
+  // Filter: only score >= 55 and not Rojo
+  const quality = [...newOpps, ...ranking]
+    .filter(x => x.score >= 55 && x.riskColor !== 'Rojo')
+    .filter((x, i, a) => a.findIndex(y => y.symbol === x.symbol) === i);
+
+  if (!quality.length) {
+    $('recomendaciones').innerHTML = '<div class="notice">No hay instrumentos con señal suficiente hoy. Mejor mantener liquidez o revisar posiciones actuales.</div>';
+    return;
+  }
+
+  // Group by category
+  const cats = new Map();
+  quality.forEach(item => {
+    const cat = categoryOf(item.assetClass);
+    if (!cats.has(cat)) cats.set(cat, []);
+    if (cats.get(cat).length < 4) cats.get(cat).push(item);
+  });
+
+  let html = '';
+  cats.forEach((items, cat) => {
+    html += `<div class="section-title">${esc(cat)}</div>`;
+    html += items.map(item => oppCard(item, cashARS)).join('');
+  });
+
+  $('recomendaciones').innerHTML = html;
+}
+
+function oppCard(item, cashARS) {
+  const cls = riskCls(item.riskColor);
+  const pcl = pillCls(item.riskColor);
+  const plan = item.tradePlan || {};
+  const price = item.price ?? item.quote?.price;
+  const dailyPct = item.dailyPct ?? item.quote?.pct;
+  const human = item.human || {};
+  const lbl = item.label || human.label || '';
+
+  const planDetails = [
+    plan.entryZone ? `Entrada: <b>${esc(plan.entryZone)}</b>` : '',
+    plan.target1 ? `Obj 1: <b>${plan.target1}</b>${plan.target2 ? ' · Obj 2: <b>'+plan.target2+'</b>' : ''}` : '',
+    plan.invalidation ? `Stop: <b>${plan.invalidation}</b>` : '',
+    plan.suggestedAmountARS ? `Monto sugerido: <b class="money">${money(plan.suggestedAmountARS)}</b> (${plan.allocationPct||0}%)` : '',
+    plan.horizon ? `Horizonte: <b>${esc(plan.horizon)}</b>` : '',
+  ].filter(Boolean);
+
+  return `<div class="rec-card ${cls}">
+  <div class="row">
+    <div>
+      ${price != null ? `<div style="font-size:18px;font-weight:900">${Number(price).toLocaleString('es-AR',{maximumFractionDigits:2})}</div>` : ''}
+      <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
+        <span class="symbol" style="font-size:18px">${esc(item.symbol)}</span>
+        <span class="tiny">${assetLabel(item.assetClass)}</span>
+      </div>
+      ${lbl ? `<div style="font-size:11px;color:var(--accent);margin-top:2px;font-weight:900">${esc(lbl)}</div>` : ''}
+    </div>
+    <div style="text-align:right">
+      ${actionBadge(item.action)}
+      <div style="margin-top:4px"><span class="pill ${pcl}">${esc(item.riskColor||'—')}</span></div>
+      ${dailyPct != null ? `<div class="tiny" style="margin-top:4px">${pctSpan(dailyPct)} hoy</div>` : ''}
+      <div class="tiny" style="margin-top:2px">Score ${item.score}/100</div>
+    </div>
+  </div>
+  <div style="margin-top:10px;font-size:12px;color:#a0b8d0;line-height:1.5">
+    <b>Señal:</b> ${esc(item.thesis || '—')}
+    ${planDetails.map(d => `<br>${d}`).join('')}
+  </div>
+  ${human.queEs ? `<div style="background:#0a1018;border-radius:10px;padding:9px;margin-top:8px;font-size:12px;color:#b0c8e0;line-height:1.5">
+    ${esc(human.queEs)}<br><b style="color:#c8d8f0">Qué hacer:</b> ${esc(human.queHacer||'—')}
+  </div>` : ''}
+</div>`;
+}
+
+// ── Cartera (Tab Cartera) ─────────────────────────────────────────
+function renderPortfolio(data) {
+  const daily = data.dailyAnalysis || {};
+  const holdingAnalysis = daily.holdingAnalysis || data.holdingsAnalysis || [];
+  const rawHoldings = daily.holdings || [];
+  const items = holdingAnalysis.length
+    ? holdingAnalysis
+    : rawHoldings.map(h => ({...h, decision:'Sin análisis', reason:'', riskColor:'Amarillo', score:0}));
+
+  if (!items.length) {
+    $('portfolio').innerHTML = '<div class="notice">No se detectaron tenencias en la cartera.</div>';
+    $('portfolioPnlSummary').innerHTML = '';
+    return;
+  }
+
+  // Portfolio P&L summary header
+  let totalVal = 0, totalDailyPnl = 0, totalAccumPnl = 0, hasDailyPnl = false, hasAccumPnl = false;
+  items.forEach(h => {
+    const v = Number(h.valueARS) || 0;
+    totalVal += v;
+    if (h.dailyPct != null) { totalDailyPnl += v * Number(h.dailyPct) / 100; hasDailyPnl = true; }
+    if (h.pnl != null) { totalAccumPnl += Number(h.pnl); hasAccumPnl = true; }
+  });
+  const dailyPct = totalVal > 0 && hasDailyPnl ? totalDailyPnl / totalVal * 100 : null;
+  const accumPct = totalVal > 0 && hasAccumPnl ? totalAccumPnl / (totalVal - totalAccumPnl) * 100 : null;
+
+  $('portfolioPnlSummary').innerHTML = `<div class="card hero-card">
+  <div class="lbl">Resumen cartera</div>
+  <div class="grid3" style="margin-top:8px">
+    <div class="stat-box"><div class="lbl">Total</div><div class="val-sm money">${money(totalVal)}</div></div>
+    ${hasDailyPnl ? `<div class="stat-box"><div class="lbl">Hoy</div><div class="val-sm ${totalDailyPnl>0?'gn':totalDailyPnl<0?'rd':'nt'} money">${money(totalDailyPnl)}</div><div class="tiny">${pctSpan(dailyPct)}</div></div>` : '<div class="stat-box"><div class="lbl">Hoy</div><div class="val-sm nt">—</div></div>'}
+    ${hasAccumPnl ? `<div class="stat-box"><div class="lbl">P&L total</div><div class="val-sm ${totalAccumPnl>0?'gn':totalAccumPnl<0?'rd':'nt'} money">${money(totalAccumPnl)}</div><div class="tiny">${pctSpan(accumPct)}</div></div>` : '<div class="stat-box"><div class="lbl">P&L total</div><div class="val-sm nt">—</div></div>'}
+  </div>
+</div>`;
+
+  $('portfolio').innerHTML = items.map(h => {
+    const cls = riskCls(h.riskColor);
+    const pcl = pillCls(h.riskColor);
+    const dailyPnlARS = (h.valueARS != null && h.dailyPct != null) ? Number(h.valueARS) * Number(h.dailyPct) / 100 : null;
+    const human = h.human || {};
+
+    return `<div class="holding-card ${cls}">
+  <div class="row">
+    <div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="symbol" style="font-size:18px">${esc(h.symbol)}</span>
+        <span class="tiny">${assetLabel(h.assetClass)}</span>
+      </div>
+      <div class="tiny">${h.quantity ? h.quantity + ' unid.' : ''}${h.avgPrice ? ' · PPC: '+Number(h.avgPrice).toLocaleString('es-AR',{maximumFractionDigits:2}) : ''}</div>
+    </div>
+    <div style="text-align:right">
+      <div class="val-sm money">${money(h.valueARS)}</div>
+      <div style="margin-top:3px">${actionBadge(h.decision)}</div>
+    </div>
+  </div>
+
+  <!-- P&L grid -->
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;padding:10px;background:#0a1018;border-radius:10px">
+    ${h.currentPrice ? `<div><div class="lbl">Precio ahora</div><div class="val-sm">${Number(h.currentPrice).toLocaleString('es-AR',{maximumFractionDigits:2})}</div></div>` : ''}
+    ${h.dailyPct != null ? `<div><div class="lbl">Variación hoy</div><div class="val-sm">${pctSpan(h.dailyPct,true)}</div></div>` : ''}
+    ${dailyPnlARS != null ? `<div><div class="lbl">Ganancia/pérd. hoy</div><div class="val-sm money ${dailyPnlARS>0?'gn':dailyPnlARS<0?'rd':'nt'}">${money(dailyPnlARS)}</div></div>` : ''}
+    ${h.pnlPct != null ? `<div><div class="lbl">P&L acumulado</div><div class="val-sm">${pctSpan(h.pnlPct,true)}</div></div>` : ''}
+    ${h.pnl != null ? `<div><div class="lbl">P&L ARS acumulado</div><div class="val-sm money ${Number(h.pnl)>0?'gn':Number(h.pnl)<0?'rd':'nt'}">${money(h.pnl)}</div></div>` : ''}
+  </div>
+
+  <div style="margin-top:8px;font-size:12px;color:#c0d8e8">${esc(h.reason||'')}</div>
+  ${human.queHacer ? `<div style="background:#0a1018;border-radius:10px;padding:8px;margin-top:8px;font-size:12px;color:#b0c8e0;line-height:1.5">${esc(human.queHacer)}</div>` : ''}
+</div>`;
+  }).join('');
+}
+
+
+// ── Consulta IA ───────────────────────────────────────────────────
+async function consultarIA() {
+  const pregunta = $('preguntaInput').value.trim();
+  if (!pregunta) return;
+  const pin = getPin();
+  if (!pin) { $('respuestaIA').innerHTML = '<div class="warning">Configurá el PIN en Config.</div>'; return; }
+
+  $('respuestaIA').innerHTML = '<div class="notice">Consultando al asesor IA…</div>';
+  $('btnConsultar').disabled = true;
+
+  try {
+    const daily = lastData?.dailyAnalysis || {};
+    const contexto = lastData ? {
+      mainRecommendation: daily.mainRecommendation,
+      summary: daily.summary,
+      holdingsCount: daily.holdingsCount,
+      availableCash: daily.availableCash,
+      marketStatus: lastData.marketStatus,
+      newsContext: lastData.newsContext || daily.newsContext || [],
+      holdingAnalysis: (daily.holdingAnalysis || []).slice(0, 8).map(h => ({
+        symbol:h.symbol, score:h.score, riskColor:h.riskColor,
+        decision:h.decision, reason:h.reason, valueARS:h.valueARS,
+        dailyPct:h.dailyPct, pnlPct:h.pnlPct, assetClass:h.assetClass,
+        commissionRoundTripPct:h.commissionRoundTripPct
+      })),
+      newOpportunities: (daily.newOpportunities || []).slice(0, 6).map(o => ({
+        symbol:o.symbol, score:o.score, riskColor:o.riskColor,
+        action:o.action, thesis:o.thesis, price:o.price, dailyPct:o.dailyPct, assetClass:o.assetClass
+      })),
+      macro: lastData.macro || null,
+      portfolioHealth: daily.portfolioHealth || null
+    } : null;
+
+    const r = await fetch(CONSULTA_API, {
+      method: 'POST',
+      headers: {'content-type':'application/json','x-app-pin':pin},
+      body: JSON.stringify({pregunta, contexto})
+    });
+    const d = await r.json();
+    if (!r.ok || !d.ok) throw new Error(d.error || `HTTP ${r.status}`);
+
+    $('respuestaIA').innerHTML = `<div class="card">
+  <div class="lbl">Asesor IA</div>
+  <div style="margin-top:10px;white-space:pre-wrap;line-height:1.6;font-size:14px">${esc(d.respuesta)}</div>
+  <div class="tiny" style="margin-top:10px;border-top:1px solid var(--line);padding-top:8px">⚠ Orientativo. Validá siempre en IOL antes de operar.</div>
+</div>`;
+  } catch(e) {
+    $('respuestaIA').innerHTML = `<div class="danger"><b>Error:</b> ${esc(e.message)}</div>`;
+  } finally {
+    $('btnConsultar').disabled = false;
+  }
+}
+
+// ── Refresh ───────────────────────────────────────────────────────
+async function refreshNow() {
+  const pin = getPin() || $('pin')?.value?.trim() || '';
+  if (!pin) { $('setup').classList.remove('hide'); $('status').textContent = 'Ingresá el PIN para conectar'; return; }
+
+  $('status').textContent = 'Conectando con IOL…';
+  $('refreshBtn').textContent = 'Cargando…';
+  $('refreshBtn').disabled = true;
+
+  try {
+    const r = await fetch(API, { headers: {'x-app-pin': pin}, cache: 'no-store' });
+    const text = await r.text();
+    let d;
+    try { d = JSON.parse(text); } catch { throw new Error('Respuesta inválida del servidor'); }
+    if (!r.ok || !d.ok) throw new Error(d.error || d.detail || `HTTP ${r.status}`);
+    localStorage.setItem('LAST_IOL_DATA', JSON.stringify(d));
+    render(d, false);
+  } catch(e) {
+    const cached = localStorage.getItem('LAST_IOL_DATA');
+    if (cached) { try { render(JSON.parse(cached), true); } catch {} }
+    $('status').textContent = '⚠ ' + e.message;
+  } finally {
+    $('refreshBtn').textContent = 'Actualizar';
+    $('refreshBtn').disabled = false;
+  }
+}
+
+// ── Auto-refresh when market is open (every 2 min) ───────────────
+setInterval(() => {
+  const ms = lastData?.marketStatus || lastData?.dailyAnalysis?.marketStatus;
+  if (ms?.isOpen && getPin()) refreshNow();
+}, 2 * 60 * 1000);
+
+// ── Init ──────────────────────────────────────────────────────────
+applyMoney();
+(function init() {
+  const pin = getPin();
+  const cached = localStorage.getItem('LAST_IOL_DATA');
+  if (cached) { try { render(JSON.parse(cached), true); } catch {} }
+  if (pin) refreshNow();
+  else { $('setup').classList.remove('hide'); $('status').textContent = 'Ingresá el PIN para conectar'; }
+  initNotifBtn();
+})();
+</script>
+</body></html>
