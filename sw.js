@@ -1,4 +1,4 @@
-const CACHE_NAME = "iol-cartera-pro-v6";
+const CACHE_NAME = "iol-cartera-pro-v7";
 const PRECACHE = [
   "./app-integrada.html",
   "./manifest.json",
